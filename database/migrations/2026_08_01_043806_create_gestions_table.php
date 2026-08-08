@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('gestions', function (Blueprint $table) {
+
             $table->id();
             $table->integer('año');
             $table->string('etapa', 50);
@@ -16,6 +17,7 @@ return new class extends Migration
             $table->date('fecha_fin');
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
             $table->timestamps();
+            //creado y actualizadp
         });
     }
 

@@ -12,8 +12,10 @@ class Gestion extends Model
     protected $fillable = [
         'año',
         'etapa',
+
         'fecha_inicio',
         'fecha_fin',
+
         'estado',
     ];
 
@@ -48,6 +50,7 @@ class Gestion extends Model
     public function getNombreCompletoAttribute(): string
     {
         return "{$this->año} - {$this->etapa}";
+        //  2026 - 1ra etapa
     }
 
     // app/Models/Gestion.php

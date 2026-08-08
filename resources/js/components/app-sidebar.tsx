@@ -17,6 +17,7 @@ const mainNavItems: NavItem[] = [
     { title: 'Cursos', url: '/cursos', icon: School },
     { title: 'Mis Entregas', url: '/entregas', icon: FileText },
     { title: 'Reportes', url: '/reportes', icon: FileText },
+    
 ];
 
 const footerNavItems: NavItem[] = [

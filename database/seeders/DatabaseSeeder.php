@@ -28,9 +28,10 @@ class DatabaseSeeder extends Seeder
             'apellido_paterno' => 'Sistema',
             'apellido_materno' => 'UPEA',
             'ci' => '1234567 LP',
-            'celular' => '76543210',
-            'email' => 'sistema@sistema.com',
-            'password' => bcrypt('password'),
+            'celular' => '7777777',
+
+            'email' => 'sistema@sistema.com',//usuario
+            'password' => bcrypt('password'),//contraseña
             'genero' => 'M',
             'fecha_nacimiento' => '1990-01-01',
             'direccion' => 'Av. Sucre B, Zona Villa Esperanza',

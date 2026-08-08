@@ -246,11 +246,17 @@ export default function DocentesIndex({ docentes }: Props) {
                                             <td className="py-3 px-4">{docente.especialidad || '-'}</td>
                                             <td className="py-3 px-4 text-right">
                                                 <div className="flex justify-end gap-2">
+
+
                                                     <Button variant="outline" size="icon" asChild>
+                                                        
                                                         <a href={`/docentes/${docente.id}`}>
                                                             <Eye className="h-4 w-4" />
                                                         </a>
                                                     </Button>
+
+
+
                                                     <Button variant="outline" size="icon" onClick={() => openEdit(docente)}>
                                                         <Pencil className="h-4 w-4" />
                                                     </Button>

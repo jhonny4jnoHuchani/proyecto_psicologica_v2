@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
 use App\Http\Controllers\GestionController;
 use App\Http\Controllers\DocenteController;
 use App\Http\Controllers\EstudianteController;
@@ -26,7 +27,11 @@ Route::middleware(['auth'])->group(function () {
     // RUTAS SOLO ADMIN
     // ========================
     Route::middleware(['role:admin'])->group(function () {
+        
         Route::resource('gestiones', GestionController::class);
+
+
+
 
         Route::prefix('materias')->name('materias.')->controller(MateriaController::class)->group(function () {
             Route::get('/', 'index')->name('index');
@@ -47,7 +52,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{docente}/reset-password', 'resetPassword')->name('reset-password');
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
-
+        
         Route::prefix('estudiantes')->name('estudiantes.')->controller(EstudianteController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/eliminados', 'trashed')->name('trashed');
@@ -111,6 +116,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/apariencia', [ConfiguracionController::class, 'index'])->name('apariencia');
         Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
     });
+
+    
 });
 
 require __DIR__.'/settings.php';
