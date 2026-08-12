@@ -16,7 +16,7 @@ interface DocenteData { id: number; user: UserData; }
 interface CursoData { id: number; paralelo: string; gestion: { año: number; etapa: string }; }
 
 interface LeccionData {
-    id: number; titulo: string; descripcion: string | null;
+    id: number; titulo: string; tema: string | null; descripcion: string | null;
     fecha_programada: string | null; fecha_entrega: string | null;
     estado: string; materia: MateriaData; docente: DocenteData; curso: CursoData;
 }
@@ -134,6 +134,9 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                             {leccion.materia?.codigo} - {leccion.materia?.nombre}
                         </div>
                         <CardTitle className="text-xl">{leccion.titulo}</CardTitle>
+                            {leccion.tema && (
+                                <p className="text-sm text-neutral-500 mt-1">{leccion.tema}</p>
+                            )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {leccion.descripcion && (

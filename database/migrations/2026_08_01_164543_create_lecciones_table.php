@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
             $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
             $table->string('titulo', 200);
+            $table->string('tema', 200)->nullable();  // ← NUEVO
             $table->text('descripcion')->nullable();
             $table->date('fecha_programada')->nullable();
             $table->date('fecha_entrega')->nullable();

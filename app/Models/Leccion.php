@@ -18,6 +18,7 @@ class Leccion extends Model
         'docente_id',
         'curso_id',
         'titulo',
+        'tema',
         'descripcion',
         'fecha_programada',
         'fecha_entrega',

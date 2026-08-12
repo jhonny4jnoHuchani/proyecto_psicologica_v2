@@ -15,7 +15,6 @@ use Inertia\Response;
 use App\Models\Estudiante;
 use App\Models\Entrega;
 
-
 class LeccionController extends Controller
 {
     public function index(Request $request): Response
@@ -34,7 +33,6 @@ class LeccionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Cursos del docente o estudiante
         if ($user->hasRole('docente')) {
             $docente = Docente::where('user_id', $user->id)->first();
             $cursos = Curso::whereHas('materias', fn($q) => $q->where('curso_materia.docente_id', $docente?->id))
@@ -70,6 +68,7 @@ class LeccionController extends Controller
             'curso_id' => 'required|exists:cursos,id',
             'materia_id' => 'required|exists:materias,id',
             'titulo' => 'required|string|max:200',
+            'tema' => 'nullable|string|max:200',  // ← NUEVO
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -83,6 +82,7 @@ class LeccionController extends Controller
             'materia_id' => $request->materia_id,
             'docente_id' => $docente->id,
             'titulo' => $request->titulo,
+            'tema' => $request->tema,  // ← NUEVO
             'descripcion' => $request->descripcion,
             'fecha_programada' => $request->fecha_programada,
             'fecha_entrega' => $request->fecha_entrega,
@@ -97,6 +97,7 @@ class LeccionController extends Controller
     {
         $request->validate([
             'titulo' => 'required|string|max:200',
+            'tema' => 'nullable|string|max:200',  // ← NUEVO
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -115,14 +116,10 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección eliminada.');
     }
 
-    /**
-     * Mostrar detalle de una lección (para estudiantes: ver y entregar).
-     */
     public function show(Leccion $leccion): Response
     {
         $user = Auth::user();
         
-        // Buscar si el estudiante ya tiene una entrega para esta lección
         $entrega = null;
         if ($user->hasRole('estudiante')) {
             $estudiante = Estudiante::where('user_id', $user->id)->first();
@@ -139,9 +136,6 @@ class LeccionController extends Controller
         ]);
     }
 
-    /**
-     * Docente: Ver entregas de una lección para calificar.
-     */
     public function entregas(Leccion $leccion): Response
     {
         $entregas = Entrega::with(['estudiante.user', 'calificacion'])
@@ -149,7 +143,6 @@ class LeccionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Estudiantes que NO entregaron
         $estudiantesSinEntregar = Estudiante::whereHas('cursos', function ($q) use ($leccion) {
             $q->where('curso_id', $leccion->curso_id);
         })

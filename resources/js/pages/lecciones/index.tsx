@@ -28,7 +28,7 @@ interface UserData { id: number; nombre: string; apellido_paterno: string; apell
 interface DocenteData { id: number; user: UserData; }
 
 interface Leccion {
-    id: number; titulo: string; descripcion: string | null;
+    id: number; titulo: string; tema: string | null; descripcion: string | null;
     fecha_programada: string | null; fecha_entrega: string | null;
     estado: string; materia: MateriaOption; curso: CursoOption; docente: DocenteData;
 }
@@ -45,7 +45,7 @@ interface Props {
 
 type LeccionForm = {
     curso_id: string; materia_id: string; titulo: string;
-    descripcion: string; fecha_programada: string; fecha_entrega: string;
+    tema: string; descripcion: string; fecha_programada: string; fecha_entrega: string;
     estado: string;
     [key: string]: string;
 };
@@ -53,8 +53,8 @@ type LeccionForm = {
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Lecciones', href: '/lecciones' }];
 
 const initialForm: LeccionForm = {
-    curso_id: '', materia_id: '', titulo: '', descripcion: '',
-    fecha_programada: '', fecha_entrega: '', estado: 'activo',
+    curso_id: '', materia_id: '', titulo: '', tema: '',
+    descripcion: '', fecha_programada: '', fecha_entrega: '', estado: 'activo',
 };
 
 const MATERIA_COLORS = [
@@ -129,6 +129,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
             curso_id: String(leccion.curso?.id || ''),
             materia_id: String(leccion.materia?.id || ''),
             titulo: leccion.titulo,
+            tema: leccion.tema || '',
             descripcion: leccion.descripcion || '',
             fecha_programada: leccion.fecha_programada || '',
             fecha_entrega: leccion.fecha_entrega || '',
@@ -313,7 +314,6 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                         <Button onClick={aplicarFiltros} variant="outline" className="sm:w-auto">
                             <Eye className="mr-2 h-4 w-4" />Filtrar
                         </Button>
-                        {/* BOTONES PDF/EXCEL */}
                         {isDocente && filtroCurso && filtroMateria && (
                             <>
                                 <a href={`/reportes/pdf?curso_id=${filtroCurso}&materia_id=${filtroMateria}`}>
@@ -385,6 +385,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                                                                         {l.titulo}
                                                                     </a>
                                                                 )}
+                                                                {l.tema && <p className="text-xs text-neutral-500 mt-0.5">{l.tema}</p>}
                                                                 <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
                                                                     {l.materia?.codigo}
                                                                 </span>
@@ -530,6 +531,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                                             <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-xs font-medium">{l.titulo}</p>
+                                                {l.tema && <p className="text-[10px] text-neutral-400 truncate">{l.tema}</p>}
                                                 <p className="text-[11px] text-neutral-400">{l.materia?.codigo} · {formatoFechaCorta(l.fecha_entrega)}</p>
                                             </div>
                                             <Badge variant="outline" className="shrink-0 text-[10px]">
@@ -561,6 +563,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                                     </Select>
                                 </div>
                                 <div className="col-span-2 space-y-1"><Label>Título *</Label><Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required /><InputError message={errors.titulo} /></div>
+                                <div className="col-span-2 space-y-1"><Label>Tema</Label><Input value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })} placeholder="Ej: Capítulo 3 - Fundamentos" /></div>
                                 <div className="col-span-2 space-y-1"><Label>Descripción</Label><textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} /></div>
                                 <div className="space-y-1"><Label>Fecha programada</Label><Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} /></div>
                                 <div className="space-y-1"><Label>Fecha de entrega</Label><Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} /></div>
@@ -579,6 +582,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                         <form onSubmit={handleUpdate} className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="col-span-2 space-y-1"><Label>Título *</Label><Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required /></div>
+                                <div className="col-span-2 space-y-1"><Label>Tema</Label><Input value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })} placeholder="Ej: Capítulo 3 - Fundamentos" /></div>
                                 <div className="col-span-2 space-y-1"><Label>Descripción</Label><textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} /></div>
                                 <div className="space-y-1"><Label>Fecha programada</Label><Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} /></div>
                                 <div className="space-y-1"><Label>Fecha de entrega</Label><Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} /></div>
