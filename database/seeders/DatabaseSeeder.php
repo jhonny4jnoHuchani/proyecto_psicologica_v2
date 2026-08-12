@@ -30,8 +30,8 @@ class DatabaseSeeder extends Seeder
             'ci' => '1234567 LP',
             'celular' => '7777777',
 
-            'email' => 'sistema@sistema.com',//usuario
-            'password' => bcrypt('password'),//contraseña
+            'email' => 'coicomirian@gmail.com',//usuario
+            'password' => bcrypt('admin'),//contraseña
             'genero' => 'M',
             'fecha_nacimiento' => '1990-01-01',
             'direccion' => 'Av. Sucre B, Zona Villa Esperanza',

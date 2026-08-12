@@ -14,6 +14,7 @@ use App\Http\Controllers\EntregaController;
 use App\Http\Controllers\CalificacionController; 
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\LibroController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -73,6 +74,16 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{curso}', 'destroy')->name('destroy');
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
+
+        Route::prefix('libros')->name('libros.')->controller(LibroController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/eliminados', 'trashed')->name('trashed');
+        Route::get('/{libro}', 'show')->name('show');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{libro}', 'update')->name('update');
+        Route::delete('/{libro}', 'destroy')->name('destroy');
+        Route::post('/{id}/restore', 'restore')->name('restore');
+    });
     });
 
     // ========================
