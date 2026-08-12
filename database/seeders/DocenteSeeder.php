@@ -18,8 +18,10 @@ class DocenteSeeder extends Seeder
                     'apellido_materno' => 'Quispe',
                     'ci' => '4832567 LP',
                     'celular' => '76543210',
+
                     'email' => 'carlos.mamani@upea.edu.bo',
                     'password' => bcrypt('password'),
+
                     'genero' => 'M',
                 ],
                 'especialidad' => 'Psicología Cognitiva',
@@ -32,8 +34,10 @@ class DocenteSeeder extends Seeder
                     'apellido_materno' => 'García',
                     'ci' => '5834567 LP',
                     'celular' => '76543211',
+
                     'email' => 'maria.lopez@upea.edu.bo',
                     'password' => bcrypt('password'),
+                    
                     'genero' => 'F',
                 ],
                 'especialidad' => 'Psicología del Desarrollo',

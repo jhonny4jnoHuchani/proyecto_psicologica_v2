@@ -18,8 +18,12 @@ class EstudianteSeeder extends Seeder
                     'apellido_materno' => 'García',
                     'ci' => '8377246 LP',
                     'celular' => '76543300',
+
+
                     'email' => 'juan.perez@email.com',
                     'password' => bcrypt('password'),
+
+
                     'genero' => 'M',
                     'fecha_nacimiento' => '2005-03-15',
                     'direccion' => 'Av. Sucre B, Zona Villa Esperanza',
@@ -34,8 +38,12 @@ class EstudianteSeeder extends Seeder
                     'apellido_materno' => 'Mamani',
                     'ci' => '9378246 LP',
                     'celular' => '76543301',
+
+
                     'email' => 'maria.quispe@email.com',
                     'password' => bcrypt('password'),
+
+                    
                     'genero' => 'F',
                     'fecha_nacimiento' => '2004-07-22',
                     'direccion' => 'Calle 5, Zona 16 de Julio',
