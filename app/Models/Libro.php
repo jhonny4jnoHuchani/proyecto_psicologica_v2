@@ -18,6 +18,8 @@ class Libro extends Model
         'nombre',
         'autor',
         'anio_lanzamiento',
+        'archivo',
+        'portada',
     ];
 
     protected $casts = [

@@ -15,6 +15,7 @@ use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\LibroController;
+use App\Http\Controllers\PaginaAdminController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -30,9 +31,6 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         
         Route::resource('gestiones', GestionController::class);
-
-
-
 
         Route::prefix('materias')->name('materias.')->controller(MateriaController::class)->group(function () {
             Route::get('/', 'index')->name('index');
@@ -76,14 +74,38 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::prefix('libros')->name('libros.')->controller(LibroController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/eliminados', 'trashed')->name('trashed');
-        Route::get('/{libro}', 'show')->name('show');
-        Route::post('/', 'store')->name('store');
-        Route::put('/{libro}', 'update')->name('update');
-        Route::delete('/{libro}', 'destroy')->name('destroy');
-        Route::post('/{id}/restore', 'restore')->name('restore');
-    });
+            Route::get('/', 'index')->name('index');
+            Route::get('/eliminados', 'trashed')->name('trashed');
+            Route::get('/{libro}', 'show')->name('show');
+            Route::post('/', 'store')->name('store');
+            Route::put('/{libro}', 'update')->name('update');
+            Route::delete('/{libro}', 'destroy')->name('destroy');
+            Route::post('/{id}/restore', 'restore')->name('restore');
+            Route::delete('/{id}/force', 'forceDelete')->name('force');
+        });
+
+        // ========================
+        // PAGINA ADMIN (Welcome)
+        // ========================
+        Route::prefix('pagina-admin')->name('pagina-admin.')->controller(PaginaAdminController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            
+            // Portadas
+            Route::post('/portadas', 'storePortada')->name('portadas.store');
+            Route::put('/portadas/{portada}', 'updatePortada')->name('portadas.update');
+            Route::delete('/portadas/{portada}', 'destroyPortada')->name('portadas.destroy');
+            
+            // Autoridades
+            Route::post('/autoridades', 'storeAutoridad')->name('autoridades.store');
+            Route::put('/autoridades/{autoridad}', 'updateAutoridad')->name('autoridades.update');
+            Route::delete('/autoridades/{autoridad}', 'destroyAutoridad')->name('autoridades.destroy');
+            
+            // Convocatorias
+            Route::post('/convocatorias', 'storeConvocatoria')->name('convocatorias.store');
+            Route::put('/convocatorias/{convocatoria}', 'updateConvocatoria')->name('convocatorias.update');
+            Route::delete('/convocatorias/{convocatoria}', 'destroyConvocatoria')->name('convocatorias.destroy');
+            Route::post('/convocatorias/{id}/restore', 'restoreConvocatoria')->name('convocatorias.restore');
+        });
     });
 
     // ========================
@@ -127,8 +149,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/apariencia', [ConfiguracionController::class, 'index'])->name('apariencia');
         Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
     });
-
-    
 });
 
 require __DIR__.'/settings.php';

@@ -1,16 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import {
-    BookOpen, RotateCcw, Trash2, LoaderCircle, AlertTriangle,
-} from 'lucide-react';
+import { BookOpen, ArrowLeft, RotateCcw, Trash2, LoaderCircle, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-    Dialog, DialogContent, DialogDescription,
-    DialogFooter, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
@@ -25,9 +19,7 @@ interface Libro {
     materia: MateriaOption;
 }
 
-interface Props {
-    libros: Libro[];
-}
+interface Props { libros: Libro[]; }
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Libros', href: '/libros' },
@@ -50,13 +42,7 @@ function colorForMateria(codigo?: string) {
 }
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export default function LibrosTrashed({ libros }: Props) {
@@ -89,7 +75,7 @@ export default function LibrosTrashed({ libros }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Libros Eliminados" />
-            <div className="mx-auto max-w-[1400px] space-y-6 p-6">
+            <div className="p-6 space-y-6">
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -99,14 +85,10 @@ export default function LibrosTrashed({ libros }: Props) {
                             </div>
                             <h1 className="text-2xl font-bold tracking-tight">Libros Eliminados</h1>
                         </div>
-                        <p className="mt-1 text-sm text-neutral-500">
-                            Gestiona los libros que han sido eliminados del sistema.
-                        </p>
+                        <p className="mt-1 text-sm text-neutral-500">Gestiona los libros que han sido eliminados del sistema.</p>
                     </div>
                     <a href="/libros">
-                        <Button variant="outline">
-                            <BookOpen className="mr-2 h-4 w-4" />Volver a activos
-                        </Button>
+                        <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />Volver a activos</Button>
                     </a>
                 </div>
 
@@ -123,12 +105,12 @@ export default function LibrosTrashed({ libros }: Props) {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-neutral-50/70 text-left text-xs uppercase tracking-wide text-neutral-500">
-                                        <th className="px-4 py-3 font-medium">Libro</th>
-                                        <th className="px-4 py-3 font-medium">Materia</th>
-                                        <th className="px-4 py-3 font-medium">Autor</th>
-                                        <th className="px-4 py-3 font-medium">Año</th>
-                                        <th className="px-4 py-3 font-medium">Eliminado</th>
-                                        <th className="px-4 py-3 text-right font-medium">Acciones</th>
+                                        <th className="px-6 py-4 font-medium">Libro</th>
+                                        <th className="px-6 py-4 font-medium">Materia</th>
+                                        <th className="px-6 py-4 font-medium">Autor</th>
+                                        <th className="px-6 py-4 font-medium">Año</th>
+                                        <th className="px-6 py-4 font-medium">Eliminado</th>
+                                        <th className="px-6 py-4 text-right font-medium">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -147,30 +129,22 @@ export default function LibrosTrashed({ libros }: Props) {
                                         const color = colorForMateria(l.materia?.codigo);
                                         return (
                                             <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50">
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-start gap-2.5">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-start gap-3">
                                                         <span className={`mt-1 h-full min-h-8 w-1 rounded-full ${color.dot}`} />
-                                                        <div>
-                                                            <p className="font-medium leading-tight">{l.nombre}</p>
-                                                        </div>
+                                                        <p className="font-medium leading-tight">{l.nombre}</p>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
                                                         {l.materia?.codigo}
                                                     </span>
-                                                    <p className="text-xs text-neutral-500 mt-0.5">{l.materia?.nombre}</p>
+                                                    <p className="text-xs text-neutral-500 mt-1">{l.materia?.nombre}</p>
                                                 </td>
-                                                <td className="px-4 py-3 text-xs text-neutral-600">
-                                                    {l.autor || <span className="text-neutral-400">—</span>}
-                                                </td>
-                                                <td className="px-4 py-3 text-xs text-neutral-600">
-                                                    {l.anio_lanzamiento || <span className="text-neutral-400">—</span>}
-                                                </td>
-                                                <td className="px-4 py-3 text-xs text-neutral-500">
-                                                    {formatoFecha(l.deleted_at)}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
+                                                <td className="px-6 py-4 text-xs text-neutral-600">{l.autor || '—'}</td>
+                                                <td className="px-6 py-4 text-xs text-neutral-600">{l.anio_lanzamiento || '—'}</td>
+                                                <td className="px-6 py-4 text-xs text-neutral-500">{formatoFecha(l.deleted_at)}</td>
+                                                <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2 opacity-70 transition-opacity group-hover:opacity-100">
                                                         <Button variant="outline" size="icon" onClick={() => openRestore(l)} title="Restaurar">
                                                             <RotateCcw className="h-4 w-4 text-emerald-500" />
@@ -193,16 +167,13 @@ export default function LibrosTrashed({ libros }: Props) {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Restaurar libro</DialogTitle>
-                            <DialogDescription>
-                                ¿Deseas restaurar "{libroSelect?.nombre}"? Volverá a estar disponible en el sistema.
-                            </DialogDescription>
+                            <DialogDescription>¿Deseas restaurar "{libroSelect?.nombre}"? Volverá a estar disponible.</DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setModalRestore(false)}>Cancelar</Button>
                             <Button onClick={handleRestore} disabled={processing} className="bg-emerald-600 hover:bg-emerald-700">
                                 {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                                <RotateCcw className="mr-2 h-4 w-4" />
-                                Restaurar
+                                <RotateCcw className="mr-2 h-4 w-4" />Restaurar
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -215,7 +186,7 @@ export default function LibrosTrashed({ libros }: Props) {
                             <DialogDescription>
                                 <span className="font-semibold text-rose-600">⚠️ Esta acción no se puede deshacer.</span>
                                 <br /><br />
-                                Se eliminará "{libroSelect?.nombre}" de forma permanente de la base de datos.
+                                Se eliminará "{libroSelect?.nombre}" de forma permanente.
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>

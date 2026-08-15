@@ -7,7 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Configuracion extends Model
 {
     protected $table = 'configuraciones';
-    protected $fillable = ['color_primario', 'color_secundario', 'logo'];
+
+    protected $fillable = [
+        'color_primario',
+        'color_secundario',
+        'logo',
+        'mision',
+        'vision',
+        'lema',
+        'organigrama',
+    ];
 
     /**
      * Calcula si el texto sobre un color de fondo debe ser negro o blanco,

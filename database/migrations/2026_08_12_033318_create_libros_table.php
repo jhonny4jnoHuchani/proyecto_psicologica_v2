@@ -14,8 +14,10 @@ return new class extends Migration
             $table->string('nombre', 200);
             $table->string('autor', 150)->nullable();
             $table->integer('anio_lanzamiento')->nullable();
+            $table->string('archivo', 255)->nullable();   // ← NUEVO
+            $table->string('portada', 255)->nullable();   // ← NUEVO
             $table->timestamps();
-            $table->softDeletes(); // ← NUEVO: columna deleted_at
+            $table->softDeletes();
         });
     }
 

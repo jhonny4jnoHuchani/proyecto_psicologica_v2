@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import {
-    BookOpen, Plus, Pencil, Trash2, LoaderCircle, Sparkles, Filter,
+    Archive, BookOpen, Eye, Plus, Pencil, Trash2, LoaderCircle, Sparkles, Filter,
 } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 
@@ -26,6 +26,8 @@ interface Libro {
     nombre: string;
     autor: string | null;
     anio_lanzamiento: number | null;
+    archivo: string | null;
+    portada: string | null;
     materia: MateriaOption;
 }
 
@@ -76,12 +78,19 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
     const [libroSelect, setLibroSelect] = useState<Libro | null>(null);
 
     const [form, setForm] = useState<LibroForm>(initialForm);
+    const [archivo, setArchivo] = useState<File | null>(null);
+    const [portada, setPortada] = useState<File | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
 
     const [filtroMateria, setFiltroMateria] = useState(filtros.materia_id ? String(filtros.materia_id) : '');
 
-    const resetForm = () => { setForm(initialForm); setErrors({}); };
+    const resetForm = () => {
+        setForm(initialForm);
+        setArchivo(null);
+        setPortada(null);
+        setErrors({});
+    };
 
     const aplicarFiltros = () => {
         const params = new URLSearchParams();
@@ -103,15 +112,28 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
             autor: libro.autor || '',
             anio_lanzamiento: libro.anio_lanzamiento ? String(libro.anio_lanzamiento) : '',
         });
+        setArchivo(null);
+        setPortada(null);
         setErrors({});
         setModalEdit(true);
     };
 
     const openDelete = (libro: Libro) => { setLibroSelect(libro); setModalDelete(true); };
 
+    const buildFormData = () => {
+        const formData = new FormData();
+        formData.append('materia_id', form.materia_id);
+        formData.append('nombre', form.nombre);
+        formData.append('autor', form.autor || '');
+        formData.append('anio_lanzamiento', form.anio_lanzamiento || '');
+        if (archivo) formData.append('archivo', archivo);
+        if (portada) formData.append('portada', portada);
+        return formData;
+    };
+
     const handleCreate: FormEventHandler = (e) => {
         e.preventDefault(); setProcessing(true);
-        router.post('/libros', form, {
+        router.post('/libros', buildFormData(), {
             onSuccess: () => { setModalCreate(false); resetForm(); setProcessing(false); },
             onError: (err) => { setErrors(err); setProcessing(false); },
         });
@@ -121,7 +143,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
         e.preventDefault();
         if (!libroSelect) return;
         setProcessing(true);
-        router.put(`/libros/${libroSelect.id}`, form, {
+        router.put(`/libros/${libroSelect.id}`, buildFormData(), {
             onSuccess: () => { setModalEdit(false); setLibroSelect(null); resetForm(); setProcessing(false); },
             onError: (err) => { setErrors(err); setProcessing(false); },
         });
@@ -143,7 +165,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Libros" />
-            <div className="mx-auto max-w-[1400px] space-y-6 p-6">
+            <div className="p-6 space-y-6">
 
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -157,9 +179,16 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                             Gestiona los libros y recursos bibliográficos del sistema.
                         </p>
                     </div>
-                    <Button onClick={openCreate} className="bg-indigo-600 hover:bg-indigo-700">
-                        <Plus className="mr-2 h-4 w-4" />Nuevo libro
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <a href="/libros/eliminados">
+                            <Button variant="outline">
+                                <Archive className="mr-2 h-4 w-4" />Ver Eliminados
+                            </Button>
+                        </a>
+                        <Button onClick={openCreate} className="bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="mr-2 h-4 w-4" />Nuevo libro
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -215,11 +244,11 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b bg-neutral-50/70 text-left text-xs uppercase tracking-wide text-neutral-500">
-                                        <th className="px-4 py-3 font-medium">Libro</th>
-                                        <th className="px-4 py-3 font-medium">Materia</th>
-                                        <th className="px-4 py-3 font-medium">Autor</th>
-                                        <th className="px-4 py-3 font-medium">Año</th>
-                                        <th className="px-4 py-3 text-right font-medium">Acciones</th>
+                                        <th className="px-6 py-4 font-medium">Libro</th>
+                                        <th className="px-6 py-4 font-medium">Materia</th>
+                                        <th className="px-6 py-4 font-medium">Autor</th>
+                                        <th className="px-6 py-4 font-medium">Año</th>
+                                        <th className="px-6 py-4 text-right font-medium">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -238,28 +267,36 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                                         const color = colorForMateria(l.materia?.codigo);
                                         return (
                                             <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50">
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-start gap-2.5">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-start gap-3">
                                                         <span className={`mt-1 h-full min-h-8 w-1 rounded-full ${color.dot}`} />
+                                                        {l.portada && (
+                                                            <img src={`/storage/${l.portada}`} alt={l.nombre} className="h-14 w-11 object-cover rounded shadow-sm" />
+                                                        )}
                                                         <div>
                                                             <p className="font-medium leading-tight">{l.nombre}</p>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
                                                         {l.materia?.codigo}
                                                     </span>
-                                                    <p className="text-xs text-neutral-500 mt-0.5">{l.materia?.nombre}</p>
+                                                    <p className="text-xs text-neutral-500 mt-1">{l.materia?.nombre}</p>
                                                 </td>
-                                                <td className="px-4 py-3 text-xs text-neutral-600">
+                                                <td className="px-6 py-4 text-xs text-neutral-600">
                                                     {l.autor || <span className="text-neutral-400">—</span>}
                                                 </td>
-                                                <td className="px-4 py-3 text-xs text-neutral-600">
+                                                <td className="px-6 py-4 text-xs text-neutral-600">
                                                     {l.anio_lanzamiento || <span className="text-neutral-400">—</span>}
                                                 </td>
-                                                <td className="px-4 py-3 text-right">
+                                                <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2 opacity-70 transition-opacity group-hover:opacity-100">
+                                                        <a href={`/libros/${l.id}`}>
+                                                            <Button variant="outline" size="icon" title="Ver detalle">
+                                                                <Eye className="h-4 w-4 text-blue-500" />
+                                                            </Button>
+                                                        </a>
                                                         <Button variant="outline" size="icon" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></Button>
                                                         <Button variant="outline" size="icon" onClick={() => openDelete(l)}><Trash2 className="h-4 w-4 text-rose-500" /></Button>
                                                     </div>
@@ -273,8 +310,9 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     </CardContent>
                 </Card>
 
+                {/* Modal Crear */}
                 <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-                    <DialogContent className="max-w-lg">
+                    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Nuevo libro</DialogTitle>
                             <DialogDescription>Completa los datos para agregar un nuevo libro al sistema.</DialogDescription>
@@ -295,34 +333,24 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Nombre del libro *</Label>
-                                    <Input
-                                        value={form.nombre}
-                                        onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                                        placeholder="Ej: Introducción a la Psicología"
-                                        required
-                                    />
+                                    <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Introducción a la Psicología" required />
                                     <InputError message={errors.nombre} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Autor</Label>
-                                    <Input
-                                        value={form.autor}
-                                        onChange={(e) => setForm({ ...form, autor: e.target.value })}
-                                        placeholder="Ej: Sigmund Freud"
-                                    />
-                                    <InputError message={errors.autor} />
+                                    <Input value={form.autor} onChange={(e) => setForm({ ...form, autor: e.target.value })} placeholder="Ej: Sigmund Freud" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Año de lanzamiento</Label>
-                                    <Input
-                                        type="number"
-                                        value={form.anio_lanzamiento}
-                                        onChange={(e) => setForm({ ...form, anio_lanzamiento: e.target.value })}
-                                        placeholder="Ej: 2020"
-                                        min="1900"
-                                        max="2100"
-                                    />
-                                    <InputError message={errors.anio_lanzamiento} />
+                                    <Input type="number" value={form.anio_lanzamiento} onChange={(e) => setForm({ ...form, anio_lanzamiento: e.target.value })} placeholder="Ej: 2020" min="1900" max="2100" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Archivo PDF</Label>
+                                    <Input type="file" accept="application/pdf" onChange={(e) => setArchivo(e.target.files?.[0] || null)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Portada (imagen)</Label>
+                                    <Input type="file" accept="image/*" onChange={(e) => setPortada(e.target.files?.[0] || null)} />
                                 </div>
                             </div>
                             <DialogFooter>
@@ -336,8 +364,9 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     </DialogContent>
                 </Dialog>
 
+                {/* Modal Editar */}
                 <Dialog open={modalEdit} onOpenChange={setModalEdit}>
-                    <DialogContent className="max-w-lg">
+                    <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Editar libro</DialogTitle>
                             <DialogDescription>Actualiza los datos de "{libroSelect?.nombre}".</DialogDescription>
@@ -354,38 +383,28 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                    <InputError message={errors.materia_id} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Nombre del libro *</Label>
-                                    <Input
-                                        value={form.nombre}
-                                        onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                                        placeholder="Ej: Introducción a la Psicología"
-                                        required
-                                    />
-                                    <InputError message={errors.nombre} />
+                                    <Input value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} placeholder="Ej: Introducción a la Psicología" required />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Autor</Label>
-                                    <Input
-                                        value={form.autor}
-                                        onChange={(e) => setForm({ ...form, autor: e.target.value })}
-                                        placeholder="Ej: Sigmund Freud"
-                                    />
-                                    <InputError message={errors.autor} />
+                                    <Input value={form.autor} onChange={(e) => setForm({ ...form, autor: e.target.value })} placeholder="Ej: Sigmund Freud" />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Año de lanzamiento</Label>
-                                    <Input
-                                        type="number"
-                                        value={form.anio_lanzamiento}
-                                        onChange={(e) => setForm({ ...form, anio_lanzamiento: e.target.value })}
-                                        placeholder="Ej: 2020"
-                                        min="1900"
-                                        max="2100"
-                                    />
-                                    <InputError message={errors.anio_lanzamiento} />
+                                    <Input type="number" value={form.anio_lanzamiento} onChange={(e) => setForm({ ...form, anio_lanzamiento: e.target.value })} placeholder="Ej: 2020" min="1900" max="2100" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Archivo PDF (opcional)</Label>
+                                    <Input type="file" accept="application/pdf" onChange={(e) => setArchivo(e.target.files?.[0] || null)} />
+                                    {libroSelect?.archivo && <p className="text-xs text-neutral-500">PDF actual: {libroSelect.archivo}</p>}
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Portada (opcional)</Label>
+                                    <Input type="file" accept="image/*" onChange={(e) => setPortada(e.target.files?.[0] || null)} />
+                                    {libroSelect?.portada && <img src={`/storage/${libroSelect.portada}`} alt="Portada actual" className="h-12 rounded mt-1" />}
                                 </div>
                             </div>
                             <DialogFooter>
@@ -399,6 +418,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     </DialogContent>
                 </Dialog>
 
+                {/* Modal Eliminar */}
                 <Dialog open={modalDelete} onOpenChange={setModalDelete}>
                     <DialogContent>
                         <DialogHeader>
