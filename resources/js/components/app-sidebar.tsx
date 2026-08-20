@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette } from 'lucide-react';
+import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette,Layout } from 'lucide-react';
 
 import AppLogo from './app-logo';
 
@@ -15,11 +15,11 @@ const mainNavItems: NavItem[] = [
     { title: 'Docentes', url: '/docentes', icon: GraduationCap },
     { title: 'Estudiantes', url: '/estudiantes', icon: Users },
     { title: 'Cursos', url: '/cursos', icon: School },
-    { title: 'Libros', url: '/libros', icon: Library },          // ← NUEVO
+    { title: 'Libros', url: '/libros', icon: Library },
     { title: 'Mis Entregas', url: '/entregas', icon: FileText },
     { title: 'Reportes', url: '/reportes', icon: FileText },
+    { title: 'Página Admin', url: '/pagina-admin', icon: Layout }  // ← NUEVO
 ];
-
 const footerNavItems: NavItem[] = [
     {
         title: 'Apariencia',

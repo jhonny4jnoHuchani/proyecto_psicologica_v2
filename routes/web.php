@@ -16,9 +16,19 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PaginaAdminController;
+use App\Models\Autoridad;
+use App\Models\Convocatoria;
+use App\Models\Configuracion;
+use App\Models\Portada;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('welcome', [
+        'config' => Configuracion::first(),
+        'portadas' => Portada::activas()->get(),
+        'autoridades' => Autoridad::ordenadas()->get(),
+        'convocatorias' => Convocatoria::activas()->get(),
+        'user' => auth()->user(),
+    ]);
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
