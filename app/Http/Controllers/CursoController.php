@@ -186,6 +186,9 @@ class CursoController extends Controller
             ->with('success', 'Curso desactivado exitosamente.');
     }
 
+
+
+    
     /**
      * Mostrar cursos eliminados.
      */

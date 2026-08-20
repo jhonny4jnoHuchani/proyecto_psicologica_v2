@@ -27,6 +27,10 @@ class DashboardController extends Controller
         return Inertia::render('dashboard');
     }
 
+
+
+    
+
     private function dashboardAdmin(): Response
     {
         return Inertia::render('dashboard', [

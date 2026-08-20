@@ -31,6 +31,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+
+
+
+
 Route::middleware(['auth'])->group(function () {
     
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -73,15 +77,23 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
 
+
+
         Route::prefix('cursos')->name('cursos.')->controller(CursoController::class)->group(function () {
             Route::get('/', 'index')->name('index');
+            
             Route::get('/eliminados', 'trashed')->name('trashed');
             Route::get('/{curso}', 'show')->name('show');
+
             Route::post('/', 'store')->name('store');
             Route::put('/{curso}', 'update')->name('update');
             Route::delete('/{curso}', 'destroy')->name('destroy');
+
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
+
+
+        
 
         Route::prefix('libros')->name('libros.')->controller(LibroController::class)->group(function () {
             Route::get('/', 'index')->name('index');
