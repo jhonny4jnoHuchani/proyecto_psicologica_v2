@@ -10,12 +10,12 @@ class MateriaSeeder extends Seeder
     public function run(): void
     {
         $materias = [
-            ['codigo' => 'PSI-101', 'nombre' => 'Psicología Cognitiva'],
-            ['codigo' => 'PSI-102', 'nombre' => 'Psicología del Desarrollo'],
-            ['codigo' => 'PSI-103', 'nombre' => 'Estadística Aplicada a la Psicología'],
-            ['codigo' => 'PSI-104', 'nombre' => 'Metodología de la Investigación'],
-            ['codigo' => 'PSI-105', 'nombre' => 'Psicología Social'],
-            ['codigo' => 'PSI-106', 'nombre' => 'Psicología Clínica'],
+            ['codigo' => 'PSI-101', 'nombre' => 'INTRODUCCIÓN A LA PSICOLOGÍA'],
+            ['codigo' => 'PSI-102', 'nombre' => 'REALIDAD NACIONAL Y SALUD MENTAL'],
+            ['codigo' => 'PSI-103', 'nombre' => 'COMUNICACIÓN Y LENGUAJE'],
+            ['codigo' => 'PSI-104', 'nombre' => 'ESTRATEGIAS DE APRENDIZAJE'],
+            ['codigo' => 'PSI-105', 'nombre' => 'PRINCIPIOS UNIVERSITARIOS'],
+            
         ];
 
         foreach ($materias as $materia) {
