@@ -15,6 +15,7 @@ class Convocatoria extends Model
         'titulo',
         'descripcion',
         'archivo',
+        'link_video',   // ← CORREGIDO
         'fecha_inicio',
         'fecha_fin',
         'activo',

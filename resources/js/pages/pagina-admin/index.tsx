@@ -38,6 +38,7 @@ interface Convocatoria {
     titulo: string;
     descripcion: string | null;
     archivo: string | null;
+    link_video: string | null;
     fecha_inicio: string | null;
     fecha_fin: string | null;
     activo: boolean;
@@ -54,17 +55,22 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Página Admin', href: '/pagina-admin' },
 ];
 
+// Muestra el primer mensaje de error de validación que devuelva Laravel,
+// para dejar de fallar en silencio cuando algo no se guarda.
+const showValidationErrors = (errors: Record<string, string>) => {
+    const first = Object.values(errors)[0];
+    toast.error(first || 'No se pudo guardar. Revisa los datos e intenta de nuevo.');
+};
+
 export default function PaginaAdminIndex({ portadas, autoridades, convocatorias }: Props) {
     const [activeTab, setActiveTab] = useState<'portadas' | 'autoridades' | 'convocatorias'>('portadas');
 
-    // ======================== PORTADAS ========================
     const [modalPortada, setModalPortada] = useState(false);
     const [portadaSelect, setPortadaSelect] = useState<Portada | null>(null);
     const [portadaTitulo, setPortadaTitulo] = useState('');
     const [portadaImagen, setPortadaImagen] = useState<File | null>(null);
     const [portadaOrden, setPortadaOrden] = useState('0');
 
-    // ======================== AUTORIDADES ========================
     const [modalAutoridad, setModalAutoridad] = useState(false);
     const [autoridadSelect, setAutoridadSelect] = useState<Autoridad | null>(null);
     const [autoridadNombre, setAutoridadNombre] = useState('');
@@ -73,7 +79,6 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
     const [autoridadMensaje, setAutoridadMensaje] = useState('');
     const [autoridadOrden, setAutoridadOrden] = useState('0');
 
-    // ======================== CONVOCATORIAS ========================
     const [modalConvocatoria, setModalConvocatoria] = useState(false);
     const [convocatoriaSelect, setConvocatoriaSelect] = useState<Convocatoria | null>(null);
     const [convocatoriaTitulo, setConvocatoriaTitulo] = useState('');
@@ -82,6 +87,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
     const [convocatoriaInicio, setConvocatoriaInicio] = useState('');
     const [convocatoriaFin, setConvocatoriaFin] = useState('');
     const [convocatoriaActivo, setConvocatoriaActivo] = useState(true);
+    const [convocatoriaLink, setConvocatoriaLink] = useState('');
 
     const [processing, setProcessing] = useState(false);
     const [modalDelete, setModalDelete] = useState(false);
@@ -114,14 +120,17 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         if (portadaImagen) formData.append('imagen', portadaImagen);
 
         if (portadaSelect) {
-            router.put(`/pagina-admin/portadas/${portadaSelect.id}`, formData, {
+            // Los navegadores/PHP no procesan bien multipart/form-data en peticiones PUT nativas
+            // (los archivos llegan vacíos). Por eso se envía como POST con _method spoofing.
+            formData.append('_method', 'PUT');
+            router.post(`/pagina-admin/portadas/${portadaSelect.id}`, formData, {
                 onSuccess: () => { setModalPortada(false); setProcessing(false); toast.success('Portada actualizada'); },
-                onError: () => setProcessing(false),
+                onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         } else {
             router.post('/pagina-admin/portadas', formData, {
                 onSuccess: () => { setModalPortada(false); setProcessing(false); toast.success('Portada agregada'); },
-                onError: () => setProcessing(false),
+                onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         }
     };
@@ -158,14 +167,15 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         if (autoridadFoto) formData.append('foto', autoridadFoto);
 
         if (autoridadSelect) {
-            router.put(`/pagina-admin/autoridades/${autoridadSelect.id}`, formData, {
+            formData.append('_method', 'PUT');
+            router.post(`/pagina-admin/autoridades/${autoridadSelect.id}`, formData, {
                 onSuccess: () => { setModalAutoridad(false); setProcessing(false); toast.success('Autoridad actualizada'); },
-                onError: () => setProcessing(false),
+                onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         } else {
             router.post('/pagina-admin/autoridades', formData, {
                 onSuccess: () => { setModalAutoridad(false); setProcessing(false); toast.success('Autoridad agregada'); },
-                onError: () => setProcessing(false),
+                onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         }
     };
@@ -179,6 +189,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         setConvocatoriaInicio('');
         setConvocatoriaFin('');
         setConvocatoriaActivo(true);
+        setConvocatoriaLink('');
         setModalConvocatoria(true);
     };
 
@@ -187,9 +198,10 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         setConvocatoriaTitulo(c.titulo);
         setConvocatoriaDescripcion(c.descripcion || '');
         setConvocatoriaArchivo(null);
-        setConvocatoriaInicio(c.fecha_inicio || '');
-        setConvocatoriaFin(c.fecha_fin || '');
+        setConvocatoriaInicio(c.fecha_inicio ? c.fecha_inicio.split('T')[0] : '');
+        setConvocatoriaFin(c.fecha_fin ? c.fecha_fin.split('T')[0] : '');
         setConvocatoriaActivo(c.activo);
+        setConvocatoriaLink(c.link_video || '');
         setModalConvocatoria(true);
     };
 
@@ -199,25 +211,28 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         const formData = new FormData();
         formData.append('titulo', convocatoriaTitulo);
         formData.append('descripcion', convocatoriaDescripcion);
-        formData.append('fecha_inicio', convocatoriaInicio);
-        formData.append('fecha_fin', convocatoriaFin);
+        // Enviar fechas vacías como string '' puede chocar con reglas "nullable|date" en Laravel.
+        // Se omiten del payload cuando están vacías para que el backend las reciba como ausentes.
+        if (convocatoriaInicio) formData.append('fecha_inicio', convocatoriaInicio);
+        if (convocatoriaFin) formData.append('fecha_fin', convocatoriaFin);
         formData.append('activo', convocatoriaActivo ? '1' : '0');
+        formData.append('link_video', convocatoriaLink);
         if (convocatoriaArchivo) formData.append('archivo', convocatoriaArchivo);
 
         if (convocatoriaSelect) {
-            router.put(`/pagina-admin/convocatorias/${convocatoriaSelect.id}`, formData, {
+            formData.append('_method', 'PUT');
+            router.post(`/pagina-admin/convocatorias/${convocatoriaSelect.id}`, formData, {
                 onSuccess: () => { setModalConvocatoria(false); setProcessing(false); toast.success('Convocatoria actualizada'); },
-                onError: () => setProcessing(false),
+                onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         } else {
             router.post('/pagina-admin/convocatorias', formData, {
                 onSuccess: () => { setModalConvocatoria(false); setProcessing(false); toast.success('Convocatoria publicada'); },
-                onError: () => setProcessing(false),
+                onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         }
     };
 
-    // ======================== DELETE ========================
     const openDelete = (type: 'portada' | 'autoridad' | 'convocatoria', id: number) => {
         setDeleteType(type);
         setDeleteId(id);
@@ -242,13 +257,13 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
 
                 {/* Tabs */}
                 <div className="flex gap-2">
-                    <Button variant={activeTab === 'portadas' ? 'default' : 'outline'} onClick={() => setActiveTab('portadas')}>
+                    <Button type="button" variant={activeTab === 'portadas' ? 'default' : 'outline'} onClick={() => setActiveTab('portadas')}>
                         <Image className="h-4 w-4 mr-2" />Portadas
                     </Button>
-                    <Button variant={activeTab === 'autoridades' ? 'default' : 'outline'} onClick={() => setActiveTab('autoridades')}>
+                    <Button type="button" variant={activeTab === 'autoridades' ? 'default' : 'outline'} onClick={() => setActiveTab('autoridades')}>
                         <Users className="h-4 w-4 mr-2" />Autoridades
                     </Button>
-                    <Button variant={activeTab === 'convocatorias' ? 'default' : 'outline'} onClick={() => setActiveTab('convocatorias')}>
+                    <Button type="button" variant={activeTab === 'convocatorias' ? 'default' : 'outline'} onClick={() => setActiveTab('convocatorias')}>
                         <Megaphone className="h-4 w-4 mr-2" />Convocatorias
                     </Button>
                 </div>
@@ -258,7 +273,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Fotos de Portada</CardTitle>
-                            <Button onClick={openCreatePortada}><Plus className="h-4 w-4 mr-2" />Agregar Portada</Button>
+                            <Button type="button" onClick={openCreatePortada}><Plus className="h-4 w-4 mr-2" />Agregar Portada</Button>
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -274,8 +289,8 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                                 <p className="text-xs text-neutral-500">Orden: {p.orden}</p>
                                             </div>
                                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button variant="outline" size="icon" onClick={() => openEditPortada(p)}><Pencil className="h-3.5 w-3.5" /></Button>
-                                                <Button variant="outline" size="icon" onClick={() => openDelete('portada', p.id)}><Trash2 className="h-3.5 w-3.5 text-rose-500" /></Button>
+                                                <Button type="button" variant="outline" size="icon" onClick={() => openEditPortada(p)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                                <Button type="button" variant="outline" size="icon" onClick={() => openDelete('portada', p.id)}><Trash2 className="h-3.5 w-3.5 text-rose-500" /></Button>
                                             </div>
                                         </div>
                                     </div>
@@ -290,7 +305,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Autoridades</CardTitle>
-                            <Button onClick={openCreateAutoridad}><Plus className="h-4 w-4 mr-2" />Agregar Autoridad</Button>
+                            <Button type="button" onClick={openCreateAutoridad}><Plus className="h-4 w-4 mr-2" />Agregar Autoridad</Button>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
@@ -312,8 +327,8 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                             {a.mensaje && <p className="text-xs text-neutral-400 mt-1 truncate">{a.mensaje}</p>}
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                                            <Button variant="outline" size="icon" onClick={() => openEditAutoridad(a)}><Pencil className="h-3.5 w-3.5" /></Button>
-                                            <Button variant="outline" size="icon" onClick={() => openDelete('autoridad', a.id)}><Trash2 className="h-3.5 w-3.5 text-rose-500" /></Button>
+                                            <Button type="button" variant="outline" size="icon" onClick={() => openEditAutoridad(a)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                            <Button type="button" variant="outline" size="icon" onClick={() => openDelete('autoridad', a.id)}><Trash2 className="h-3.5 w-3.5 text-rose-500" /></Button>
                                         </div>
                                     </div>
                                 ))}
@@ -327,7 +342,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Convocatorias</CardTitle>
-                            <Button onClick={openCreateConvocatoria}><Plus className="h-4 w-4 mr-2" />Nueva Convocatoria</Button>
+                            <Button type="button" onClick={openCreateConvocatoria}><Plus className="h-4 w-4 mr-2" />Nueva Convocatoria</Button>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
@@ -344,11 +359,13 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                                 {c.fecha_fin && <Badge variant="outline">hasta {c.fecha_fin}</Badge>}
                                                 <Badge variant={c.activo ? 'default' : 'secondary'}>{c.activo ? 'Activo' : 'Inactivo'}</Badge>
                                                 {c.deleted_at && <Badge variant="destructive">Eliminada</Badge>}
+                                                {c.link_video && <Badge variant="outline">🎥 Video</Badge>}
+                                                {c.archivo && <Badge variant="outline">🖼️ Imagen</Badge>}
                                             </div>
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                                            <Button variant="outline" size="icon" onClick={() => openEditConvocatoria(c)}><Pencil className="h-3.5 w-3.5" /></Button>
-                                            <Button variant="outline" size="icon" onClick={() => openDelete('convocatoria', c.id)}><Trash2 className="h-3.5 w-3.5 text-rose-500" /></Button>
+                                            <Button type="button" variant="outline" size="icon" onClick={() => openEditConvocatoria(c)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                            <Button type="button" variant="outline" size="icon" onClick={() => openDelete('convocatoria', c.id)}><Trash2 className="h-3.5 w-3.5 text-rose-500" /></Button>
                                         </div>
                                     </div>
                                 ))}
@@ -431,9 +448,14 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                 <textarea value={convocatoriaDescripcion} onChange={(e) => setConvocatoriaDescripcion(e.target.value)} className="w-full rounded-md border p-2 text-sm" rows={3} />
                             </div>
                             <div className="space-y-1">
-                                <Label>Archivo PDF (opcional)</Label>
-                                <Input type="file" accept="application/pdf" onChange={(e) => setConvocatoriaArchivo(e.target.files?.[0] || null)} />
-                                {convocatoriaSelect?.archivo && !convocatoriaArchivo && <p className="text-xs text-neutral-500 mt-1">PDF actual: {convocatoriaSelect.archivo}</p>}
+                                <Label>Link de Video (YouTube)</Label>
+                                <Input value={convocatoriaLink} onChange={(e) => setConvocatoriaLink(e.target.value)} placeholder="https://youtu.be/..." />
+                                <p className="text-xs text-neutral-500">Pega el link normal de compartir</p>
+                            </div>
+                            <div className="space-y-1">
+                                <Label>Imagen (opcional)</Label>
+                                <Input type="file" accept="image/*" onChange={(e) => setConvocatoriaArchivo(e.target.files?.[0] || null)} />
+                                {convocatoriaSelect?.archivo && !convocatoriaArchivo && <img src={`/storage/${convocatoriaSelect.archivo}`} className="h-16 rounded mt-1 object-cover" />}
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
@@ -465,8 +487,8 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                             <DialogDescription>Esta acción no se puede deshacer.</DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setModalDelete(false)}>Cancelar</Button>
-                            <Button variant="destructive" onClick={handleDelete}>Eliminar</Button>
+                            <Button type="button" variant="outline" onClick={() => setModalDelete(false)}>Cancelar</Button>
+                            <Button type="button" variant="destructive" onClick={handleDelete}>Eliminar</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

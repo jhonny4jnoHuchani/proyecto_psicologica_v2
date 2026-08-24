@@ -142,13 +142,14 @@ class PaginaAdminController extends Controller
         $request->validate([
             'titulo' => 'required|string|max:200',
             'descripcion' => 'nullable|string',
-            'archivo' => 'nullable|file|mimes:pdf|max:10240',
+            'archivo' => 'nullable|image|max:2048',
+            'link_video' => 'nullable|string',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
             'activo' => 'nullable|boolean',
         ]);
 
-        $data = $request->only(['titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'activo']);
+        $data = $request->only(['titulo', 'descripcion', 'link_video', 'fecha_inicio', 'fecha_fin', 'activo']);
 
         if ($request->hasFile('archivo')) {
             $data['archivo'] = $request->file('archivo')->store('convocatorias', 'public');
@@ -158,19 +159,21 @@ class PaginaAdminController extends Controller
 
         return back()->with('success', 'Convocatoria publicada.');
     }
-
+    
+    
     public function updateConvocatoria(Request $request, Convocatoria $convocatoria): RedirectResponse
     {
         $request->validate([
             'titulo' => 'required|string|max:200',
             'descripcion' => 'nullable|string',
-            'archivo' => 'nullable|file|mimes:pdf|max:10240',
+            'archivo' => 'nullable|image|max:2048',
+            'link_video' => 'nullable|string',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
             'activo' => 'nullable|boolean',
         ]);
 
-        $data = $request->only(['titulo', 'descripcion', 'fecha_inicio', 'fecha_fin', 'activo']);
+        $data = $request->only(['titulo', 'descripcion', 'link_video', 'fecha_inicio', 'fecha_fin', 'activo']);
 
         if ($request->hasFile('archivo')) {
             if ($convocatoria->archivo) Storage::disk('public')->delete($convocatoria->archivo);

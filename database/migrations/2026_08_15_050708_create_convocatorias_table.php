@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('titulo', 200);
             $table->text('descripcion')->nullable();
             $table->string('archivo')->nullable();
+            $table->text('link_video')->nullable();   // ← FALTABA
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_fin')->nullable();
             $table->boolean('activo')->default(true);
@@ -23,6 +24,7 @@ return new class extends Migration
             $table->softDeletes();
         });
     }
+
     /**
      * Reverse the migrations.
      */
