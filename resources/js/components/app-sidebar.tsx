@@ -1,9 +1,13 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
+//objeto Nav user
 import { NavUser } from '@/components/nav-user';
+
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
+
 import { Link, usePage } from '@inertiajs/react';
+
 import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout } from 'lucide-react';
 
 import AppLogo from './app-logo';
@@ -15,7 +19,7 @@ export function AppSidebar() {
     const isDocente = roles.includes('docente');
     const isEstudiante = roles.includes('estudiante');
 
-    // Menu para ADMIN
+    // q. Menu para ADMIN
     const adminNavItems: NavItem[] = [
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
         { title: 'Gestiones', url: '/gestiones', icon: Calendar },
@@ -26,10 +30,10 @@ export function AppSidebar() {
         { title: 'Libros', url: '/libros', icon: Library },
         { title: 'Lecciones', url: '/lecciones', icon: FileText },
         { title: 'Reportes', url: '/reportes', icon: FileText },
-        { title: 'Página Admin', url: '/pagina-admin', icon: Layout },
+        { title: 'Página pricipal', url: '/pagina-admin', icon: Layout },
     ];
 
-    // Menu para DOCENTE
+    // 2.Menu para DOCENTE
     const docenteNavItems: NavItem[] = [
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
         { title: 'Lecciones', url: '/lecciones', icon: FileText },
@@ -37,7 +41,7 @@ export function AppSidebar() {
         { title: 'Reportes', url: '/reportes', icon: FileText },
     ];
 
-    // Menu para ESTUDIANTE
+    //3.  Menu para ESTUDIANTE
     const estudianteNavItems: NavItem[] = [
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
         { title: 'Lecciones', url: '/lecciones', icon: FileText },

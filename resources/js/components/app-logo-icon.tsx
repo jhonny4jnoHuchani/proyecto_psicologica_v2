@@ -11,3 +11,4 @@ export default function AppLogoIcon(props: SVGAttributes<SVGElement>) {
         </svg>
     );
 }
+//aqui se muestra el logo del sibe bar

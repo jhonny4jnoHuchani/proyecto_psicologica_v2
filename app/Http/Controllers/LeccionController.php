@@ -19,6 +19,7 @@ class LeccionController extends Controller
 {
     public function index(Request $request): Response
     {
+        //aqui estoy extas
         $user = Auth::user();
         $cursoId = $request->query('curso_id');
         $materiaId = $request->query('materia_id');

@@ -16,6 +16,11 @@ class CalificacionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        //verificador de rol
+        if (!auth()->user()->hasRole('admin|docente')) {
+            abort(403);
+        }
+        
         $request->validate([
             'entrega_id' => 'required|exists:entregas,id',
             'nota' => 'required|numeric|min:0|max:100',

@@ -35,14 +35,14 @@ interface ConfigData {
 
 interface Portada { id: number; titulo: string | null; imagen: string; orden: number; }
 interface Autoridad { id: number; nombre: string; cargo: string; foto: string | null; mensaje: string | null; }
-interface Convocatoria { 
-    id: number; 
-    titulo: string; 
-    descripcion: string | null; 
-    archivo: string | null; 
+interface Convocatoria {
+    id: number;
+    titulo: string;
+    descripcion: string | null;
+    archivo: string | null;
     link_video: string | null;
-    fecha_inicio: string | null; 
-    fecha_fin: string | null; 
+    fecha_inicio: string | null;
+    fecha_fin: string | null;
 }
 
 
@@ -84,25 +84,25 @@ const convocatoriaAbierta = (c: Convocatoria) => {
 const convertirLinkAEmbed = (link: string): string | null => {
     try {
         const url = new URL(link);
-        
+
         // YouTube watch
         if (url.hostname.includes('youtube.com') && url.pathname === '/watch') {
             const videoId = url.searchParams.get('v');
             if (videoId) return `https://www.youtube.com/embed/${videoId}`;
         }
-        
+
         // YouTube Shorts
         if (url.hostname.includes('youtube.com') && url.pathname.includes('/shorts/')) {
             const shortId = url.pathname.split('/shorts/')[1]?.split('/')[0];
             if (shortId) return `https://www.youtube.com/embed/${shortId}`;
         }
-        
+
         // youtu.be
         if (url.hostname === 'youtu.be') {
             const videoId = url.pathname.slice(1);
             if (videoId) return `https://www.youtube.com/embed/${videoId}`;
         }
-        
+
         return null;
     } catch {
         return null;
@@ -113,7 +113,7 @@ const getYoutubeThumbnail = (link: string): string | null => {
     try {
         const url = new URL(link);
         let videoId: string | null = null;
-        
+
         if (url.hostname.includes('youtube.com') && url.pathname === '/watch') {
             videoId = url.searchParams.get('v');
         }
@@ -123,7 +123,7 @@ const getYoutubeThumbnail = (link: string): string | null => {
         if (url.hostname === 'youtu.be') {
             videoId = url.pathname.slice(1);
         }
-        
+
         if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
         return null;
     } catch {
@@ -140,13 +140,13 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
     const [modalVideo, setModalVideo] = useState(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
-const abrirVideo = (link: string) => {
-    const embedUrl = convertirLinkAEmbed(link);
-    if (embedUrl) {
-        setVideoUrl(embedUrl);
-        setModalVideo(true);
-    }
-};
+    const abrirVideo = (link: string) => {
+        const embedUrl = convertirLinkAEmbed(link);
+        if (embedUrl) {
+            setVideoUrl(embedUrl);
+            setModalVideo(true);
+        }
+    };
 
     useEffect(() => {
         AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 40 });
@@ -168,10 +168,16 @@ const abrirVideo = (link: string) => {
                 `}</style>
             </Head>
 
+
+
+
+
+
             {/* ==================== NAVBAR ==================== */}
             <nav className="sticky top-0 z-50 border-b border-neutral-100 bg-white/85 backdrop-blur">
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
                     <div className="flex items-center gap-3">
+                        {/*aqui se muestra el logo del sibe bar*/}
                         {config?.logo ? (
                             <img src={`/storage/${config.logo}`} alt="Logo institucional" className="h-11 w-11 object-contain" />
                         ) : (
@@ -199,16 +205,31 @@ const abrirVideo = (link: string) => {
                                 <Link href="/login">
                                     <Button variant="ghost">Iniciar sesión</Button>
                                 </Link>
-                                <Link href="/register">
-                                    <Button className="text-white shadow-sm hover:opacity-90" style={{ backgroundColor: primary }}>
-                                        Regístrate
-                                    </Button>
-                                </Link>
                             </>
                         )}
                     </div>
                 </div>
             </nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* ==================== HERO ==================== */}
             <section
@@ -330,6 +351,23 @@ const abrirVideo = (link: string) => {
                 </div>
             </section>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* ==================== LEMA RIBBON ==================== */}
             {config?.lema && (
                 <div className="relative py-8 text-center" style={{ background: `linear-gradient(100deg, ${primary}, ${shade(secondary, 5)})` }}>
@@ -337,6 +375,20 @@ const abrirVideo = (link: string) => {
                     <p className="font-display mx-auto max-w-3xl px-6 text-xl text-white md:text-2xl">{config.lema}</p>
                 </div>
             )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* ==================== MISIÓN Y VISIÓN ==================== */}
             <div className="mx-auto max-w-7xl px-6 py-20">
@@ -370,6 +422,22 @@ const abrirVideo = (link: string) => {
                 </div>
             </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* ==================== RUTA DE INGRESO ==================== */}
             <div className="mx-auto max-w-7xl px-6 pb-20">
                 <div className="mb-12 text-center" data-aos="fade-up">
@@ -395,6 +463,19 @@ const abrirVideo = (link: string) => {
                     ))}
                 </div>
             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* ==================== AUTORIDADES ==================== */}
             {autoridades && autoridades.length > 0 && (
@@ -450,6 +531,19 @@ const abrirVideo = (link: string) => {
                 </div>
             )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* ==================== CONVOCATORIAS ==================== */}
             {convocatorias && convocatorias.length > 0 && (
                 <div className="mx-auto max-w-5xl px-6 py-20">
@@ -484,33 +578,33 @@ const abrirVideo = (link: string) => {
 
 
 
-<div className="mt-3 flex flex-col sm:flex-row gap-3">
-    {/* Video */}
-    {c.link_video && (() => {
-        const thumbnail = getYoutubeThumbnail(c.link_video);
-        if (!thumbnail) return null;
-        return (
-            <button
-                onClick={() => abrirVideo(c.link_video!)}
-                className="relative block w-full max-w-[200px] overflow-hidden rounded-xl group"
-            >
-                <img src={thumbnail} alt="Vista previa del video" className="w-full h-28 object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/55 transition-colors">
-                    <span className="text-white text-3xl drop-shadow-lg">▶</span>
-                </div>
-            </button>
-        );
-    })()}
+                                            <div className="mt-3 flex flex-col sm:flex-row gap-3">
+                                                {/* Video */}
+                                                {c.link_video && (() => {
+                                                    const thumbnail = getYoutubeThumbnail(c.link_video);
+                                                    if (!thumbnail) return null;
+                                                    return (
+                                                        <button
+                                                            onClick={() => abrirVideo(c.link_video!)}
+                                                            className="relative block w-full max-w-[200px] overflow-hidden rounded-xl group"
+                                                        >
+                                                            <img src={thumbnail} alt="Vista previa del video" className="w-full h-28 object-cover" />
+                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/55 transition-colors">
+                                                                <span className="text-white text-3xl drop-shadow-lg">▶</span>
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })()}
 
-    {/* Imagen */}
-    {c.archivo && (
-        <img
-            src={`/storage/${c.archivo}`}
-            alt={c.titulo}
-            className="w-full max-w-[200px] h-28 object-cover rounded-xl border border-neutral-200"
-        />
-    )}
-</div>
+                                                {/* Imagen */}
+                                                {c.archivo && (
+                                                    <img
+                                                        src={`/storage/${c.archivo}`}
+                                                        alt={c.titulo}
+                                                        className="w-full max-w-[200px] h-28 object-cover rounded-xl border border-neutral-200"
+                                                    />
+                                                )}
+                                            </div>
 
 
                                             {(inicio || fin) && (
@@ -539,6 +633,19 @@ const abrirVideo = (link: string) => {
                 </div>
             )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
             {/* ==================== ORGANIGRAMA ==================== */}
             {config?.organigrama && (
                 <div className="bg-neutral-50/70 py-20">
@@ -551,6 +658,27 @@ const abrirVideo = (link: string) => {
                     </div>
                 </div>
             )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* ==================== CTA FINAL ==================== */}
             {!user && (
@@ -570,6 +698,26 @@ const abrirVideo = (link: string) => {
                     </div>
                 </div>
             )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* ==================== FOOTER ==================== */}
             <footer className="bg-neutral-950 py-14 text-neutral-300">
@@ -605,6 +753,17 @@ const abrirVideo = (link: string) => {
                 </div>
 
             </footer>
+
+
+
+
+
+
+
+
+
+
+
 
             {/* ==================== MODAL VIDEO ==================== */}
             <Dialog open={modalVideo} onOpenChange={setModalVideo}>

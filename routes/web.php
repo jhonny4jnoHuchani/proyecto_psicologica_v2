@@ -20,7 +20,7 @@ use App\Models\Autoridad;
 use App\Models\Convocatoria;
 use App\Models\Configuracion;
 use App\Models\Portada;
-
+//pagina inicial (todos pueden verla xq??)
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'config' => Configuracion::first(),
@@ -34,11 +34,11 @@ Route::get('/', function () {
 
 
 
-
+//protegemos las rutas o verificamos que tenga alguna identificacion dentro del sistema(middleware)
 Route::middleware(['auth'])->group(function () {
+    //una vez logueado ya hemos pasado esa primera barrera 
     
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');//aqui como estudiantes (el rol que tenemos)
     // ========================
     // RUTAS SOLO ADMIN
     // ========================
@@ -92,8 +92,10 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
 
-
-        
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/apariencia', [ConfiguracionController::class, 'index'])->name('apariencia');
+            Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
+        });
 
         Route::prefix('libros')->name('libros.')->controller(LibroController::class)->group(function () {
             Route::get('/', 'index')->name('index');
@@ -142,6 +144,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{leccion}', 'destroy')->name('destroy')->middleware('role:admin|docente');
     });
 
+
+
+
+
     // ========================
     // ENTREGAS
     // ========================
@@ -166,11 +172,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/excel', 'excel')->name('excel');
     });
 
+
+    // poner dentro de un middleware
     // Configuración de Apariencia
-    Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/apariencia', [ConfiguracionController::class, 'index'])->name('apariencia');
-        Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
-    });
+
+
 });
 
 require __DIR__.'/settings.php';

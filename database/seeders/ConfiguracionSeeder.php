@@ -9,6 +9,7 @@ class ConfiguracionSeeder extends Seeder
 {
     public function run(): void
     {
+        
         Configuracion::create([
             'color_primario' => '#4f46e5',
             'color_secundario' => '#06b6d4',
