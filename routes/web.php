@@ -16,6 +16,7 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PaginaAdminController;
+
 use App\Models\Autoridad;
 use App\Models\Convocatoria;
 use App\Models\Configuracion;
@@ -23,10 +24,13 @@ use App\Models\Portada;
 //pagina inicial (todos pueden verla xq??)
 Route::get('/', function () {
     return Inertia::render('welcome', [
+
         'config' => Configuracion::first(),
         'portadas' => Portada::activas()->get(),
         'autoridades' => Autoridad::ordenadas()->get(),
         'convocatorias' => Convocatoria::activas()->get(),
+        //estamos consultando datos que vamos a necesitar para el welcome(la pantalla principal publica)
+// informacion empaquetada 
         'user' => auth()->user(),
     ]);
 })->name('home');

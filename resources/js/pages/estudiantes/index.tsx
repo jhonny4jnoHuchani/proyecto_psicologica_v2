@@ -163,6 +163,10 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
         return tipo ? map[tipo] || tipo : 'No definido';
     };
 
+
+
+
+    
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Estudiantes" />

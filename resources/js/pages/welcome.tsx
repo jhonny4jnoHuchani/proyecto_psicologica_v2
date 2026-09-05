@@ -23,6 +23,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+
+
+//definimos funciones o procedimientos que manejamos en la vista...
+
 interface ConfigData {
     color_primario: string;
     color_secundario: string;
@@ -60,6 +64,7 @@ const tint = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, w
 const shade = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, black)`;
 const alpha = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, transparent)`;
 
+
 const RUTA_INGRESO = [
     { titulo: 'Inscripción', detalle: 'Crea tu cuenta en la plataforma y elige tu horario de preparación.' },
     { titulo: 'Preparación', detalle: 'Avanza por módulos de razonamiento, biología y ciencias sociales con docentes especialistas.' },
@@ -72,6 +77,7 @@ const formatFecha = (fecha: string | null) => {
     const d = new Date(fecha);
     if (Number.isNaN(d.getTime())) return fecha;
     return d.toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' });
+                                              //  23 - feb (fecbrero)  2026
 };
 
 const convocatoriaAbierta = (c: Convocatoria) => {
@@ -132,6 +138,7 @@ const getYoutubeThumbnail = (link: string): string | null => {
 };
 
 export default function Welcome({ config, portadas, autoridades, convocatorias, user }: Props) {
+    //colores ya los configura que es lo que se ah definido en la parte de props
     const primary = config?.color_primario || '#4f46e5';
     const secondary = config?.color_secundario || '#06b6d4';
     const lema = config?.lema || 'Formando Psicólogos para el Futuro';
@@ -139,6 +146,8 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
 
     const [modalVideo, setModalVideo] = useState(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
+        const [currentPortada, setCurrentPortada] = useState(0);
+        
 
     const abrirVideo = (link: string) => {
         const embedUrl = convertirLinkAEmbed(link);
@@ -152,7 +161,21 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
         AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 40 });
     }, []);
 
+        // Efecto para el carrusel automático de portadas
+    useEffect(() => {
+        if (!portadas || portadas.length <= 1) return;
+        
+        const interval = setInterval(() => {
+            setCurrentPortada((prev) => (prev + 1) % portadas.length);
+        }, 2000);
+        
+        return () => clearInterval(interval);
+    }, [portadas]);
+
     return (
+
+
+        
         <div className="font-body min-h-screen bg-white text-neutral-900">
             <Head title="Preuniversitario de Psicología - UPEA">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -167,8 +190,6 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     .font-mono-ui { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
                 `}</style>
             </Head>
-
-
 
 
 
@@ -230,122 +251,182 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
 
 
 
-
             {/* ==================== HERO ==================== */}
-            <section
-                className="relative overflow-hidden"
-                style={{ background: `linear-gradient(165deg, ${tint(primary, 92)} 0%, ${tint(secondary, 94)} 55%, #ffffff 100%)` }}
-            >
-                <div
-                    className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full blur-3xl"
-                    style={{ background: alpha(secondary, 30) }}
-                />
-                <div
-                    className="pointer-events-none absolute top-40 -left-24 h-72 w-72 rounded-full blur-3xl"
-                    style={{ background: alpha(primary, 20) }}
-                />
-
-                <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-6 pt-14 pb-20 lg:grid-cols-[1.05fr_0.95fr] lg:pt-20 lg:pb-28">
-                    <div data-aos="fade-up">
-                        <span
-                            className="font-mono-ui inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] tracking-wide uppercase"
-                            style={{ borderColor: alpha(primary, 35), color: shade(primary, 10) }}
-                        >
-                            <Sparkles className="h-3.5 w-3.5" /> Admisión UPEA · Carrera de Psicología
-                        </span>
-
-                        <h1 className="font-display mt-6 text-5xl leading-[1.08] font-medium tracking-tight text-neutral-900 md:text-6xl">
-                            {lema}
-                        </h1>
-
-                        <p className="mt-6 max-w-xl text-lg leading-relaxed text-neutral-600">
-                            Prepárate para tu examen de admisión con clases virtuales en vivo, material de estudio por áreas y el
-                            acompañamiento de un equipo docente especializado.
-                        </p>
-
-                        {!user && (
-                            <div className="mt-9 flex flex-wrap items-center gap-5">
-                                <Link href="/register">
-                                    <Button
-                                        size="lg"
-                                        className="h-12 px-7 text-base text-white shadow-lg transition-transform hover:scale-[1.02] hover:opacity-95"
-                                        style={{ backgroundColor: primary, boxShadow: `0 12px 24px -8px ${alpha(primary, 45)}` }}
-                                    >
-                                        Inscríbete ahora <ChevronRight className="ml-2 h-5 w-5" />
-                                    </Button>
-                                </Link>
-                                <Link
-                                    href="/login"
-                                    className="text-sm font-medium underline decoration-2 underline-offset-4"
-                                    style={{ color: shade(secondary, 15), textDecorationColor: alpha(secondary, 45) }}
-                                >
-                                    Ya tengo una cuenta
-                                </Link>
-                            </div>
-                        )}
-
-                        <div className="mt-12 flex flex-wrap gap-3">
-                            {['Clases en vivo', 'Simulacros cronometrados', 'Tutoría personalizada'].map((item) => (
-                                <span
-                                    key={item}
-                                    className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-medium text-neutral-600 shadow-sm ring-1"
-                                    style={{ boxShadow: `0 1px 2px ${alpha(primary, 10)}`, outline: 'none' }}
-                                >
-                                    <CheckCircle2 className="h-3.5 w-3.5" style={{ color: secondary }} />
-                                    {item}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Signature element: hero image styled like a student credential card */}
-                    <div className="relative" data-aos="fade-left" data-aos-delay="100">
-                        <div
-                            className="absolute -inset-8 -z-10 rounded-[2.5rem]"
-                            style={{ background: `radial-gradient(circle at 30% 25%, ${alpha(secondary, 25)}, transparent 65%)` }}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, y: 24, rotate: -6 }}
-                            animate={{ opacity: 1, y: 0, rotate: -3 }}
-                            transition={{ duration: 0.8, ease: 'easeOut' }}
-                            className="relative mx-auto max-w-sm rounded-3xl bg-white p-3"
-                            style={{ boxShadow: `0 0 0 1px ${alpha(primary, 12)}, 0 30px 60px -20px ${alpha(primary, 45)}` }}
-                        >
-                            {portada ? (
+            <section className="relative min-h-screen overflow-hidden">
+                {/* Carrusel de imágenes de fondo */}
+                {portadas && portadas.length > 0 && (
+                    <div className="absolute inset-0">
+                        {portadas.map((portada, index) => (
+                            <div
+                                key={portada.id}
+                                className={`absolute inset-0 transition-opacity duration-1000 ${
+                                    index === currentPortada ? 'opacity-100' : 'opacity-0'
+                                }`}
+                            >
                                 <img
                                     src={`/storage/${portada.imagen}`}
-                                    alt={portada.titulo || 'Portada institucional'}
-                                    className="aspect-[4/5] w-full rounded-2xl object-cover"
+                                    alt={portada.titulo || `Portada ${index + 1}`}
+                                    className="w-full h-full object-cover"
                                 />
-                            ) : (
-                                <div
-                                    className="flex aspect-[4/5] w-full items-center justify-center rounded-2xl"
-                                    style={{ background: `linear-gradient(160deg, ${primary}, ${secondary})` }}
-                                >
-                                    <BookOpen className="h-20 w-20 text-white/40" />
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Contenido del hero */}
+                <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-6 py-20">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 items-center w-full">
+                        {/* Columna izquierda - Texto */}
+                        <div data-aos="fade-up">
+                            <span
+                                className="font-mono-ui inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] tracking-wide uppercase bg-white/80 backdrop-blur-sm"
+                                style={{ borderColor: alpha(primary, 35), color: shade(primary, 10) }}
+                            >
+                                <Sparkles className="h-3.5 w-3.5" /> Admisión UPEA · Carrera de Psicología
+                            </span>
+
+                            <h1 className="font-display mt-6 text-5xl leading-[1.08] font-medium tracking-tight text-white md:text-6xl drop-shadow-lg">
+                                {lema}
+                            </h1>
+
+                            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/90">
+                                Prepárate para tu examen de admisión con clases virtuales en vivo, material de estudio por áreas y el
+                                acompañamiento de un equipo docente especializado.
+                            </p>
+
+                            {!user && (
+                                <div className="mt-9 flex flex-wrap items-center gap-5">
+                                    <Link href="/register">
+                                        <Button
+                                            size="lg"
+                                            className="h-12 px-7 text-base text-white shadow-lg transition-transform hover:scale-[1.02] hover:opacity-95 bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30"
+                                        >
+                                            Inscríbete ahora <ChevronRight className="ml-2 h-5 w-5" />
+                                        </Button>
+                                    </Link>
+                                    <Link
+                                        href="/login"
+                                        className="text-sm font-medium underline decoration-2 underline-offset-4 text-white/90 hover:text-white"
+                                    >
+                                        Ya tengo una cuenta
+                                    </Link>
                                 </div>
                             )}
-                            <div
-                                className="mt-3 flex items-center justify-between rounded-xl px-4 py-3"
-                                style={{ background: tint(primary, 92) }}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <GraduationCap className="h-4 w-4" style={{ color: primary }} />
-                                    <span className="font-mono-ui text-[11px] tracking-wide text-neutral-600 uppercase">Promoción 2026</span>
-                                </div>
-                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: secondary }} />
-                            </div>
-                        </motion.div>
 
-                        <div
-                            className="absolute -right-4 -bottom-6 flex h-20 w-20 items-center justify-center rounded-full text-center shadow-lg"
-                            style={{ background: `conic-gradient(from 180deg, ${primary}, ${secondary}, ${primary})` }}
-                        >
-                            <span className="font-mono-ui text-[10px] leading-tight font-medium text-white">
-                                UPEA
-                                <br />
-                                PSICOLOGÍA
-                            </span>
+                            <div className="mt-12 flex flex-wrap gap-3">
+                                {['Clases en vivo', 'Simulacros cronometrados', 'Tutoría personalizada'].map((item) => (
+                                    <span
+                                        key={item}
+                                        className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-3.5 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-white/30"
+                                    >
+                                        <CheckCircle2 className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                        {item}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Columna derecha - Logo grande flotando */}
+                        <div className="hidden lg:flex flex-col items-end justify-center gap-6" data-aos="fade-left" data-aos-delay="100">
+
+
+                            
+<motion.div
+    initial={{ opacity: 0, scale: 0.5, y: 50 }}
+    animate={{ 
+        opacity: 1, 
+        scale: [1, 1.1, 1],
+        y: [0, -40, 0],  // Movimiento vertical más amplio
+        rotate: [0, 3, -3, 0]
+    }}
+    transition={{ 
+        duration: 4,
+        ease: 'easeInOut',
+        repeat: Infinity,
+        repeatType: 'loop'
+    }}
+    className="relative"
+>
+    {/* Logo grande */}
+    {config?.logo ? (
+        <div className="relative">
+            <motion.img
+                src={`/storage/${config.logo}`}
+                alt="Logo institucional"
+                className="w-150 h-150 object-contain drop-shadow-2xl"
+                animate={{ 
+                    x: [0, 15, -15, 0],  // Movimiento lateral
+                    y: [0, -25, 0],
+                    rotate: [0, 5, -5, 0]
+                }}
+                transition={{ 
+                    duration: 5,
+                    ease: 'easeInOut',
+                    repeat: Infinity,
+                    repeatType: 'loop'
+                }}
+            />
+            {/* Efecto de brillo con pulso fuerte */}
+            <motion.div 
+                className="absolute inset-0 -z-10 blur-3xl"
+                animate={{ 
+                    opacity: [0.2, 0.8, 0.2],
+                    scale: [0.8, 1.5, 0.8]
+                }}
+                transition={{ 
+                    duration: 3,
+                    ease: 'easeInOut',
+                    repeat: Infinity,
+                    repeatType: 'loop'
+                }}
+                style={{ background: `radial-gradient(circle, ${alpha(primary, 40)}, transparent 70%)` }}
+            />
+        </div>
+    ) : (
+        <motion.div
+            className="flex h-64 w-64 items-center justify-center rounded-full shadow-2xl"
+            style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+            animate={{ 
+                y: [0, -30, 0],
+                rotate: [0, 15, -15, 0],
+                scale: [1, 1.15, 1]
+            }}
+            transition={{ 
+                duration: 5,
+                ease: 'easeInOut',
+                repeat: Infinity,
+                repeatType: 'loop'
+            }}
+        >
+            <GraduationCap className="h-32 w-32 text-white" />
+        </motion.div>
+    )}
+    
+    {/* Indicadores del carrusel debajo del logo */}
+    <motion.div 
+        className="flex gap-2 justify-center mt-8"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ 
+            duration: 2.5,
+            ease: 'easeInOut',
+            repeat: Infinity,
+            repeatType: 'loop'
+        }}
+    >
+        {portadas.map((_, index) => (
+            <button
+                key={index}
+                onClick={() => setCurrentPortada(index)}
+                className="h-2 rounded-full transition-all duration-300"
+                style={{
+                    width: index === currentPortada ? '40px' : '8px',
+                    backgroundColor: index === currentPortada ? 'white' : 'rgba(255,255,255,0.4)'
+                }}
+                aria-label={`Ir a la imagen ${index + 1}`}
+            />
+        ))}
+    </motion.div>
+</motion.div>
                         </div>
                     </div>
                 </div>
@@ -363,18 +444,69 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
 
 
 
+{/* ==================== LEMA RIBBON ==================== */}
+{config?.lema && (
+    <div className="relative overflow-hidden py-16 text-center" style={{ background: `linear-gradient(100deg, ${primary}, ${shade(secondary, 5)})` }}>
+        {/* Decoradores flotantes */}
+        <motion.div
+            className="pointer-events-none absolute top-10 left-10 opacity-60"
+            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+            <img src="/decoradores/circulo.png" alt="" className="w-16 h-16" />
+        </motion.div>
+        
+        <motion.div
+            className="pointer-events-none absolute bottom-10 right-20 opacity-70"
+            animate={{ y: [0, 15, 0], rotate: [0, -15, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+            <img src="/decoradores/cuadrado_punteado_rojo.png" alt="" className="w-20 h-20" />
+        </motion.div>
+        
+        <motion.div
+            className="pointer-events-none absolute top-20 right-40 opacity-100"
+            animate={{ y: [0, -30, 0], x: [0, 10, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        >
+            <img src="/decoradores/objeto.png" alt="" className="w-24 h-24" />
+        </motion.div>
+
+        <motion.div
+            className="pointer-events-none absolute bottom-20 left-1/4 opacity-60"
+            animate={{ y: [0, 10, 0], rotate: [0, 360, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        >
+            <img src="/decoradores/redondo_puntedo_rojo.png" alt="" className="w-14 h-14" />
+        </motion.div>
+
+        <motion.div
+            className="pointer-events-none absolute top-1/2 left-8 opacity-40"
+            animate={{ y: [0, -15, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        >
+            <img src="/decoradores/objeto_combinado.png" alt="" className="w-12 h-12" />
+        </motion.div>
+
+        <motion.div
+            className="pointer-events-none absolute bottom-1/3 right-8 opacity-50"
+            animate={{ y: [0, 20, 0], rotate: [0, 12, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+            <img src="/decoradores/shape-35.png" alt="" className="w-16 h-16" />
+        </motion.div>
+
+        <div className="relative z-10">
+            <Quote className="mx-auto mb-2 h-6 w-6 text-white/40" />
+            <p className="font-display mx-auto max-w-3xl px-6 text-xl text-white md:text-2xl">{config.lema}</p>
+        </div>
+    </div>
+)}
 
 
 
 
 
-            {/* ==================== LEMA RIBBON ==================== */}
-            {config?.lema && (
-                <div className="relative py-8 text-center" style={{ background: `linear-gradient(100deg, ${primary}, ${shade(secondary, 5)})` }}>
-                    <Quote className="mx-auto mb-2 h-6 w-6 text-white/40" />
-                    <p className="font-display mx-auto max-w-3xl px-6 text-xl text-white md:text-2xl">{config.lema}</p>
-                </div>
-            )}
 
 
 
@@ -384,89 +516,132 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
 
 
 
+{/* ==================== MISIÓN Y VISIÓN ==================== */}
+<div className="relative mx-auto max-w-7xl px-6 py-20">
+    {/* Decoradores de fondo */}
+    <motion.div
+        className="pointer-events-none absolute top-10 right-10 opacity-90"
+        animate={{ y: [0, -25, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+    >
+        <img src="/decoradores/objeto_combinado.png" alt="" className="w-32 h-32" />
+    </motion.div>
+    
+    <motion.div
+        className="pointer-events-none absolute bottom-10 left-5 opacity-90"
+        animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+    >
+        <img src="/decoradores/rectangulo punteado.png" alt="" className="w-28 h-28" />
+    </motion.div>
 
+    <motion.div
+        className="pointer-events-none absolute top-1/2 left-1/2 opacity-90"
+        animate={{ rotate: [0, 360, 0] }}
+        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+    >
+        <img src="/decoradores/shape-35.png" alt="" className="w-40 h-40" />
+    </motion.div>
 
-
-
-
-
-            {/* ==================== MISIÓN Y VISIÓN ==================== */}
-            <div className="mx-auto max-w-7xl px-6 py-20">
-                <div className="grid grid-cols-1 divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-100 shadow-sm md:grid-cols-2 md:divide-x md:divide-y-0">
-                    <div className="p-10 md:p-12" data-aos="fade-up">
-                        <div
-                            className="mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2"
-                            style={{ borderColor: alpha(primary, 40) }}
-                        >
-                            <Target className="h-5 w-5" style={{ color: primary }} />
-                        </div>
-                        <h3 className="font-display text-2xl">Misión</h3>
-                        <p className="mt-4 leading-relaxed text-neutral-600">
-                            {config?.mision ||
-                                'Formar profesionales en psicología con sólidas competencias académicas, científicas y tecnológicas.'}
-                        </p>
-                    </div>
-                    <div className="p-10 md:p-12" data-aos="fade-up" data-aos-delay="100">
-                        <div
-                            className="mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2"
-                            style={{ borderColor: alpha(secondary, 40) }}
-                        >
-                            <Eye className="h-5 w-5" style={{ color: secondary }} />
-                        </div>
-                        <h3 className="font-display text-2xl">Visión</h3>
-                        <p className="mt-4 leading-relaxed text-neutral-600">
-                            {config?.vision ||
-                                'Ser una institución líder en la formación de psicólogos altamente capacitados.'}
-                        </p>
-                    </div>
-                </div>
+    <div className="relative grid grid-cols-1 divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-100 shadow-sm md:grid-cols-2 md:divide-x md:divide-y-0 bg-white">
+        <div className="p-10 md:p-12" data-aos="fade-up">
+            <div
+                className="mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2"
+                style={{ borderColor: alpha(primary, 40) }}
+            >
+                <Target className="h-5 w-5" style={{ color: primary }} />
             </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== RUTA DE INGRESO ==================== */}
-            <div className="mx-auto max-w-7xl px-6 pb-20">
-                <div className="mb-12 text-center" data-aos="fade-up">
-                    <h2 className="font-display text-3xl md:text-4xl">Tu ruta hacia la carrera</h2>
-                    <p className="mt-3 text-neutral-500">Cuatro etapas para llegar preparado al día del examen.</p>
-                </div>
-                <div className="relative grid grid-cols-1 gap-8 md:grid-cols-4">
-                    <div
-                        className="absolute top-6 right-0 left-0 hidden h-px md:block"
-                        style={{ background: `linear-gradient(90deg, ${alpha(primary, 5)}, ${alpha(primary, 35)}, ${alpha(secondary, 35)}, ${alpha(secondary, 5)})` }}
-                    />
-                    {RUTA_INGRESO.map((paso, i) => (
-                        <div key={paso.titulo} className="relative" data-aos="fade-up" data-aos-delay={i * 100}>
-                            <div
-                                className="font-mono-ui relative z-10 flex h-12 w-12 items-center justify-center rounded-full text-sm font-medium text-white shadow-md"
-                                style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
-                            >
-                                0{i + 1}
-                            </div>
-                            <h4 className="mt-5 text-base font-semibold text-neutral-900">{paso.titulo}</h4>
-                            <p className="mt-2 text-sm leading-relaxed text-neutral-500">{paso.detalle}</p>
-                        </div>
-                    ))}
-                </div>
+            <h3 className="font-display text-2xl">Misión</h3>
+            <p className="mt-4 leading-relaxed text-neutral-600">
+                {config?.mision ||
+                    'Formar profesionales en psicología con sólidas competencias académicas, científicas y tecnológicas.'}
+            </p>
+        </div>
+        <div className="p-10 md:p-12" data-aos="fade-up" data-aos-delay="100">
+            <div
+                className="mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2"
+                style={{ borderColor: alpha(secondary, 40) }}
+            >
+                <Eye className="h-5 w-5" style={{ color: secondary }} />
             </div>
+            <h3 className="font-display text-2xl">Visión</h3>
+            <p className="mt-4 leading-relaxed text-neutral-600">
+                {config?.vision ||
+                    'Ser una institución líder en la formación de psicólogos altamente capacitados.'}
+            </p>
+        </div>
+    </div>
+</div>
 
 
 
 
+
+
+
+
+
+
+
+
+{/* ==================== RUTA DE INGRESO ==================== */}
+<div className="relative mx-auto max-w-7xl px-6 pb-20">
+    {/* Decoradores dispersos */}
+    <motion.div
+        className="pointer-events-none absolute top-0 left-0 opacity-90"
+        animate={{ y: [0, -15, 0], x: [0, 10, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+    >
+        <img src="/decoradores/decoradores2/circulo_linea_.png" alt="" className="w-20 h-20" />
+    </motion.div>
+    
+    <motion.div
+        className="pointer-events-none absolute top-10 right-10 opacity-90"
+        animate={{ rotate: [0, 360, 0] }}
+        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+    >
+        <img src="/decoradores/decoradores2/cuadrado_puntueado.png" alt="" className="w-24 h-24" />
+    </motion.div>
+
+    <motion.div
+        className="pointer-events-none absolute bottom-0 left-1/3 opacity-90"
+        animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+    >
+        <img src="/decoradores/decoradores2/objeto_puntueado.png" alt="" className="w-28 h-28" />
+    </motion.div>
+
+    <motion.div
+        className="pointer-events-none absolute bottom-10 right-20 opacity-90"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+    >
+        <img src="/decoradores/decoradores3/circulo_linea.png" alt="" className="w-16 h-16" />
+    </motion.div>
+
+    <div className="relative mb-12 text-center" data-aos="fade-up">
+        <h2 className="font-display text-3xl md:text-4xl">Tu ruta hacia la carrera</h2>
+        <p className="mt-3 text-neutral-500">Cuatro etapas para llegar preparado al día del examen.</p>
+    </div>
+    <div className="relative grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div
+            className="absolute top-6 right-0 left-0 hidden h-px md:block"
+            style={{ background: `linear-gradient(90deg, ${alpha(primary, 5)}, ${alpha(primary, 35)}, ${alpha(secondary, 35)}, ${alpha(secondary, 5)})` }}
+        />
+        {RUTA_INGRESO.map((paso, i) => (
+            <div key={paso.titulo} className="relative" data-aos="fade-up" data-aos-delay={i * 100}>
+                <div
+                    className="font-mono-ui relative z-10 flex h-12 w-12 items-center justify-center rounded-full text-sm font-medium text-white shadow-md"
+                    style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+                >
+                    0{i + 1}
+                </div>
+                <h4 className="mt-5 text-base font-semibold text-neutral-900">{paso.titulo}</h4>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-500">{paso.detalle}</p>
+            </div>
+        ))}
+    </div>
+</div>
 
 
 
@@ -482,6 +657,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 <div className="bg-neutral-50/70 py-20">
                     <div className="mx-auto max-w-7xl px-6">
                         <div className="mb-12 flex items-center justify-center gap-2 text-center" data-aos="fade-up">
+                            
                             <Users className="h-5 w-5" style={{ color: primary }} />
                             <h2 className="font-display text-3xl md:text-4xl">Autoridades</h2>
                         </div>
@@ -489,6 +665,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                             {autoridades.map((a, i) => (
                                 <div
                                     key={a.id}
+                                    //este es el efecto que hace al pasar el cursor
                                     className="group w-72 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-100 transition-shadow hover:shadow-xl"
                                     data-aos="fade-up"
                                     data-aos-delay={i * 80}
@@ -507,7 +684,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                                 className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full"
                                                 style={{ background: tint(primary, 90) }}
                                             >
-                                                <GraduationCap className="h-11 w-11" style={{ color: primary }} />
+                                                
                                             </div>
                                         )}
                                         <p className="text-lg font-semibold">{a.nombre}</p>
@@ -568,7 +745,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                             className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
                                             style={{ background: tint(secondary, 88) }}
                                         >
-                                            <Megaphone className="h-5 w-5" style={{ color: secondary }} />
+                                            <Megaphone className="h-5 w-5" style={{ color: primary }} />
                                         </div>
                                         <div>
                                             <p className="font-semibold text-neutral-900">{c.titulo}</p>

@@ -39,6 +39,9 @@ interface Props {
     filtros: Filtros;
 }
 
+
+
+//formularios(son los qie se van a mandar al controlador para llenar datos en la base datos)
 type LibroForm = {
     materia_id: string;
     nombre: string;
@@ -49,6 +52,8 @@ type LibroForm = {
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Libros', href: '/libros' }];
 
+
+// como va iniciar???
 const initialForm: LibroForm = {
     materia_id: '',
     nombre: '',

@@ -17,6 +17,7 @@ class Configuracion extends Model
         'lema',
         'organigrama',
     ];
+    //
 
     /**
      * Calcula si el texto sobre un color de fondo debe ser negro o blanco,
