@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CursoSeeder::class,
             LeccionSeeder::class,
             EntregaSeeder::class,
+            LibrosSeeder::class,
         ]);
 
         // Admin
@@ -39,4 +40,5 @@ class DatabaseSeeder extends Seeder
         
         $admin->assignRole('admin');
     }
+   
 }
