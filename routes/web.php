@@ -16,6 +16,7 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PaginaAdminController;
+use App\Http\Controllers\RecomendacionController;
 
 use App\Models\Autoridad;
 use App\Models\Convocatoria;
@@ -176,6 +177,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/excel', 'excel')->name('excel');
     });
 
+     // Recomendacion de la IA
+    Route::get('/estudiante/recomendaciones', [RecomendacionController::class, 'index'])
+    ->name('estudiante.recomendaciones');
 
     // poner dentro de un middleware
     // Configuración de Apariencia

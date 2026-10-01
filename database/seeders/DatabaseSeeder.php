@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             GestionSeeder::class,
             ConfiguracionSeeder::class,
             MateriaSeeder::class,
+            TemaSeeder::class, 
             DocenteSeeder::class,
             EstudianteSeeder::class,
             CursoSeeder::class,
