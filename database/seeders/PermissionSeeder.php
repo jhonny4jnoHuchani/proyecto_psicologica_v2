@@ -66,10 +66,15 @@ class PermissionSeeder extends Seeder
             // Libros
             'gestionar-libros',
             'ver-libro',
-        ];
 
-        foreach ($permisos as $permiso) {
-            Permission::create(['name' => $permiso]);
+            // Temas
+            'ver-temas',
+            'crear-temas',
+            'editar-temas',
+            'eliminar-temas',
+        ];
+  foreach ($permisos as $permiso) {
+            Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
         }
 
         // ========================
@@ -80,6 +85,7 @@ class PermissionSeeder extends Seeder
         $admin = Role::findByName('admin');
         $admin->givePermissionTo(Permission::all());
 
+        
         // Docente
         $docente = Role::findByName('docente');
         $docente->givePermissionTo([
@@ -104,5 +110,16 @@ class PermissionSeeder extends Seeder
             'ver-calificaciones',
             'ver-libro',
         ]);
+
+        // Coordinador
+        $coordinador = Role::findByName('coordinador');
+        $coordinador->givePermissionTo([
+            'ver-dashboard',
+            'ver-temas',
+            'crear-temas',
+            'editar-temas',
+            'eliminar-temas',
+        ]);
+
     }
 }

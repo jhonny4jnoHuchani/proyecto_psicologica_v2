@@ -34,10 +34,12 @@ class DatabaseSeeder extends Seeder
 
             'email' => 'admin@sistema.com',//usuario
             'password' => bcrypt('admin'),//contraseña
-            'genero' => 'M',
+            'genero' => 'F',
             'fecha_nacimiento' => '1990-01-01',
             'direccion' => 'Av. Sucre B, Zona Villa Esperanza',
         ]);
+
+        
         
         $admin->assignRole('admin');
     }
