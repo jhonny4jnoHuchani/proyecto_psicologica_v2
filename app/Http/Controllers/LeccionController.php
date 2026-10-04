@@ -14,17 +14,17 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\Estudiante;
 use App\Models\Entrega;
+use App\Models\Tema;
 
 class LeccionController extends Controller
 {
     public function index(Request $request): Response
     {
-        //aqui estoy extas
         $user = Auth::user();
         $cursoId = $request->query('curso_id');
         $materiaId = $request->query('materia_id');
 
-        $lecciones = Leccion::with(['materia', 'docente.user', 'curso'])
+        $lecciones = Leccion::with(['materia', 'temario', 'docente.user', 'curso'])
             ->when($cursoId, fn($q) => $q->where('curso_id', $cursoId))
             ->when($materiaId, fn($q) => $q->where('materia_id', $materiaId))
             ->when($user->hasRole('docente'), function ($q) use ($user) {
@@ -49,11 +49,13 @@ class LeccionController extends Controller
         }
 
         $docentes = Docente::with('user')->get();
+        $temas = Tema::orderBy('materia_id')->orderBy('orden')->get();
 
         return Inertia::render('lecciones/index', [
             'lecciones' => $lecciones,
             'cursos' => $cursos,
             'materias' => $materias,
+            'temas' => $temas,
             'docentes' => $docentes,
             'filtros' => [
                 'curso_id' => $cursoId ? (int) $cursoId : null,
@@ -68,8 +70,8 @@ class LeccionController extends Controller
         $request->validate([
             'curso_id' => 'required|exists:cursos,id',
             'materia_id' => 'required|exists:materias,id',
+            'tema_id' => 'nullable|exists:temas,id',
             'titulo' => 'required|string|max:200',
-            'tema' => 'nullable|string|max:200',  // ← NUEVO
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -81,9 +83,9 @@ class LeccionController extends Controller
         Leccion::create([
             'curso_id' => $request->curso_id,
             'materia_id' => $request->materia_id,
+            'tema_id' => $request->tema_id,
             'docente_id' => $docente->id,
             'titulo' => $request->titulo,
-            'tema' => $request->tema,  // ← NUEVO
             'descripcion' => $request->descripcion,
             'fecha_programada' => $request->fecha_programada,
             'fecha_entrega' => $request->fecha_entrega,
@@ -98,7 +100,7 @@ class LeccionController extends Controller
     {
         $request->validate([
             'titulo' => 'required|string|max:200',
-            'tema' => 'nullable|string|max:200',  // ← NUEVO
+            'tema_id' => 'nullable|exists:temas,id',
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
@@ -131,7 +133,7 @@ class LeccionController extends Controller
         }
 
         return Inertia::render('lecciones/show', [
-            'leccion' => $leccion->load(['materia', 'docente.user', 'curso.gestion']),
+            'leccion' => $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']),
             'entrega' => $entrega,
             'rol' => $user->roles->first()?->name,
         ]);
@@ -154,7 +156,7 @@ class LeccionController extends Controller
         ->get();
 
         return Inertia::render('lecciones/entregas', [
-            'leccion' => $leccion->load(['materia', 'docente.user', 'curso.gestion']),
+            'leccion' => $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']),
             'entregas' => $entregas,
             'estudiantesSinEntregar' => $estudiantesSinEntregar,
         ]);

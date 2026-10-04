@@ -15,10 +15,11 @@ class Leccion extends Model
 
     protected $fillable = [
         'materia_id',
+        'tema_id',
         'docente_id',
         'curso_id',
         'titulo',
-        'tema',
+        'tema',           // ← se queda (no se usa más)
         'descripcion',
         'fecha_programada',
         'fecha_entrega',
@@ -37,6 +38,11 @@ class Leccion extends Model
     public function materia(): BelongsTo
     {
         return $this->belongsTo(Materia::class);
+    }
+
+    public function temario(): BelongsTo
+    {
+        return $this->belongsTo(Tema::class, 'tema_id');
     }
 
     public function docente(): BelongsTo

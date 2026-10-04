@@ -11,10 +11,11 @@ return new class extends Migration
         Schema::create('lecciones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
+            $table->foreignId('tema_id')->nullable()->constrained('temas')->onDelete('set null'); // ← NUEVA FK
             $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
             $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
             $table->string('titulo', 200);
-            $table->string('tema', 200)->nullable();  // ← NUEVO
+            $table->string('tema', 200)->nullable();
             $table->text('descripcion')->nullable();
             $table->date('fecha_programada')->nullable();
             $table->date('fecha_entrega')->nullable();

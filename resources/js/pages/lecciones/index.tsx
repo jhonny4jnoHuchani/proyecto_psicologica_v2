@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import {
     AlertCircle, BookOpen, CalendarClock, CalendarDays, CheckCircle2,
-    ChevronLeft, ChevronRight, Clock, Eye, FileSpreadsheet, FileText,
+    ChevronDown, ChevronLeft, ChevronRight, Clock, Eye, FileSpreadsheet, FileText,
     LoaderCircle, Pencil, Plus, Sparkles, Trash2, Send, Users,
 } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
@@ -27,10 +27,27 @@ interface MateriaOption { id: number; nombre: string; codigo: string; }
 interface UserData { id: number; nombre: string; apellido_paterno: string; apellido_materno: string; }
 interface DocenteData { id: number; user: UserData; }
 
+interface Tema {
+    id: number;
+    materia_id: number;
+    nombre: string;
+    orden: number;
+    paginas_libro: string | null;
+    estado: string;
+}
+
 interface Leccion {
-    id: number; titulo: string; tema: string | null; descripcion: string | null;
-    fecha_programada: string | null; fecha_entrega: string | null;
-    estado: string; materia: MateriaOption; curso: CursoOption; docente: DocenteData;
+    id: number;
+    titulo: string;
+    tema_id: number | null;
+    temario: Tema | null;
+    descripcion: string | null;
+    fecha_programada: string | null;
+    fecha_entrega: string | null;
+    estado: string;
+    materia: MateriaOption;
+    curso: CursoOption;
+    docente: DocenteData;
 }
 
 interface Filtros { curso_id: number | null; materia_id: number | null; }
@@ -39,13 +56,19 @@ interface Props {
     lecciones: Leccion[];
     cursos: CursoOption[];
     materias: MateriaOption[];
+    temas: Tema[];
     filtros: Filtros;
     rol: string;
 }
 
 type LeccionForm = {
-    curso_id: string; materia_id: string; titulo: string;
-    tema: string; descripcion: string; fecha_programada: string; fecha_entrega: string;
+    curso_id: string;
+    materia_id: string;
+    tema_id: string;
+    titulo: string;
+    descripcion: string;
+    fecha_programada: string;
+    fecha_entrega: string;
     estado: string;
     [key: string]: string;
 };
@@ -53,7 +76,7 @@ type LeccionForm = {
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Lecciones', href: '/lecciones' }];
 
 const initialForm: LeccionForm = {
-    curso_id: '', materia_id: '', titulo: '', tema: '',
+    curso_id: '', materia_id: '', tema_id: '', titulo: '',
     descripcion: '', fecha_programada: '', fecha_entrega: '', estado: 'activo',
 };
 
@@ -92,7 +115,7 @@ function diasRestantes(fecha?: string | null) {
     return Math.round((objetivo.getTime() - hoy.getTime()) / 86400000);
 }
 
-export default function LeccionesIndex({ lecciones, cursos, materias, filtros, rol }: Props) {
+export default function LeccionesIndex({ lecciones, cursos, materias, temas, filtros, rol }: Props) {
     const [modalCreate, setModalCreate] = useState(false);
     const [modalEdit, setModalEdit] = useState(false);
     const [modalDelete, setModalDelete] = useState(false);
@@ -102,6 +125,9 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
 
+    // Acordeón: set de temas abiertos
+    const [temasAbiertos, setTemasAbiertos] = useState<Record<string, boolean>>({});
+
     const [filtroCurso, setFiltroCurso] = useState(filtros.curso_id ? String(filtros.curso_id) : '');
     const [filtroMateria, setFiltroMateria] = useState(filtros.materia_id ? String(filtros.materia_id) : '');
 
@@ -110,6 +136,10 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
 
     const resetForm = () => { setForm(initialForm); setErrors({}); };
 
+    const toggleTema = (key: string) => {
+        setTemasAbiertos(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
     const aplicarFiltros = () => {
         const params = new URLSearchParams();
         if (filtroCurso) params.set('curso_id', filtroCurso);
@@ -117,9 +147,15 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
         router.get(`/lecciones?${params.toString()}`);
     };
 
-    const openCreate = () => {
+    // Abre el modal para crear con valores precargados (curso, materia, tema)
+    const openCreateInTema = (materiaId: number, temaId: number | null) => {
         resetForm();
-        setForm({ ...initialForm, curso_id: filtroCurso, materia_id: filtroMateria });
+        setForm({
+            ...initialForm,
+            curso_id: filtroCurso || '',
+            materia_id: String(materiaId),
+            tema_id: temaId ? String(temaId) : '',
+        });
         setModalCreate(true);
     };
 
@@ -128,8 +164,8 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
         setForm({
             curso_id: String(leccion.curso?.id || ''),
             materia_id: String(leccion.materia?.id || ''),
+            tema_id: String(leccion.tema_id || ''),
             titulo: leccion.titulo,
-            tema: leccion.tema || '',
             descripcion: leccion.descripcion || '',
             fecha_programada: leccion.fecha_programada || '',
             fecha_entrega: leccion.fecha_entrega || '',
@@ -183,6 +219,23 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
             .slice(0, 4);
     }, [lecciones]);
 
+    // Agrupar lecciones por tema
+    const leccionesPorTema = useMemo(() => {
+        const grupos: Record<string, Leccion[]> = {};
+        lecciones.forEach(l => {
+            const key = l.tema_id ? String(l.tema_id) : 'sin-tema';
+            if (!grupos[key]) grupos[key] = [];
+            grupos[key].push(l);
+        });
+        return grupos;
+    }, [lecciones]);
+
+    // Temas disponibles según filtros (materia seleccionada)
+    const temasFiltrados = useMemo(() => {
+        if (!filtroMateria || filtroMateria === 'none') return temas;
+        return temas.filter(t => String(t.materia_id) === filtroMateria);
+    }, [temas, filtroMateria]);
+
     const hoy = new Date();
     const [mes, setMes] = useState(hoy.getMonth());
     const [año, setAño] = useState(hoy.getFullYear());
@@ -227,6 +280,12 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
         return lecciones.filter(l => l.fecha_entrega?.startsWith(fecha));
     };
 
+    // Temas del select del formulario, filtrados por la materia del form
+    const temasDelForm = useMemo(() => {
+        if (!form.materia_id) return [];
+        return temas.filter(t => String(t.materia_id) === String(form.materia_id));
+    }, [temas, form.materia_id]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Lecciones" />
@@ -244,11 +303,6 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                             Planifica, revisa y da seguimiento a las entregas de tus lecciones.
                         </p>
                     </div>
-                    {isDocente && (
-                        <Button onClick={openCreate} className="bg-indigo-600 hover:bg-indigo-700">
-                            <Plus className="mr-2 h-4 w-4" />Nueva lección
-                        </Button>
-                    )}
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -334,135 +388,261 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     <Card className="shadow-sm lg:col-span-2">
                         <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Listado de lecciones</CardTitle>
+                            <CardTitle>Listado por temas</CardTitle>
                             <span className="text-xs text-neutral-400">{lecciones?.length ?? 0} resultado(s)</span>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b bg-neutral-50/70 text-left text-xs uppercase tracking-wide text-neutral-500">
-                                            <th className="px-4 py-3 font-medium">Lección</th>
-                                            <th className="px-4 py-3 font-medium">Curso</th>
-                                            <th className="px-4 py-3 font-medium">Docente</th>
-                                            <th className="px-4 py-3 font-medium">Entrega</th>
-                                            <th className="px-4 py-3 font-medium">Estado</th>
-                                            {!isDocente && <th className="px-4 py-3 text-right font-medium">Entregar</th>}
-                                            {isDocente && <th className="px-4 py-3 text-right font-medium">Acciones</th>}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(!lecciones || lecciones.length === 0) && (
-                                            <tr>
-                                                <td colSpan={isDocente ? 6 : 6} className="py-14 text-center">
-                                                    <div className="flex flex-col items-center gap-2 text-neutral-400">
-                                                        <Sparkles className="h-8 w-8" />
-                                                        <p className="text-sm font-medium text-neutral-500">Todavía no hay lecciones aquí</p>
-                                                        <p className="text-xs">
-                                                            {isDocente
-                                                                ? 'Crea la primera lección con el botón "Nueva lección".'
-                                                                : 'Cuando tu docente publique una lección, aparecerá en esta lista.'}
-                                                        </p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                        {lecciones?.map((l) => {
-                                            const color = colorForMateria(l.materia?.codigo);
-                                            const restantes = diasRestantes(l.fecha_entrega);
-                                            return (
-                                                <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50">
-                                                    <td className="px-4 py-3">
-                                                        <div className="flex items-start gap-2.5">
-                                                            <span className={`mt-1 h-full min-h-8 w-1 rounded-full ${color.bar}`} />
-                                                            <div>
-                                                                {isDocente ? (
-                                                                    <a href={`/lecciones/${l.id}/entregas`} className="font-medium leading-tight hover:text-indigo-600 transition-colors">
-                                                                        {l.titulo}
-                                                                    </a>
-                                                                ) : (
-                                                                    <a href={`/lecciones/${l.id}`} className="font-medium leading-tight hover:text-indigo-600 transition-colors">
-                                                                        {l.titulo}
-                                                                    </a>
-                                                                )}
-                                                                {l.tema && <p className="text-xs text-neutral-500 mt-0.5">{l.tema}</p>}
-                                                                <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
-                                                                    {l.materia?.codigo}
-                                                                </span>
-                                                            </div>
+                            <div className="divide-y">
+                                {temasFiltrados.length === 0 && (
+                                    <div className="py-14 text-center">
+                                        <div className="flex flex-col items-center gap-2 text-neutral-400">
+                                            <Sparkles className="h-8 w-8" />
+                                            <p className="text-sm font-medium text-neutral-500">No hay temas en esta materia</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {temasFiltrados.map((tema) => {
+                                    const key = String(tema.id);
+                                    const abierto = !!temasAbiertos[key];
+                                    const leccionesTema = leccionesPorTema[key] ?? [];
+                                    const materiaDelTema = materias.find(m => m.id === tema.materia_id);
+                                    const color = colorForMateria(materiaDelTema?.codigo);
+
+                                    return (
+                                        <div key={tema.id}>
+                                            {/* ENCABEZADO DEL TEMA */}
+                                            <div className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleTema(key)}
+                                                    className="flex flex-1 items-center gap-2 text-left"
+                                                >
+                                                    <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${abierto ? '' : '-rotate-90'}`} />
+                                                    <span className={`h-2 w-2 rounded-full ${color.dot}`} />
+                                                    <span className="font-medium text-sm">
+                                                        {tema.orden}. {tema.nombre}
+                                                    </span>
+                                                    <Badge variant="outline" className="ml-2 text-[10px]">
+                                                        {leccionesTema.length} lección{leccionesTema.length !== 1 ? 'es' : ''}
+                                                    </Badge>
+                                                </button>
+
+                                                {isDocente && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                                        onClick={() => openCreateInTema(tema.materia_id, tema.id)}
+                                                    >
+                                                        <Plus className="mr-1 h-3.5 w-3.5" />
+                                                        Añadir
+                                                    </Button>
+                                                )}
+                                            </div>
+
+                                            {/* LECCIONES DEL TEMA */}
+                                            {abierto && (
+                                                <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
+                                                    {leccionesTema.length === 0 ? (
+                                                        <div className="py-6 text-center text-xs text-neutral-400">
+                                                            No hay lecciones en este tema todavía.
+                                                            {isDocente && ' Usa el botón "Añadir" para crear la primera.'}
                                                         </div>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-xs text-neutral-600">
-                                                        {l.curso?.gestion?.año} · P.{l.curso?.paralelo}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        {l.docente ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-200 text-[10px] font-semibold text-neutral-700">
-                                                                    {iniciales(l.docente.user)}
-                                                                </span>
-                                                                <span className="text-xs text-neutral-600">{nombreCompleto(l.docente.user)}</span>
-                                                            </div>
-                                                        ) : <span className="text-xs text-neutral-400">—</span>}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        {l.fecha_entrega ? (
-                                                            <div className="flex items-center gap-1.5 text-xs">
-                                                                <Clock className="h-3.5 w-3.5 text-neutral-400" />
-                                                                <span className="text-neutral-700">{formatoFechaCorta(l.fecha_entrega)}</span>
-                                                                {restantes !== null && restantes >= 0 && restantes <= 3 && (
-                                                                    <Badge className="ml-1 bg-amber-100 text-amber-700 hover:bg-amber-100">
-                                                                        {restantes === 0 ? 'Hoy' : `${restantes}d`}
-                                                                    </Badge>
-                                                                )}
-                                                                {restantes !== null && restantes < 0 && l.estado === 'activo' && (
-                                                                    <Badge className="ml-1 bg-rose-100 text-rose-700 hover:bg-rose-100">Vencida</Badge>
-                                                                )}
-                                                            </div>
-                                                        ) : <span className="text-xs text-neutral-400">Sin fecha</span>}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                                                            l.estado === 'activo'
-                                                                ? 'bg-emerald-50 text-emerald-700'
-                                                                : 'bg-neutral-100 text-neutral-500'
-                                                        }`}>
-                                                            <span className={`h-1.5 w-1.5 rounded-full ${l.estado === 'activo' ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
-                                                            {l.estado === 'activo' ? 'Activo' : 'Inactivo'}
-                                                        </span>
-                                                    </td>
-                                                    {!isDocente && (
-                                                        <td className="px-4 py-3 text-right">
-                                                            <a href={`/lecciones/${l.id}`}>
-                                                                <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                                                                    <Send className="mr-1.5 h-3.5 w-3.5" />
-                                                                    Entregar
-                                                                </Button>
-                                                            </a>
-                                                        </td>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            {leccionesTema.map((l) => {
+                                                                const restantes = diasRestantes(l.fecha_entrega);
+                                                                return (
+                                                                    <div key={l.id} className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all">
+                                                                        <div className="min-w-0 flex-1">
+                                                                            {isDocente ? (
+                                                                                <a href={`/lecciones/${l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                                    {l.titulo}
+                                                                                </a>
+                                                                            ) : (
+                                                                                <a href={`/lecciones/${l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                                    {l.titulo}
+                                                                                </a>
+                                                                            )}
+                                                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-neutral-500">
+                                                                                <span className="flex items-center gap-1">
+                                                                                    <Clock className="h-3 w-3" />
+                                                                                    {l.fecha_entrega ? formatoFechaCorta(l.fecha_entrega) : 'Sin fecha'}
+                                                                                </span>
+
+                                                                                <span className="flex items-center gap-1">
+                                                                                    <Users className="h-3 w-3" />
+                                                                                    {l.curso?.gestion?.año} · P.{l.curso?.paralelo}
+                                                                                </span>
+                                                                                {l.docente && (
+                                                                                    <span className="flex items-center gap-1" title={nombreCompleto(l.docente.user)}>
+                                                                                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
+                                                                                            {iniciales(l.docente.user)}
+                                                                                        </span>
+                                                                                        <span className="truncate max-w-[120px]">{nombreCompleto(l.docente.user)}</span>
+                                                                                    </span>
+                                                                                )}
+                                                                                {restantes !== null && restantes >= 0 && restantes <= 3 && (
+                                                                                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
+                                                                                        {restantes === 0 ? 'Hoy' : `${restantes}d`}
+                                                                                    </Badge>
+                                                                                )}
+                                                                                {restantes !== null && restantes < 0 && l.estado === 'activo' && (
+                                                                                    <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">Vencida</Badge>
+                                                                                )}
+                                                                                <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${l.estado === 'activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+                                                                                    }`}>
+                                                                                    <span className={`h-1 w-1 rounded-full ${l.estado === 'activo' ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                                                                                    {l.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
+                                                                            {!isDocente ? (
+                                                                                <a href={`/lecciones/${l.id}`}>
+                                                                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-7 text-xs">
+                                                                                        <Send className="mr-1 h-3 w-3" />
+                                                                                        Entregar
+                                                                                    </Button>
+                                                                                </a>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <a href={`/lecciones/${l.id}/entregas`}>
+                                                                                        <Button variant="outline" size="icon" className="h-7 w-7" title="Ver entregas">
+                                                                                            <Users className="h-3.5 w-3.5 text-blue-500" />
+                                                                                        </Button>
+                                                                                    </a>
+                                                                                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEdit(l)}>
+                                                                                        <Pencil className="h-3.5 w-3.5" />
+                                                                                    </Button>
+                                                                                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openDelete(l)}>
+                                                                                        <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                                                                    </Button>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
                                                     )}
-                                                    {isDocente && (
-                                                        <td className="px-4 py-3 text-right">
-                                                            <div className="flex justify-end gap-2 opacity-70 transition-opacity group-hover:opacity-100">
-                                                                <a href={`/lecciones/${l.id}/entregas`}>
-                                                                    <Button variant="outline" size="icon" title="Ver entregas">
-                                                                        <Users className="h-4 w-4 text-blue-500" />
-                                                                    </Button>
-                                                                </a>
-                                                                <Button variant="outline" size="icon" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></Button>
-                                                                <Button variant="outline" size="icon" onClick={() => openDelete(l)}><Trash2 className="h-4 w-4 text-rose-500" /></Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                {/* PANEL SIN TEMA */}
+                                {(leccionesPorTema['sin-tema']?.length ?? 0) > 0 && (
+                                    <div>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleTema('sin-tema')}
+                                            className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
+                                        >
+                                            <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${temasAbiertos['sin-tema'] ? '' : '-rotate-90'}`} />
+                                            <span className="h-2 w-2 rounded-full bg-neutral-300" />
+                                            <span className="font-medium text-sm text-neutral-600">Sin tema específico</span>
+                                            <Badge variant="outline" className="ml-2 text-[10px]">
+                                                {leccionesPorTema['sin-tema'].length} lección{leccionesPorTema['sin-tema'].length !== 1 ? 'es' : ''}
+                                            </Badge>
+                                        </button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                        {temasAbiertos['sin-tema'] && (
+                                            <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
+                                                <div className="space-y-2">
+                                                    {leccionesPorTema['sin-tema'].map((l) => {
+                                                        const restantes = diasRestantes(l.fecha_entrega);
+                                                        return (
+                                                            <div key={l.id} className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all">
+                                                                <div className="min-w-0 flex-1">
+                                                                    {isDocente ? (
+                                                                        <a href={`/lecciones/${l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                            {l.titulo}
+                                                                        </a>
+                                                                    ) : (
+                                                                        <a href={`/lecciones/${l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                            {l.titulo}
+                                                                        </a>
+                                                                    )}
+                                                                    <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-neutral-500">
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Clock className="h-3 w-3" />
+                                                                            {l.fecha_entrega ? formatoFechaCorta(l.fecha_entrega) : 'Sin fecha'}
+                                                                        </span>
+                                                                        <span className="flex items-center gap-1">
+                                                                            <Users className="h-3 w-3" />
+                                                                            {l.curso?.gestion?.año} · P.{l.curso?.paralelo}
+                                                                        </span>
+                                                                        {l.docente && (
+                                                                            <span className="flex items-center gap-1" title={nombreCompleto(l.docente.user)}>
+                                                                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
+                                                                                    {iniciales(l.docente.user)}
+                                                                                </span>
+                                                                                <span className="truncate max-w-[120px]">{nombreCompleto(l.docente.user)}</span>
+                                                                            </span>
+                                                                        )}
+                                                                        {restantes !== null && restantes >= 0 && restantes <= 3 && (
+                                                                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
+                                                                                {restantes === 0 ? 'Hoy' : `${restantes}d`}
+                                                                            </Badge>
+                                                                        )}
+                                                                        {restantes !== null && restantes < 0 && l.estado === 'activo' && (
+                                                                            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">Vencida</Badge>
+                                                                        )}
+                                                                        <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${l.estado === 'activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+                                                                            }`}>
+                                                                            <span className={`h-1 w-1 rounded-full ${l.estado === 'activo' ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                                                                            {l.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
+                                                                    {isDocente && (
+                                                                        <>
+                                                                            <a href={`/lecciones/${l.id}/entregas`}>
+                                                                                <Button variant="outline" size="icon" className="h-7 w-7" title="Ver entregas">
+                                                                                    <Users className="h-3.5 w-3.5 text-blue-500" />
+                                                                                </Button>
+                                                                            </a>
+                                                                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEdit(l)}>
+                                                                                <Pencil className="h-3.5 w-3.5" />
+                                                                            </Button>
+                                                                            <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openDelete(l)}>
+                                                                                <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
-
                     <div className="space-y-6">
                         <Card className="shadow-sm">
                             <CardContent className="pt-5">
@@ -531,7 +711,6 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                                             <span className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`} />
                                             <div className="min-w-0 flex-1">
                                                 <p className="truncate text-xs font-medium">{l.titulo}</p>
-                                                {l.tema && <p className="text-[10px] text-neutral-400 truncate">{l.tema}</p>}
                                                 <p className="text-[11px] text-neutral-400">{l.materia?.codigo} · {formatoFechaCorta(l.fecha_entrega)}</p>
                                             </div>
                                             <Badge variant="outline" className="shrink-0 text-[10px]">
@@ -545,65 +724,135 @@ export default function LeccionesIndex({ lecciones, cursos, materias, filtros, r
                     </div>
                 </div>
 
+                {/* MODAL CREAR */}
                 <Dialog open={modalCreate} onOpenChange={setModalCreate}>
                     <DialogContent className="max-w-lg">
-                        <DialogHeader><DialogTitle>Nueva lección</DialogTitle><DialogDescription>Completa los datos para publicar una nueva lección.</DialogDescription></DialogHeader>
+                        <DialogHeader>
+                            <DialogTitle>Nueva lección</DialogTitle>
+                            <DialogDescription>Completa los datos para publicar una nueva lección.</DialogDescription>
+                        </DialogHeader>
                         <form onSubmit={handleCreate} className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1"><Label>Curso *</Label>
+                                <div className="space-y-1">
+                                    <Label>Curso *</Label>
                                     <Select value={form.curso_id} onValueChange={(v) => setForm({ ...form, curso_id: v })}>
                                         <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                                         <SelectContent>{(cursos || []).map(c => <SelectItem key={c.id} value={String(c.id)}>{c.gestion?.año} - P.{c.paralelo}</SelectItem>)}</SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-1"><Label>Materia *</Label>
-                                    <Select value={form.materia_id} onValueChange={(v) => setForm({ ...form, materia_id: v })}>
+                                <div className="space-y-1">
+                                    <Label>Materia *</Label>
+                                    <Select value={form.materia_id} onValueChange={(v) => setForm({ ...form, materia_id: v, tema_id: '' })}>
                                         <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                                         <SelectContent>{(materias || []).map(m => <SelectItem key={m.id} value={String(m.id)}>{m.codigo}</SelectItem>)}</SelectContent>
                                     </Select>
                                 </div>
-                                <div className="col-span-2 space-y-1"><Label>Título *</Label><Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required /><InputError message={errors.titulo} /></div>
-                                <div className="col-span-2 space-y-1"><Label>Tema</Label><Input value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })} placeholder="Ej: Capítulo 3 - Fundamentos" /></div>
-                                <div className="col-span-2 space-y-1"><Label>Descripción</Label><textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} /></div>
-                                <div className="space-y-1"><Label>Fecha programada</Label><Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} /></div>
-                                <div className="space-y-1"><Label>Fecha de entrega</Label><Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} /></div>
+                                <div className="col-span-2 space-y-1">
+                                    <Label>Tema del temario</Label>
+                                    <Select value={form.tema_id || 'none'} onValueChange={(v) => setForm({ ...form, tema_id: v === 'none' ? '' : v })}>
+                                        <SelectTrigger><SelectValue placeholder="Sin tema específico" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Sin tema específico</SelectItem>
+                                            {temasDelForm.map(t => (
+                                                <SelectItem key={t.id} value={String(t.id)}>{t.orden}. {t.nombre}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.tema_id} />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <Label>Título *</Label>
+                                    <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required />
+                                    <InputError message={errors.titulo} />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <Label>Descripción</Label>
+                                    <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Fecha programada</Label>
+                                    <Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Fecha de entrega</Label>
+                                    <Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} />
+                                </div>
                             </div>
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={() => setModalCreate(false)}>Cancelar</Button>
-                                <Button type="submit" disabled={processing} className="bg-indigo-600 hover:bg-indigo-700">{processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}Guardar lección</Button>
+                                <Button type="submit" disabled={processing} className="bg-indigo-600 hover:bg-indigo-700">
+                                    {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}Guardar lección
+                                </Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
                 </Dialog>
 
+                {/* MODAL EDITAR */}
                 <Dialog open={modalEdit} onOpenChange={setModalEdit}>
                     <DialogContent className="max-w-lg">
-                        <DialogHeader><DialogTitle>Editar lección</DialogTitle><DialogDescription>Actualiza los datos de "{leccionSelect?.titulo}".</DialogDescription></DialogHeader>
+                        <DialogHeader>
+                            <DialogTitle>Editar lección</DialogTitle>
+                            <DialogDescription>Actualiza los datos de "{leccionSelect?.titulo}".</DialogDescription>
+                        </DialogHeader>
                         <form onSubmit={handleUpdate} className="space-y-4">
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="col-span-2 space-y-1"><Label>Título *</Label><Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required /></div>
-                                <div className="col-span-2 space-y-1"><Label>Tema</Label><Input value={form.tema} onChange={(e) => setForm({ ...form, tema: e.target.value })} placeholder="Ej: Capítulo 3 - Fundamentos" /></div>
-                                <div className="col-span-2 space-y-1"><Label>Descripción</Label><textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} /></div>
-                                <div className="space-y-1"><Label>Fecha programada</Label><Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} /></div>
-                                <div className="space-y-1"><Label>Fecha de entrega</Label><Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} /></div>
-                                <div className="space-y-1"><Label>Estado</Label>
+                                <div className="col-span-2 space-y-1">
+                                    <Label>Título *</Label>
+                                    <Input value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} required />
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <Label>Tema del temario</Label>
+                                    <Select value={form.tema_id || 'none'} onValueChange={(v) => setForm({ ...form, tema_id: v === 'none' ? '' : v })}>
+                                        <SelectTrigger><SelectValue placeholder="Sin tema específico" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Sin tema específico</SelectItem>
+                                            {temasDelForm.map(t => (
+                                                <SelectItem key={t.id} value={String(t.id)}>{t.orden}. {t.nombre}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="col-span-2 space-y-1">
+                                    <Label>Descripción</Label>
+                                    <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Fecha programada</Label>
+                                    <Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Fecha de entrega</Label>
+                                    <Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label>Estado</Label>
                                     <Select value={form.estado} onValueChange={(v) => setForm({ ...form, estado: v })}>
                                         <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent><SelectItem value="activo">Activo</SelectItem><SelectItem value="inactivo">Inactivo</SelectItem></SelectContent>
+                                        <SelectContent>
+                                            <SelectItem value="activo">Activo</SelectItem>
+                                            <SelectItem value="inactivo">Inactivo</SelectItem>
+                                        </SelectContent>
                                     </Select>
                                 </div>
                             </div>
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={() => setModalEdit(false)}>Cancelar</Button>
-                                <Button type="submit" disabled={processing} className="bg-indigo-600 hover:bg-indigo-700">{processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}Actualizar</Button>
+                                <Button type="submit" disabled={processing} className="bg-indigo-600 hover:bg-indigo-700">
+                                    {processing && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}Actualizar
+                                </Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
                 </Dialog>
 
+                {/* MODAL ELIMINAR */}
                 <Dialog open={modalDelete} onOpenChange={setModalDelete}>
                     <DialogContent>
-                        <DialogHeader><DialogTitle>Eliminar lección</DialogTitle><DialogDescription>Esta acción no se puede deshacer. ¿Eliminar "{leccionSelect?.titulo}"?</DialogDescription></DialogHeader>
+                        <DialogHeader>
+                            <DialogTitle>Eliminar lección</DialogTitle>
+                            <DialogDescription>Esta acción no se puede deshacer. ¿Eliminar "{leccionSelect?.titulo}"?</DialogDescription>
+                        </DialogHeader>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setModalDelete(false)}>Cancelar</Button>
                             <Button variant="destructive" onClick={handleDelete}>Eliminar</Button>

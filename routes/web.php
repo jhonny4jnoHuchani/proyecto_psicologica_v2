@@ -17,6 +17,7 @@ use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PaginaAdminController;
 use App\Http\Controllers\RecomendacionController;
+use App\Http\Controllers\ImportController;  
 
 use App\Models\Autoridad;
 use App\Models\Convocatoria;
@@ -70,7 +71,16 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{docente}/reset-password', 'resetPassword')->name('reset-password');
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
-        
+
+        // ========================
+        // IMPORTAR ESTUDIANTES (debe ir ANTES del prefix estudiantes)
+        // ========================
+        Route::prefix('estudiantes/importar')->name('estudiantes.importar.')->controller(ImportController::class)->group(function () {
+            Route::get('/plantilla', 'plantilla')->name('plantilla');
+            Route::post('/preview', 'preview')->name('preview');
+            Route::post('/confirm', 'confirm')->name('confirm');
+        });
+
         Route::prefix('estudiantes')->name('estudiantes.')->controller(EstudianteController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/eliminados', 'trashed')->name('trashed');
