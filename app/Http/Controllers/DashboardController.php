@@ -9,6 +9,10 @@ use App\Models\Gestion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\RedirectResponse;
 
 class DashboardController extends Controller
 {
@@ -55,7 +59,7 @@ class DashboardController extends Controller
             'gestion',
             'materias' => function ($query) use ($docente) {
                 $query->where('curso_materia.docente_id', $docente?->id)
-                    ->withPivot('docente_id');
+                    ->withPivot('id', 'docente_id', 'ayuda_ia_activa', 'imagen');
             },
         ])
         ->get();
@@ -65,7 +69,6 @@ class DashboardController extends Controller
             'cursos' => $cursos,
         ]);
     }
-
     private function dashboardEstudiante($user): Response
     {
         $estudiante = Estudiante::where('user_id', $user->id)->first();
@@ -78,5 +81,58 @@ class DashboardController extends Controller
             'rol' => 'estudiante',
             'cursos' => $cursos,
         ]);
+    }
+
+
+    public function toggleIA($cursoMateriaId): RedirectResponse
+    {
+        
+        $docente = Docente::where('user_id', Auth::id())->first();
+
+        $cursoMateria = DB::table('curso_materia')
+            ->where('id', $cursoMateriaId)
+            ->where('docente_id', $docente->id)
+            ->first();
+
+        if (!$cursoMateria) {
+            abort(403, 'No tienes permiso');
+        }
+
+        DB::table('curso_materia')
+            ->where('id', $cursoMateriaId)
+            ->update(['ayuda_ia_activa' => !$cursoMateria->ayuda_ia_activa]);
+
+        return back()->with('success', 'Preferencia IA actualizada.');
+    }
+
+    public function subirImagen(Request $request, $cursoMateriaId): RedirectResponse
+    {
+        $request->validate([
+            'imagen' => 'required|image|max:2048',
+        ]);
+
+        $docente = Docente::where('user_id', Auth::id())->first();
+
+        $cursoMateria = DB::table('curso_materia')
+            ->where('id', $cursoMateriaId)
+            ->where('docente_id', $docente->id)
+            ->first();
+
+        if (!$cursoMateria) {
+            abort(403, 'No tienes permiso');
+        }
+
+        // Borrar imagen anterior si existe
+        if ($cursoMateria->imagen) {
+            Storage::disk('public')->delete($cursoMateria->imagen);
+        }
+
+        $ruta = $request->file('imagen')->store('curso-materia', 'public');
+
+        DB::table('curso_materia')
+            ->where('id', $cursoMateriaId)
+            ->update(['imagen' => $ruta]);
+
+        return back()->with('success', 'Imagen actualizada.');
     }
 }

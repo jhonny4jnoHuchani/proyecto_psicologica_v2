@@ -187,6 +187,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/excel', 'excel')->name('excel');
     });
 
+    Route::middleware(['role:docente|admin'])->prefix('docente')->name('docente.')->controller(DashboardController::class)->group(function () {
+        Route::post('/curso-materia/{cursoMateriaId}/toggle-ia', 'toggleIA')->name('toggle-ia');
+        Route::post('/curso-materia/{cursoMateriaId}/imagen', 'subirImagen')->name('subir-imagen');
+    });
+
      // Recomendacion de la IA
     Route::get('/estudiante/recomendaciones', [RecomendacionController::class, 'index'])
     ->name('estudiante.recomendaciones');

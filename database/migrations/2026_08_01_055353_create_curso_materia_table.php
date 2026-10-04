@@ -13,6 +13,8 @@ return new class extends Migration
             $table->foreignId('curso_id')->constrained('cursos')->onDelete('cascade');
             $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
             $table->foreignId('docente_id')->nullable()->constrained('docentes')->onDelete('set null');
+            $table->boolean('ayuda_ia_activa')->default(true);   
+            $table->string('imagen', 255)->nullable();      
             $table->timestamps();
         });
     }

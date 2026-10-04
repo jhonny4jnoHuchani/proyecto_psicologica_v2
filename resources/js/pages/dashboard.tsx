@@ -1,5 +1,5 @@
-import { Head } from '@inertiajs/react';
-import { BookOpen, GraduationCap, LayoutGrid, School, Users } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { BookOpen, GraduationCap, ImagePlus, LayoutGrid, School, Sparkles, Users } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -20,6 +20,12 @@ interface Materia {
     id: number;
     nombre: string;
     codigo: string;
+    pivot: {
+        id: number;
+        docente_id: number;
+        ayuda_ia_activa: boolean;
+        imagen: string | null;
+    };
 }
 
 interface Curso {
@@ -131,21 +137,88 @@ export default function Dashboard({ rol, stats, cursos }: Props) {
                                             <BookOpen className="h-4 w-4" />
                                             Mis Materias ({curso.materias?.length || 0})
                                         </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             {curso.materias?.map((m) => (
-                                                <a
+                                                <div
                                                     key={m.id}
-                                                    href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
-                                                    className="flex items-center gap-3 border rounded-lg p-3 hover:bg-blue-50 hover:border-blue-300 transition-all cursor-pointer"
+                                                    className="relative border rounded-lg overflow-hidden hover:border-blue-300 hover:shadow-md transition-all group"
                                                 >
-                                                    <div className="bg-blue-100 p-2 rounded-lg">
-                                                        <BookOpen className="h-5 w-5 text-blue-600" />
-                                                    </div>
-                                                    <div>
-                                                        <span className="font-medium text-sm">{m.codigo}</span>
-                                                        <span className="text-xs text-neutral-500 block">{m.nombre}</span>
-                                                    </div>
-                                                </a>
+                                                    {/* LINK A LA CARD (con imagen o degradado) */}
+                                                    <a
+                                                        href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
+                                                        className="block"
+                                                    >
+                                                        {m.pivot?.imagen ? (
+                                                            <div className="h-28 w-full overflow-hidden bg-neutral-100">
+                                                                <img
+                                                                    src={`/storage/${m.pivot.imagen}`}
+                                                                    alt={m.nombre}
+                                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="h-28 w-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                                                                <BookOpen className="h-10 w-10 text-blue-400" />
+                                                            </div>
+                                                        )}
+
+                                                        <div className="p-3">
+                                                            <span className="font-medium text-sm">{m.codigo}</span>
+                                                            <span className="text-xs text-neutral-500 block truncate">{m.nombre}</span>
+                                                        </div>
+                                                    </a>
+
+                                                    {/* TOGGLE IA */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            router.post(
+                                                                `/docente/curso-materia/${m.pivot?.id}/toggle-ia`,
+                                                                {},
+                                                                { preserveScroll: true }
+                                                            );
+                                                        }}
+                                                        className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur transition-colors ${
+                                                            m.pivot?.ayuda_ia_activa
+                                                                ? 'bg-purple-600/90 text-white hover:bg-purple-700/90'
+                                                                : 'bg-white/80 text-neutral-500 hover:bg-white'
+                                                        }`}
+                                                        title={m.pivot?.ayuda_ia_activa ? 'IA activada' : 'IA desactivada'}
+                                                    >
+                                                        <Sparkles className="h-3 w-3" />
+                                                        IA
+                                                    </button>
+
+                                                    {/* BOTÓN SUBIR IMAGEN */}
+                                                    <label
+                                                        className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur bg-white/80 text-neutral-600 cursor-pointer hover:bg-white transition-colors"
+                                                        title="Cambiar imagen"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <ImagePlus className="h-3 w-3" />
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            className="hidden"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (!file) return;
+                                                                const formData = new FormData();
+                                                                formData.append('imagen', file);
+                                                                router.post(
+                                                                    `/docente/curso-materia/${m.pivot?.id}/imagen`,
+                                                                    formData,
+                                                                    {
+                                                                        forceFormData: true,
+                                                                        preserveScroll: true,
+                                                                    }
+                                                                );
+                                                            }}
+                                                        />
+                                                    </label>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -187,19 +260,30 @@ export default function Dashboard({ rol, stats, cursos }: Props) {
                                             <BookOpen className="h-4 w-4" />
                                             Mis Materias ({curso.materias?.length || 0})
                                         </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                             {curso.materias?.map((m) => (
                                                 <a
                                                     key={m.id}
                                                     href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
-                                                    className="flex items-center gap-3 border rounded-lg p-3 hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer"
+                                                    className="border rounded-lg overflow-hidden hover:border-green-300 hover:shadow-md transition-all group"
                                                 >
-                                                    <div className="bg-green-100 p-2 rounded-lg">
-                                                        <BookOpen className="h-5 w-5 text-green-600" />
-                                                    </div>
-                                                    <div>
+                                                    {m.pivot?.imagen ? (
+                                                        <div className="h-28 w-full overflow-hidden bg-neutral-100">
+                                                            <img
+                                                                src={`/storage/${m.pivot.imagen}`}
+                                                                alt={m.nombre}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-28 w-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                                                            <BookOpen className="h-10 w-10 text-green-400" />
+                                                        </div>
+                                                    )}
+
+                                                    <div className="p-3">
                                                         <span className="font-medium text-sm">{m.codigo}</span>
-                                                        <span className="text-xs text-neutral-500 block">{m.nombre}</span>
+                                                        <span className="text-xs text-neutral-500 block truncate">{m.nombre}</span>
                                                     </div>
                                                 </a>
                                             ))}
