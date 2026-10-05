@@ -174,7 +174,7 @@ class RefuerzoController extends Controller
 
         $refuerzos = Refuerzo::with(['leccion.materia', 'leccion.temario', 'leccion.curso'])
             ->where('estudiante_id', $estudiante?->id)
-            ->orderBy('completado', 'asc')      // pendientes primero
+            ->orderBy('completado', 'asc')
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -8,8 +8,7 @@ import { type NavItem } from '@/types';
 
 import { Link, usePage } from '@inertiajs/react';
 
-import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout } from 'lucide-react';
-
+import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout, Sparkles } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -38,6 +37,7 @@ export function AppSidebar() {
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
         { title: 'Lecciones', url: '/lecciones', icon: FileText },
         { title: 'Entregas', url: '/entregas/docente', icon: FileText },
+        { title: 'Refuerzos', url: '/refuerzos/docente', icon: Sparkles },  // ← NUEVO
         { title: 'Reportes', url: '/reportes', icon: FileText },
     ];
 
@@ -46,6 +46,7 @@ export function AppSidebar() {
         { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
         { title: 'Lecciones', url: '/lecciones', icon: FileText },
         { title: 'Mis Entregas', url: '/entregas', icon: FileText },
+        { title: 'Mis Refuerzos', url: '/refuerzos', icon: Sparkles },  // ← NUEVO
     ];
 
     let mainNavItems: NavItem[] = [];

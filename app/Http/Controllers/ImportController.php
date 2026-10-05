@@ -211,7 +211,7 @@ class ImportController extends Controller
                     'estado' => 'activo',
                 ]);
 
-                // $user->assignRole('estudiante');
+                $user->assignRole('estudiante');
 
                 $creados[] = [
                     'nombre' => "{$user->apellido_paterno} {$user->apellido_materno}, {$user->nombre}",

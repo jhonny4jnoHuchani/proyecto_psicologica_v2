@@ -23,12 +23,16 @@ class EntregaController extends Controller
         $user = Auth::user();
         $estudiante = Estudiante::where('user_id', $user->id)->first();
 
-        $entregas = Entrega::with(['leccion.materia', 'leccion.docente.user', 'calificacion'])
+        $entregas = Entrega::with([
+                'leccion.materia',
+                'leccion.docente.user',
+                'calificacion',
+                'refuerzo',  // 👈 NUEVO
+            ])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Lecciones donde el estudiante aún no ha entregado
         $leccionesPendientes = Leccion::with(['materia', 'docente.user', 'curso'])
             ->whereHas('curso.estudiantes', fn($q) => $q->where('estudiante_id', $estudiante->id))
             ->whereDoesntHave('entregas', fn($q) => $q->where('estudiante_id', $estudiante->id))

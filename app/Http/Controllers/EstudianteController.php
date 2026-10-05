@@ -95,8 +95,11 @@ class EstudianteController extends Controller
             'estado' => 'activo',
         ]);
 
+        // Asignar rol de estudiante
+        $user->assignRole('estudiante');
+
         return redirect()->route('estudiantes.index')
-            ->with('success', "Estudiante creado e inscrito. Contraseña: {$password}");
+        ->with('success', "Estudiante creado e inscrito. Contraseña: {$password}");
     }
 
     public function update(Request $request, Estudiante $estudiante): RedirectResponse
