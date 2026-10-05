@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
+import { AxiosError } from 'axios';
 
 // ======================== TIPOS ========================
 interface UserData {
@@ -173,6 +174,7 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
         setModalImport(true);
     };
 
+
 const handleImportPreview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!importFile || !importCursoId) return;
@@ -185,36 +187,24 @@ const handleImportPreview = async (e: React.FormEvent) => {
     setErrors({});
 
     try {
-        const csrfToken =
-            document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-
-        const res = await fetch('/estudiantes/importar/preview', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: data,
+        const res = await window.axios.post('/estudiantes/importar/preview', data, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
 
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            setErrors(err.errors || { archivo: 'Error al leer el archivo' });
-            setProcessing(false);
-            toast.error('Error al procesar el archivo');
-            return;
-        }
-
-        const json = await res.json();
-        setPreviewData(json.preview);
+        setPreviewData(res.data.preview);
         setModalImport(false);
         setModalPreview(true);
         setProcessing(false);
     } catch (err) {
         console.error(err);
         setProcessing(false);
-        toast.error('Error de conexión');
+        const axiosErr = err as AxiosError<{ errors?: Record<string, string> }>;
+        if (axiosErr.response?.status === 419) {
+            toast.error('Sesión expirada. Recarga la página.');
+        } else {
+            setErrors(axiosErr.response?.data?.errors || { archivo: 'Error al leer el archivo' });
+            toast.error('Error al procesar el archivo');
+        }
     }
 };
 
@@ -245,66 +235,33 @@ const handleImportConfirm = async () => {
     setErrors({});
 
     try {
-        const metaToken = document
-            .querySelector('meta[name="csrf-token"]')
-            ?.getAttribute('content');
-
-        const cookieToken = document.cookie
-            .split('; ')
-            .find((row) => row.startsWith('XSRF-TOKEN='))
-            ?.split('=')[1];
-
-        const csrfToken = metaToken || decodeURIComponent(cookieToken || '');
-
-        const res = await fetch('/estudiantes/importar/confirm', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html,application/xhtml+xml',
-            },
-            credentials: 'same-origin',
-            body: data,
-            // 👇 NO usar redirect: 'manual'. Dejar que siga el 302.
+        await window.axios.post('/estudiantes/importar/confirm', data, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
 
-        // El navegador siguió el 302 → la respuesta final es 200 con el HTML de /estudiantes
-        if (res.ok) {
-            setModalPreview(false);
-            setPreviewData(null);
-            setImportFile(null);
-            setImportCursoId('');
-            setProcessing(false);
-            toast.success(`${total} estudiantes importados correctamente`);
-
-            // Recargar la página
-            window.location.href = '/estudiantes';
-            return;
-        }
-
-        if (res.status === 422) {
-            const err = await res.json().catch(() => ({}));
-            setErrors(err.errors || {});
-            setProcessing(false);
-            const mensaje = Object.values(err.errors || {}).flat().join(' ');
-            toast.error(mensaje || 'Datos inválidos');
-            return;
-        }
-
-        if (res.status === 419) {
-            toast.error('Sesión expirada. Recarga la página');
-            setProcessing(false);
-            return;
-        }
-
-        toast.error('Error al importar');
+        setModalPreview(false);
+        setPreviewData(null);
+        setImportFile(null);
+        setImportCursoId('');
         setProcessing(false);
+        toast.success(`${total} estudiantes importados correctamente`);
+
+        window.location.href = '/estudiantes';
     } catch (err) {
         console.error(err);
         setProcessing(false);
-        toast.error('Error de conexión');
+        const axiosErr = err as AxiosError<{ errors?: Record<string, string> }>;
+        if (axiosErr.response?.status === 419) {
+            toast.error('Sesión expirada. Recarga la página.');
+        } else {
+            const errores = axiosErr.response?.data?.errors || {};
+            setErrors(errores);
+            const mensaje = Object.values(errores).flat().join(' ');
+            toast.error(mensaje || 'Error al importar');
+        }
     }
 };
+
 
 
 

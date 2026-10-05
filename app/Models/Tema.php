@@ -14,6 +14,7 @@ class Tema extends Model
     protected $fillable = [
         'materia_id',
         'nombre',
+        'resumen',
         'orden',
         'paginas_libro',
         'estado',

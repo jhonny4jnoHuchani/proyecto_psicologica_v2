@@ -1,4 +1,12 @@
 import { LucideIcon } from 'lucide-react';
+import { AxiosInstance } from 'axios';
+
+
+declare global {
+    interface Window {
+        axios: AxiosInstance;
+    }
+}
 
 export interface Auth {
     user: User;

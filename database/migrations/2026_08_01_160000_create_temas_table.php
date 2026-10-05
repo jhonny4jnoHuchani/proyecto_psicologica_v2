@@ -14,6 +14,8 @@ return new class extends Migration
             $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
             // Nombre del tema (ej: "Tema 3: La Memoria")
             $table->string('nombre', 200);
+            //resumen del tema 
+            $table->text('resumen')->nullable();
             // LA SECUENCIA: tema 1, 2, 3... (el ML usa esto para saber qué viene después)
             $table->unsignedInteger('orden')->default(1);
             // Qué parte del libro-resumen corresponde (ej: "págs. 9-14")
@@ -21,6 +23,7 @@ return new class extends Migration
             // ADMINISTRABLE: el docente marca si ya se vio, se pospuso o se saltó
             $table->enum('estado', ['programado', 'visto', 'omitido', 'pospuesto'])
                   ->default('programado');
+            
             $table->timestamps();
             $table->softDeletes();
         });

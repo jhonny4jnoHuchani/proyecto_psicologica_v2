@@ -17,34 +17,35 @@ use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PaginaAdminController;
 use App\Http\Controllers\RecomendacionController;
-use App\Http\Controllers\ImportController;  
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\RefuerzoController;    // ← NUEVO
 
 use App\Models\Autoridad;
 use App\Models\Convocatoria;
 use App\Models\Configuracion;
 use App\Models\Portada;
+
 //pagina inicial (todos pueden verla xq??)
 Route::get('/', function () {
     return Inertia::render('welcome', [
-
         'config' => Configuracion::first(),
         'portadas' => Portada::activas()->get(),
         'autoridades' => Autoridad::ordenadas()->get(),
         'convocatorias' => Convocatoria::activas()->get(),
-        //estamos consultando datos que vamos a necesitar para el welcome(la pantalla principal publica)
-// informacion empaquetada 
         'user' => auth()->user(),
     ]);
 })->name('home');
 
 
-
-
 //protegemos las rutas o verificamos que tenga alguna identificacion dentro del sistema(middleware)
 Route::middleware(['auth'])->group(function () {
-    //una vez logueado ya hemos pasado esa primera barrera 
-    
-    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');//aqui como estudiantes (el rol que tenemos)
+
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Endpoint para obtener un token CSRF fresco
+    Route::get('/csrf-token', function () {
+        return response()->json(['token' => csrf_token()]);
+    })->name('csrf-token');
+
     // ========================
     // RUTAS SOLO ADMIN
     // ========================
@@ -92,18 +93,13 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
 
-
-
         Route::prefix('cursos')->name('cursos.')->controller(CursoController::class)->group(function () {
             Route::get('/', 'index')->name('index');
-            
             Route::get('/eliminados', 'trashed')->name('trashed');
             Route::get('/{curso}', 'show')->name('show');
-
             Route::post('/', 'store')->name('store');
             Route::put('/{curso}', 'update')->name('update');
             Route::delete('/{curso}', 'destroy')->name('destroy');
-
             Route::post('/{id}/restore', 'restore')->name('restore');
         });
 
@@ -159,10 +155,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{leccion}', 'destroy')->name('destroy')->middleware('role:admin|docente');
     });
 
-
-
-
-
     // ========================
     // ENTREGAS
     // ========================
@@ -187,18 +179,38 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/excel', 'excel')->name('excel');
     });
 
+    // ========================
+    // DOCENTE (toggle IA + imagen)
+    // ========================
     Route::middleware(['role:docente|admin'])->prefix('docente')->name('docente.')->controller(DashboardController::class)->group(function () {
         Route::post('/curso-materia/{cursoMateriaId}/toggle-ia', 'toggleIA')->name('toggle-ia');
         Route::post('/curso-materia/{cursoMateriaId}/imagen', 'subirImagen')->name('subir-imagen');
     });
 
-     // Recomendacion de la IA
+    // ========================
+    // REFUERZOS (NUEVO)
+    // ========================
+    Route::prefix('refuerzos')->name('refuerzos.')->controller(RefuerzoController::class)->group(function () {
+
+        // --- Rutas del DOCENTE (generación con IA) ---
+        Route::middleware(['role:docente|admin'])->group(function () {
+            Route::post('/generar', 'generar')->name('generar');
+            Route::post('/regenerar-pregunta', 'regenerarPregunta')->name('regenerar-pregunta');
+            Route::post('/guardar', 'guardar')->name('guardar');
+            Route::get('/docente', 'docente')->name('docente');
+        });
+
+        // --- Rutas del ESTUDIANTE ---
+        Route::middleware(['role:estudiante'])->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{refuerzo}', 'show')->name('show');
+            Route::post('/{refuerzo}/responder', 'responder')->name('responder');
+        });
+    });
+
+    // Recomendacion de la IA
     Route::get('/estudiante/recomendaciones', [RecomendacionController::class, 'index'])
-    ->name('estudiante.recomendaciones');
-
-    // poner dentro de un middleware
-    // Configuración de Apariencia
-
+        ->name('estudiante.recomendaciones');
 
 });
 
