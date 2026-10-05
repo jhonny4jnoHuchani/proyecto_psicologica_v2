@@ -23,11 +23,15 @@ return [
         ],
     ],
 
-    // 👇 NUEVO
+    //configuracion para la IA
     'groq' => [
         'key' => env('GROQ_API_KEY'),
         'url' => 'https://api.groq.com/openai/v1/chat/completions',
         'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
+    ],
+    //configuracion para telegram
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
     ],
 
 ];

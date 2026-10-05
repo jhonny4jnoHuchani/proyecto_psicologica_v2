@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\CredencialTemporal;
 
 class EstudianteController extends Controller
 {
@@ -89,6 +90,8 @@ class EstudianteController extends Controller
             'tipo_inscripcion' => $request->tipo_inscripcion,
         ]);
 
+
+
         // Inscribir al curso
         $estudiante->cursos()->attach($request->curso_id, [
             'fecha_inscripcion' => now(),
@@ -98,8 +101,16 @@ class EstudianteController extends Controller
         // Asignar rol de estudiante
         $user->assignRole('estudiante');
 
+        // ' Guardar credencial temporal para Telegram
+        \App\Models\CredencialTemporal::create([
+            'user_id' => $user->id,
+            'password_temporal' => $password,
+        ]);
+
         return redirect()->route('estudiantes.index')
         ->with('success', "Estudiante creado e inscrito. Contraseña: {$password}");
+
+
     }
 
     public function update(Request $request, Estudiante $estudiante): RedirectResponse

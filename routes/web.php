@@ -18,7 +18,9 @@ use App\Http\Controllers\LibroController;
 use App\Http\Controllers\PaginaAdminController;
 use App\Http\Controllers\RecomendacionController;
 use App\Http\Controllers\ImportController;
-use App\Http\Controllers\RefuerzoController;    // ← NUEVO
+use App\Http\Controllers\RefuerzoController;
+use App\Http\Controllers\Telegram\TelegramWebhookController;
+
 
 use App\Models\Autoridad;
 use App\Models\Convocatoria;
@@ -214,5 +216,7 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+Route::post('/telegram/webhook', [TelegramWebhookController::class, 'webhook'])
+    ->name('telegram.webhook');
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

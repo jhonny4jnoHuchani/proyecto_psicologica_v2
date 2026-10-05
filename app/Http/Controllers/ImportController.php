@@ -206,6 +206,8 @@ class ImportController extends Controller
                     'tipo_inscripcion' => $fila['tipo_inscripcion'] ?? null,
                 ]);
 
+
+                
                 $estudiante->cursos()->attach($curso->id, [
                     'fecha_inscripcion' => today(),
                     'estado' => 'activo',
@@ -213,11 +215,19 @@ class ImportController extends Controller
 
                 $user->assignRole('estudiante');
 
+                //  Guardar credencial temporal para Telegram
+                \App\Models\CredencialTemporal::create([
+                    'user_id' => $user->id,
+                    'password_temporal' => $password,
+                ]);
+
                 $creados[] = [
                     'nombre' => "{$user->apellido_paterno} {$user->apellido_materno}, {$user->nombre}",
                     'email' => $user->email,
                     'password' => $password,
                 ];
+
+
             }
         });
 

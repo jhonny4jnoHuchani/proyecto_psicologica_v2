@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; // ← Para Spatie (próximamente)
+use Spatie\Permission\Traits\HasRoles; 
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -20,17 +21,17 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'nombre',              // ← NUEVO
-        'apellido_paterno',    // ← NUEVO
-        'apellido_materno',    // ← NUEVO
-        'ci',                  // ← NUEVO
-        'celular',             // ← NUEVO
+        'nombre',             
+        'apellido_paterno',    
+        'apellido_materno',    
+        'ci',                  
+        'celular',             
         'email',
         'password',
-        'genero',              // ← NUEVO
-        'fecha_nacimiento',    // ← NUEVO
-        'direccion',           // ← NUEVO
-        'foto_perfil',         // ← NUEVO
+        'genero',              
+        'fecha_nacimiento',    
+        'direccion',           
+        'foto_perfil',        
     ];
 
     /**
@@ -79,4 +80,23 @@ class User extends Authenticatable
     // {
     //     return "{$this->apellido_paterno} {$this->apellido_materno}, {$this->nombre}";
     // }
+
+    // ========================
+    // RELACIONES DE NOTIFICACIONES Y TELEGRAM
+    // ========================
+
+    public function credencialTemporal(): HasOne
+    {
+        return $this->hasOne(CredencialTemporal::class);
+    }
+
+    public function telegramVinculacion(): HasOne
+    {
+        return $this->hasOne(TelegramVinculacion::class);
+    }
+
+    public function notificaciones(): HasMany
+    {
+        return $this->hasMany(Notificacion::class);
+    }
 }
