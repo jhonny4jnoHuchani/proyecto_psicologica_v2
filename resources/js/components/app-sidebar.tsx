@@ -8,7 +8,7 @@ import { type NavItem } from '@/types';
 
 import { Link, usePage } from '@inertiajs/react';
 
-import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout, Sparkles } from 'lucide-react';
+import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout, Sparkles, ShieldCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -29,6 +29,7 @@ export function AppSidebar() {
         { title: 'Libros', url: '/libros', icon: Library },
         { title: 'Lecciones', url: '/lecciones', icon: FileText },
         { title: 'Reportes', url: '/reportes', icon: FileText },
+        { title: 'Roles y Permisos', url: '/roles', icon: ShieldCheck },
         { title: 'Página pricipal', url: '/pagina-admin', icon: Layout },
     ];
 

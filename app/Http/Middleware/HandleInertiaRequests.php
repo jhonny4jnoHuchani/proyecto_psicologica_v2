@@ -26,6 +26,7 @@ class HandleInertiaRequests extends Middleware
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
+                'notificaciones' => $request->user() ? $request->user()->notificaciones()->noLeidas()->recientes(10)->get() : [],
             ],
             'config' => Configuracion::first(),  // ← NUEVO
         ];

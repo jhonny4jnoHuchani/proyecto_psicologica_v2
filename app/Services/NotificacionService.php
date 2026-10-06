@@ -19,6 +19,7 @@ class NotificacionService
         string $titulo,
         string $mensaje,
         ?string $url = null,
+        bool $mandarTelegram = true,
     ): Notificacion {
         $notificacion = Notificacion::create([
             'user_id' => $user->id,
@@ -27,12 +28,14 @@ class NotificacionService
             'mensaje' => $mensaje,
             'url' => $url,
             'leida' => false,
-            'enviada_telegram' => false,
+            'enviada_telegram' => ! $mandarTelegram, // Si no se manda, marcamos como true para ignorar o simplemente queda false sin enviar
         ]);
 
-        // Despachar a la cola con delay de 1 seg (evita baneo del bot)
-        EnviarNotificacionTelegram::dispatch($notificacion->id)
-            ->delay(now()->addSeconds(1));
+        if ($mandarTelegram) {
+            // Despachar a la cola con delay de 1 seg (evita baneo del bot)
+            EnviarNotificacionTelegram::dispatch($notificacion->id)
+                ->delay(now()->addSeconds(1));
+        }
 
         return $notificacion;
     }
@@ -48,7 +51,7 @@ class NotificacionService
         return self::crear(
             user: $user,
             tipo: 'tarea_calificada',
-            titulo: "📝 Tarea calificada: {$nota}/100",
+            titulo: "Tarea calificada: {$nota}/100",
             mensaje: "Tu tarea \"{$nombreTarea}\" fue calificada con {$nota}/100.",
             url: '/entregas',
         );
@@ -65,7 +68,7 @@ class NotificacionService
         return self::crear(
             user: $user,
             tipo: 'refuerzo_generado',
-            titulo: '🪄 Nuevo refuerzo disponible',
+            titulo: 'Nuevo refuerzo disponible',
             mensaje: "Se generó un refuerzo para \"{$nombreTema}\". ¡Practica para mejorar!",
             url: "/refuerzos/{$refuerzoId}",
         );
@@ -79,7 +82,7 @@ class NotificacionService
         return self::crear(
             user: $user,
             tipo: 'credenciales_enviadas',
-            titulo: '🔐 Credenciales enviadas',
+            titulo: 'Credenciales enviadas',
             mensaje: 'Tus credenciales de acceso fueron enviadas por Telegram.',
             url: '/',
         );
@@ -92,13 +95,15 @@ class NotificacionService
         User $user,
         string $titulo,
         int $leccionId,
+        bool $mandarTelegram = false,
     ): Notificacion {
         return self::crear(
             user: $user,
             tipo: 'tarea_nueva',
-            titulo: "📚 Nueva tarea: {$titulo}",
+            titulo: "Nueva tarea: {$titulo}",
             mensaje: "Se publicó una nueva tarea: \"{$titulo}\".",
             url: "/lecciones/{$leccionId}",
+            mandarTelegram: $mandarTelegram,
         );
     }
 

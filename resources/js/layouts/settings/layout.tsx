@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 const sidebarNavItems: NavItem[] = [
     {
@@ -16,21 +16,22 @@ const sidebarNavItems: NavItem[] = [
         url: '/settings/password',
         icon: null,
     },
-    {
-        title: 'Diseño',
-        url: '/settings/apariencia',
-        icon: null,
-    },
-    {
-        title: 'Apariencia',
-        url: '/settings/appearance',
-        icon: null,
-    },
-
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
     const currentPath = window.location.pathname;
+    const { auth } = usePage().props as { auth?: { user?: { roles?: { name: string }[] } } };
+    const isAdmin = auth?.user?.roles?.some(r => r.name === 'admin');
+
+    const menuItems = [...sidebarNavItems];
+    
+    if (isAdmin) {
+        menuItems.push({
+            title: 'Diseño Institucional',
+            url: '/settings/apariencia',
+            icon: null,
+        });
+    }
 
     return (
         <div className="px-4 py-6">
@@ -39,7 +40,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav className="flex flex-col space-y-1 space-x-0">
-                        {sidebarNavItems.map((item) => (
+                        {menuItems.map((item) => (
                             <Button
                                 key={item.url}
                                 size="sm"

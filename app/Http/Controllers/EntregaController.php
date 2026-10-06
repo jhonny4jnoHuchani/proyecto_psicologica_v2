@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Docente;
 use App\Models\Entrega;
 use App\Models\Estudiante;
-use App\Models\Docente;
 use App\Models\Leccion;
+use App\Services\NotificacionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,18 +25,18 @@ class EntregaController extends Controller
         $estudiante = Estudiante::where('user_id', $user->id)->first();
 
         $entregas = Entrega::with([
-                'leccion.materia',
-                'leccion.docente.user',
-                'calificacion',
-                'refuerzo',  // 👈 NUEVO
-            ])
+            'leccion.materia',
+            'leccion.docente.user',
+            'calificacion',
+            'refuerzo',  // 👈 NUEVO
+        ])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
         $leccionesPendientes = Leccion::with(['materia', 'docente.user', 'curso'])
-            ->whereHas('curso.estudiantes', fn($q) => $q->where('estudiante_id', $estudiante->id))
-            ->whereDoesntHave('entregas', fn($q) => $q->where('estudiante_id', $estudiante->id))
+            ->whereHas('curso.estudiantes', fn ($q) => $q->where('estudiante_id', $estudiante->id))
+            ->whereDoesntHave('entregas', fn ($q) => $q->where('estudiante_id', $estudiante->id))
             ->where('estado', 'activo')
             ->get();
 
@@ -61,8 +62,8 @@ class EntregaController extends Controller
         $leccionId = request('leccion_id');
 
         $entregas = Entrega::with(['estudiante.user', 'leccion.materia', 'calificacion'])
-            ->whereHas('leccion', fn($q) => $q->where('docente_id', $docente->id))
-            ->when($leccionId, fn($q) => $q->where('leccion_id', $leccionId))
+            ->whereHas('leccion', fn ($q) => $q->where('docente_id', $docente->id))
+            ->when($leccionId, fn ($q) => $q->where('leccion_id', $leccionId))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -109,7 +110,7 @@ class EntregaController extends Controller
 
         if ($entrega) {
             // Si ya existe y se puede editar
-            if (!$entrega->sePuedeEditar()) {
+            if (! $entrega->sePuedeEditar()) {
                 return back()->with('error', 'No puedes editar esta entrega.');
             }
             // Eliminar archivos antiguos
@@ -134,6 +135,14 @@ class EntregaController extends Controller
                 'fecha_entrega' => now(),
             ]);
         }
+
+        NotificacionService::sistema(
+            user: $user,
+            titulo: 'Tarea entregada',
+            mensaje: "Tu entrega para la tarea \"{$leccion->titulo}\" fue recibida correctamente.",
+            url: "/lecciones/{$leccion->id}",
+            mandarTelegram: true, // Podemos notificar tanto por web como por telegram
+        );
 
         return back()->with('success', 'Entrega subida exitosamente.');
     }

@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Models\Calificacion;
 use App\Models\Configuracion;
+use App\Models\Leccion;
 use App\Models\Refuerzo;
 use App\Observers\CalificacionObserver;
+use App\Observers\LeccionObserver;
 use App\Observers\RefuerzoObserver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         // 🔔 Observers de notificaciones
         Calificacion::observe(CalificacionObserver::class);
         Refuerzo::observe(RefuerzoObserver::class);
+        Leccion::observe(LeccionObserver::class);
 
         // 🎨 View composer para configuración visual
         View::composer('app', function ($view) {

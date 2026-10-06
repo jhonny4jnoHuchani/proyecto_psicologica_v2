@@ -1,33 +1,32 @@
 <?php
 
+use App\Http\Controllers\CalificacionController;
+use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\CursoController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocenteController;
+use App\Http\Controllers\EntregaController;
+use App\Http\Controllers\EstudianteController;
+use App\Http\Controllers\GestionController;
+use App\Http\Controllers\ImportController;
+use App\Http\Controllers\LeccionController;
+use App\Http\Controllers\LibroController;
+use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\NotificacionController;
+use App\Http\Controllers\PaginaAdminController;
+use App\Http\Controllers\RecomendacionController;
+use App\Http\Controllers\RefuerzoController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Telegram\TelegramWebhookController;
+use App\Models\Autoridad;
+use App\Models\Configuracion;
+use App\Models\Convocatoria;
+use App\Models\Portada;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-use App\Http\Controllers\GestionController;
-use App\Http\Controllers\DocenteController;
-use App\Http\Controllers\EstudianteController;
-use App\Http\Controllers\MateriaController;   
-use App\Http\Controllers\CursoController;      
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LeccionController;
-use App\Http\Controllers\EntregaController; 
-use App\Http\Controllers\CalificacionController; 
-use App\Http\Controllers\ReporteController;
-use App\Http\Controllers\ConfiguracionController;
-use App\Http\Controllers\LibroController;
-use App\Http\Controllers\PaginaAdminController;
-use App\Http\Controllers\RecomendacionController;
-use App\Http\Controllers\ImportController;
-use App\Http\Controllers\RefuerzoController;
-use App\Http\Controllers\Telegram\TelegramWebhookController;
-
-
-use App\Models\Autoridad;
-use App\Models\Convocatoria;
-use App\Models\Configuracion;
-use App\Models\Portada;
-
-//pagina inicial (todos pueden verla xq??)
+// pagina inicial (todos pueden verla xq??)
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'config' => Configuracion::first(),
@@ -38,8 +37,7 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-
-//protegemos las rutas o verificamos que tenga alguna identificacion dentro del sistema(middleware)
+// protegemos las rutas o verificamos que tenga alguna identificacion dentro del sistema(middleware)
 Route::middleware(['auth'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -52,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
     // RUTAS SOLO ADMIN
     // ========================
     Route::middleware(['role:admin'])->group(function () {
-        
+
         Route::resource('gestiones', GestionController::class);
 
         Route::prefix('materias')->name('materias.')->controller(MateriaController::class)->group(function () {
@@ -110,6 +108,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
         });
 
+        // 🛡️ ADMINISTRACIÓN DE ROLES
+        Route::resource('roles', RoleController::class)->except(['show']);
+
         Route::prefix('libros')->name('libros.')->controller(LibroController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/eliminados', 'trashed')->name('trashed');
@@ -126,17 +127,17 @@ Route::middleware(['auth'])->group(function () {
         // ========================
         Route::prefix('pagina-admin')->name('pagina-admin.')->controller(PaginaAdminController::class)->group(function () {
             Route::get('/', 'index')->name('index');
-            
+
             // Portadas
             Route::post('/portadas', 'storePortada')->name('portadas.store');
             Route::put('/portadas/{portada}', 'updatePortada')->name('portadas.update');
             Route::delete('/portadas/{portada}', 'destroyPortada')->name('portadas.destroy');
-            
+
             // Autoridades
             Route::post('/autoridades', 'storeAutoridad')->name('autoridades.store');
             Route::put('/autoridades/{autoridad}', 'updateAutoridad')->name('autoridades.update');
             Route::delete('/autoridades/{autoridad}', 'destroyAutoridad')->name('autoridades.destroy');
-            
+
             // Convocatorias
             Route::post('/convocatorias', 'storeConvocatoria')->name('convocatorias.store');
             Route::put('/convocatorias/{convocatoria}', 'updateConvocatoria')->name('convocatorias.update');
@@ -213,6 +214,10 @@ Route::middleware(['auth'])->group(function () {
     // Recomendacion de la IA
     Route::get('/estudiante/recomendaciones', [RecomendacionController::class, 'index'])
         ->name('estudiante.recomendaciones');
+
+    // Notificaciones (Marcar como leída)
+    Route::post('/notificaciones/{notificacion}/marcar-leida', [NotificacionController::class, 'marcarLeida'])
+        ->name('notificaciones.marcar-leida');
 
 });
 

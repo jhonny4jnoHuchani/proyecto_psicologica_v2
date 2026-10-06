@@ -10,6 +10,7 @@ declare global {
 
 export interface Auth {
     user: User;
+    notificaciones?: any[];
 }
 
 export interface BreadcrumbItem {

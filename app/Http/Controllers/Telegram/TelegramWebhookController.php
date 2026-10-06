@@ -23,20 +23,21 @@ class TelegramWebhookController extends Controller
         Log::info('Telegram webhook', $update);
 
         $mensaje = $update['message'] ?? null;
-        if (!$mensaje) {
+        if (! $mensaje) {
             return response()->json(['ok' => true]);
         }
 
         $chatId = $mensaje['chat']['id'] ?? null;
         $username = $mensaje['from']['username'] ?? null;
 
-        if (!$chatId) {
+        if (! $chatId) {
             return response()->json(['ok' => true]);
         }
 
         // Caso 1: el user compartió su contacto (botón)
         if (isset($mensaje['contact'])) {
             $this->procesarContacto($chatId, $username, $mensaje['contact']);
+
             return response()->json(['ok' => true]);
         }
 
@@ -45,6 +46,7 @@ class TelegramWebhookController extends Controller
 
         if (str_starts_with($texto, '/start')) {
             $this->iniciarConversacion($chatId);
+
             return response()->json(['ok' => true]);
         }
 
@@ -53,11 +55,13 @@ class TelegramWebhookController extends Controller
 
         if ($paso === 'esperando_ci') {
             $this->procesarCI($chatId, $username, $texto);
+
             return response()->json(['ok' => true]);
         }
 
         // Cualquier otra cosa
-        $this->enviarMensaje($chatId, "Si quieres vincularte, envía /start");
+        $this->enviarMensaje($chatId, 'Si quieres vincularte, envía /start');
+
         return response()->json(['ok' => true]);
     }
 
@@ -70,8 +74,8 @@ class TelegramWebhookController extends Controller
 
         $this->enviarMensaje(
             $chatId,
-            "¡Hola! 👋 Soy el bot de notificaciones.\n\n" .
-            "Para vincularte, envíame tu CI (con o sin complemento)."
+            "¡Hola! 👋 Soy el bot de notificaciones.\n\n".
+            'Para vincularte, envíame tu CI (con o sin complemento).'
         );
     }
 
@@ -82,15 +86,17 @@ class TelegramWebhookController extends Controller
     {
         $user = User::where('ci', $ci)->first();
 
-        if (!$user) {
-            $this->enviarMensaje($chatId, "❌ No encontré ese CI en el sistema. Verifica e intenta de nuevo.");
+        if (! $user) {
+            $this->enviarMensaje($chatId, '❌ No encontré ese CI en el sistema. Verifica e intenta de nuevo.');
+
             return;
         }
 
         // Verificar que el user no esté ya vinculado a OTRO chat
         $yaVinculado = TelegramVinculacion::where('user_id', $user->id)->exists();
         if ($yaVinculado) {
-            $this->enviarMensaje($chatId, "⚠️ Este CI ya está vinculado a otro Telegram.");
+            $this->enviarMensaje($chatId, '⚠️ Este CI ya está vinculado a otro Telegram.');
+
             return;
         }
 
@@ -100,8 +106,8 @@ class TelegramWebhookController extends Controller
         // Pedir contacto con botón
         $this->enviarMensajeConBotonContacto(
             $chatId,
-            "✅ Te encontré, {$user->nombre}.\n\n" .
-            "Ahora comparte tu número de celular para confirmar tu identidad."
+            "✅ Te encontré, {$user->nombre}.\n\n".
+            'Ahora comparte tu número de celular para confirmar tu identidad.'
         );
     }
 
@@ -112,17 +118,19 @@ class TelegramWebhookController extends Controller
     {
         $paso = Cache::get("tg:{$chatId}");
 
-        if (!$paso || !str_starts_with($paso, 'esperando_contacto:')) {
-            $this->enviarMensaje($chatId, "Primero envía /start para comenzar.");
+        if (! $paso || ! str_starts_with($paso, 'esperando_contacto:')) {
+            $this->enviarMensaje($chatId, 'Primero envía /start para comenzar.');
+
             return;
         }
 
         $userId = (int) explode(':', $paso)[1];
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             Cache::forget("tg:{$chatId}");
-            $this->enviarMensaje($chatId, "Algo salió mal. Envía /start de nuevo.");
+            $this->enviarMensaje($chatId, 'Algo salió mal. Envía /start de nuevo.');
+
             return;
         }
 
@@ -133,9 +141,10 @@ class TelegramWebhookController extends Controller
         if ($telefonoTelegram !== $telefonoBD) {
             $this->enviarMensaje(
                 $chatId,
-                "❌ El número no coincide con el registrado.\n\n" .
-                "Verifica o contacta a tu institución."
+                "❌ El número no coincide con el registrado.\n\n".
+                'Verifica o contacta a tu institución.'
             );
+
             return;
         }
 
@@ -153,8 +162,8 @@ class TelegramWebhookController extends Controller
 
         $this->enviarMensaje(
             $chatId,
-            "🎉 ¡Vinculación exitosa!\n\n" .
-            "A partir de ahora recibirás tus notificaciones aquí."
+            "🎉 ¡Vinculación exitosa!\n\n".
+            'A partir de ahora recibirás tus notificaciones aquí.'
         );
 
         // Flush de notificaciones pendientes
@@ -184,10 +193,11 @@ class TelegramWebhookController extends Controller
      */
     private function enviarMensaje(int $chatId, string $texto): void
     {
-        $token = config('telegram.bots.mybot.token');
+        $token = config('services.telegram.bot_token');
 
-        if (!$token || $token === 'xxxxx') {
+        if (! $token || $token === 'xxxxx') {
             Log::warning('Telegram: token no configurado.');
+
             return;
         }
 
@@ -197,7 +207,7 @@ class TelegramWebhookController extends Controller
                 'text' => $texto,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error enviando mensaje Telegram: ' . $e->getMessage());
+            Log::error('Error enviando mensaje Telegram: '.$e->getMessage());
         }
     }
 
@@ -206,10 +216,11 @@ class TelegramWebhookController extends Controller
      */
     private function enviarMensajeConBotonContacto(int $chatId, string $texto): void
     {
-        $token = config('telegram.bots.mybot.token');
+        $token = config('services.telegram.bot_token');
 
-        if (!$token || $token === 'xxxxx') {
+        if (! $token || $token === 'xxxxx') {
             Log::warning('Telegram: token no configurado.');
+
             return;
         }
 
@@ -226,7 +237,7 @@ class TelegramWebhookController extends Controller
                 ]),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error enviando mensaje Telegram: ' . $e->getMessage());
+            Log::error('Error enviando mensaje Telegram: '.$e->getMessage());
         }
     }
 }

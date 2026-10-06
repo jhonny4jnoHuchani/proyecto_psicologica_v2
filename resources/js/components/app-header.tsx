@@ -11,7 +11,8 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Bell, FileSignature, Sparkles, KeyRound } from 'lucide-react';
+import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
 
@@ -152,13 +153,69 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 ))}
                             </div>
                         </div>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="relative group h-9 w-9 cursor-pointer">
+                                    <Bell className="!size-5 opacity-80 group-hover:opacity-100" />
+                                    {auth.notificaciones && auth.notificaciones.length > 0 && (
+                                        <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                                        </span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-80 p-2" align="end">
+                                <div className="flex items-center justify-between pb-2 mb-2 border-b">
+                                    <span className="font-semibold text-sm">Notificaciones ({auth.notificaciones?.length || 0})</span>
+                                </div>
+                                {auth.notificaciones && auth.notificaciones.length > 0 ? (
+                                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                                        {auth.notificaciones.map((notif: any) => {
+                                            const iconMap: Record<string, any> = {
+                                                'FileSignature': FileSignature,
+                                                'Sparkles': Sparkles,
+                                                'KeyRound': KeyRound,
+                                                'BookOpen': BookOpen,
+                                                'Bell': Bell
+                                            };
+                                            const IconComponent = iconMap[notif.icono] || Bell;
+
+                                            return (
+                                            <div key={notif.id} className="text-sm p-3 bg-neutral-50 dark:bg-neutral-800 rounded-md border text-left flex flex-col gap-1">
+                                                <div className="font-semibold flex justify-between items-start gap-2">
+                                                    <span className="flex items-center gap-1"><IconComponent className="w-4 h-4" /> {notif.titulo}</span>
+                                                    <Link 
+                                                        href={`/notificaciones/${notif.id}/marcar-leida`} 
+                                                        method="post"
+                                                        as="button"
+                                                        className="text-[10px] text-blue-500 hover:underline flex-shrink-0"
+                                                    >
+                                                        Marcar leída
+                                                    </Link>
+                                                </div>
+                                                <p className="text-neutral-500 dark:text-neutral-400 text-xs">{notif.mensaje}</p>
+                                                {notif.url && (
+                                                    <Link href={notif.url} className="text-blue-600 dark:text-blue-400 text-[11px] font-medium mt-1 inline-block hover:underline">
+                                                        Ver detalles &rarr;
+                                                    </Link>
+                                                )}
+                                            </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-center text-neutral-500 p-4">No tienes notificaciones nuevas</div>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="size-10 rounded-full p-1">
                                     <Avatar className="size-8 overflow-hidden rounded-full">
-                                        <AvatarImage src={auth.user.avatar} alt={auth.user.name} />
+                                        <AvatarImage src={auth.user.avatar} alt={(auth.user.nombre as string)} />
                                         <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                                            {getInitials(auth.user.name)}
+                                            {getInitials((auth.user.nombre as string))}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>
@@ -167,6 +224,8 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                 <UserMenuContent user={auth.user} />
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <AppearanceToggleDropdown />
                     </div>
                 </div>
             </div>

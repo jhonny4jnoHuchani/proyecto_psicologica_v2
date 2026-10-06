@@ -75,12 +75,12 @@ class Notificacion extends Model
     public function getIconoAttribute(): string
     {
         return match ($this->tipo) {
-            'tarea_calificada' => '📝',
-            'refuerzo_generado' => '🪄',
-            'credenciales_enviadas' => '🔐',
-            'tarea_nueva' => '📚',
-            'sistema' => '🔔',
-            default => '🔔',
+            'tarea_calificada' => 'FileSignature',
+            'refuerzo_generado' => 'Sparkles',
+            'credenciales_enviadas' => 'KeyRound',
+            'tarea_nueva' => 'BookOpen',
+            'sistema' => 'Bell',
+            default => 'Bell',
         };
     }
 }
