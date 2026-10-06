@@ -18,6 +18,7 @@ use App\Http\Controllers\RecomendacionController;
 use App\Http\Controllers\RefuerzoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\AdministrativoController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Models\Autoridad;
 use App\Models\Configuracion;
@@ -108,8 +109,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
         });
 
-        // 🛡️ ADMINISTRACIÓN DE ROLES
+        // 🛡️ ADMINISTRACIÓN DE ROLES Y CUENTAS PRIVILEGIADAS
         Route::resource('roles', RoleController::class)->except(['show']);
+        Route::resource('administrativos', AdministrativoController::class)->except(['show']);
 
         Route::prefix('libros')->name('libros.')->controller(LibroController::class)->group(function () {
             Route::get('/', 'index')->name('index');

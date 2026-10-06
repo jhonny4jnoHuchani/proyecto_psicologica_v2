@@ -16,7 +16,7 @@ class RoleController extends Controller
 
     public function index(Request $request): Response
     {
-        $roles = Role::paginate(15);
+        $roles = Role::with('permissions')->paginate(15);
         
         $roles->getCollection()->transform(function ($role) {
             $role->is_protected = in_array($role->name, $this->protectedRoles);
@@ -24,20 +24,12 @@ class RoleController extends Controller
         });
 
         return Inertia::render('roles/index', [
-            'roles' => $roles
+            'roles' => $roles,
+            'permissions' => Permission::all()
         ]);
     }
 
-    public function create(): Response
-    {
-        $permissions = Permission::all();
-        
-        return Inertia::render('roles/form', [
-            'role' => null,
-            'permissions' => $permissions,
-            'rolePermissions' => []
-        ]);
-    }
+
 
     public function store(Request $request): RedirectResponse
     {
@@ -55,21 +47,7 @@ class RoleController extends Controller
         return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente.');
     }
 
-    public function edit(Role $role): Response
-    {
-        if (in_array($role->name, $this->protectedRoles)) {
-            abort(403, 'Acceso denegado: Rol protegido del sistema.');
-        }
 
-        $permissions = Permission::all();
-        $rolePermissions = $role->permissions->pluck('name')->toArray();
-
-        return Inertia::render('roles/form', [
-            'role' => $role,
-            'permissions' => $permissions,
-            'rolePermissions' => $rolePermissions
-        ]);
-    }
 
     public function update(Request $request, Role $role): RedirectResponse
     {
