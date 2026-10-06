@@ -18,43 +18,83 @@ export function AppSidebar() {
     const isDocente = roles.includes('docente');
     const isEstudiante = roles.includes('estudiante');
 
-    // q. Menu para ADMIN
-    const adminNavItems: NavItem[] = [
-        { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-        { title: 'Gestiones', url: '/gestiones', icon: Calendar },
-        { title: 'Materias', url: '/materias', icon: BookOpen },
-        { title: 'Docentes', url: '/docentes', icon: GraduationCap },
-        { title: 'Estudiantes', url: '/estudiantes', icon: Users },
-        { title: 'Personal Admin', url: '/administrativos', icon: UserCog },
-        { title: 'Cursos', url: '/cursos', icon: School },
-        { title: 'Libros', url: '/libros', icon: Library },
-        { title: 'Lecciones', url: '/lecciones', icon: FileText },
-        { title: 'Reportes', url: '/reportes', icon: FileText },
-        { title: 'Roles y Permisos', url: '/roles', icon: ShieldCheck },
-        { title: 'Página pricipal', url: '/pagina-admin', icon: Layout },
+    // Agrupación para ADMIN
+    const adminGroups = [
+        {
+            label: "Principal",
+            items: [
+                { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+                { title: 'Página Principal', url: '/pagina-admin', icon: Layout },
+            ]
+        },
+        {
+            label: "Gestión Académica",
+            items: [
+                { title: 'Gestiones', url: '/gestiones', icon: Calendar },
+                { title: 'Cursos', url: '/cursos', icon: School },
+                { title: 'Materias', url: '/materias', icon: BookOpen },
+                { title: 'Libros', url: '/libros', icon: Library },
+                { title: 'Lecciones', url: '/lecciones', icon: FileText },
+            ]
+        },
+        {
+            label: "Registros (Usuarios)",
+            items: [
+                { title: 'Estudiantes', url: '/estudiantes', icon: Users },
+                { title: 'Docentes', url: '/docentes', icon: GraduationCap },
+                { title: 'Personal Admin', url: '/administrativos', icon: UserCog },
+            ]
+        },
+        {
+            label: "Administración del Sistema",
+            items: [
+                { title: 'Reportes', url: '/reportes', icon: FileText },
+                { title: 'Roles y Permisos', url: '/roles', icon: ShieldCheck },
+            ]
+        }
     ];
 
-    // 2.Menu para DOCENTE
-    const docenteNavItems: NavItem[] = [
-        { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-        { title: 'Lecciones', url: '/lecciones', icon: FileText },
-        { title: 'Entregas', url: '/entregas/docente', icon: FileText },
-        { title: 'Refuerzos', url: '/refuerzos/docente', icon: Sparkles },  // ← NUEVO
-        { title: 'Reportes', url: '/reportes', icon: FileText },
+    // Menu para DOCENTE
+    const docenteGroups = [
+        {
+            label: "Principal",
+            items: [
+                { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+            ]
+        },
+        {
+            label: "Académico",
+            items: [
+                { title: 'Lecciones', url: '/lecciones', icon: FileText },
+                { title: 'Entregas', url: '/entregas/docente', icon: FileText },
+                { title: 'Refuerzos', url: '/refuerzos/docente', icon: Sparkles },
+                { title: 'Reportes', url: '/reportes', icon: FileText },
+            ]
+        }
     ];
 
-    //3.  Menu para ESTUDIANTE
-    const estudianteNavItems: NavItem[] = [
-        { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-        { title: 'Lecciones', url: '/lecciones', icon: FileText },
-        { title: 'Mis Entregas', url: '/entregas', icon: FileText },
-        { title: 'Mis Refuerzos', url: '/refuerzos', icon: Sparkles },  // ← NUEVO
+    // Menu para ESTUDIANTE
+    const estudianteGroups = [
+        {
+            label: "Principal",
+            items: [
+                { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+            ]
+        },
+        {
+            label: "Mis Actividades",
+            items: [
+                { title: 'Lecciones', url: '/lecciones', icon: FileText },
+                { title: 'Mis Entregas', url: '/entregas', icon: FileText },
+                { title: 'Mis Refuerzos', url: '/refuerzos', icon: Sparkles },
+            ]
+        }
     ];
 
-    let mainNavItems: NavItem[] = [];
-    if (isAdmin) mainNavItems = adminNavItems;
-    else if (isDocente) mainNavItems = docenteNavItems;
-    else if (isEstudiante) mainNavItems = estudianteNavItems;
+    let activeGroups = [];
+    if (isAdmin) activeGroups = adminGroups;
+    else if (isDocente) activeGroups = docenteGroups;
+    else if (isEstudiante) activeGroups = estudianteGroups;
 
     const footerNavItems: NavItem[] = isAdmin
         ? [{ title: 'Apariencia', url: '/settings/apariencia', icon: Palette }]
@@ -75,7 +115,9 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {activeGroups.map((group, index) => (
+                    <NavMain key={index} label={group.label} items={group.items} />
+                ))}
             </SidebarContent>
 
             <SidebarFooter>
