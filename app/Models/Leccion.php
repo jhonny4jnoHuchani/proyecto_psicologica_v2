@@ -30,8 +30,8 @@ class Leccion extends Model
     protected function casts(): array
     {
         return [
-            'fecha_programada' => 'date',
-            'fecha_entrega' => 'date',
+            'fecha_programada' => 'datetime',
+            'fecha_entrega' => 'datetime',
         ];
     }
 

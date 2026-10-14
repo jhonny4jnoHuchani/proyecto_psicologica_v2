@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import {
+    formatoFechaHora,
+    formatoRangoFechas,
+    obtenerEstadoVencimiento,
+} from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface UserData { nombre: string; apellido_paterno: string; apellido_materno: string; }
@@ -40,20 +45,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Detalle', href: '' },
 ];
 
-function diasRestantes(fecha?: string | null) {
-    if (!fecha) return null;
-    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    const obj = new Date(`${fecha.split('T')[0]}T00:00:00`);
-    return Math.round((obj.getTime() - hoy.getTime()) / 86400000);
-}
-
-function formatoFechaLarga(fecha?: string | null) {
-    if (!fecha) return 'Sin fecha';
-    return new Date(`${fecha.split('T')[0]}T00:00:00`).toLocaleDateString('es-BO', {
-        day: 'numeric', month: 'long', year: 'numeric',
-    });
-}
-
 export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }: Props) {
     const { flash } = usePage().props as { flash?: { success?: string; error?: string } };
     
@@ -71,9 +62,12 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
     }, [flash]);
 
     const nombreCompleto = (u: UserData) => `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
-    const restantes = diasRestantes(leccion.fecha_entrega);
+    const estadoVenc = obtenerEstadoVencimiento(leccion.fecha_entrega, leccion.fecha_programada);
     const esEstudiante = rol === 'estudiante';
-    const puedeEntregar = esEstudiante && (!entrega || (entrega.estado_calificacion !== 'calificado' && restantes !== null && restantes >= 0));
+    // Si ya existe entrega, solo puede editarla si no está calificada y aún no venció la fecha límite
+    const puedeEditarExistente = entrega && entrega.estado_calificacion !== 'calificado' && !estadoVenc?.vencido;
+    // Si no existe entrega, puede subirla (si pasó la fecha límite se registrará como atrasada)
+    const puedeEntregar = esEstudiante && (!entrega || puedeEditarExistente);
 
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -146,26 +140,47 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                             </div>
                         )}
 
-                        <div className="flex flex-wrap gap-4 text-sm">
-                            <div className="flex items-center gap-1.5 text-neutral-600">
-                                <GraduationCap className="h-4 w-4" />
-                                {leccion.docente ? nombreCompleto(leccion.docente.user) : 'Sin docente'}
+                        <div className="rounded-lg bg-neutral-50 dark:bg-neutral-900 border p-3.5 space-y-2.5">
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                                <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+                                    Periodo y plazo de entrega
+                                </span>
+                                {estadoVenc && (
+                                    <Badge
+                                        className={
+                                            estadoVenc.vencido
+                                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                                                : estadoVenc.esHoy
+                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                        }
+                                    >
+                                        <Clock className="mr-1 h-3 w-3" />
+                                        {estadoVenc.textoBadge}
+                                    </Badge>
+                                )}
                             </div>
-                            <div className="flex items-center gap-1.5 text-neutral-600">
-                                <CalendarDays className="h-4 w-4" />
-                                {formatoFechaLarga(leccion.fecha_entrega)}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+                                <div className="flex items-center gap-1.5">
+                                    <CalendarDays className="h-3.5 w-3.5 text-neutral-400 shrink-0" />
+                                    <span>
+                                        <span className="font-medium text-neutral-500">Inicio:</span>{' '}
+                                        {leccion.fecha_programada ? formatoFechaHora(leccion.fecha_programada) : 'Inmediato'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <Clock className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                                    <span>
+                                        <span className="font-medium text-neutral-500">Límite:</span>{' '}
+                                        <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                            {leccion.fecha_entrega ? formatoFechaHora(leccion.fecha_entrega) : 'Sin fecha límite'}
+                                        </span>
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="h-4 w-4" />
-                                {restantes !== null && restantes > 0 && (
-                                    <Badge className="bg-amber-100 text-amber-700">{restantes} días restantes</Badge>
-                                )}
-                                {restantes === 0 && (
-                                    <Badge className="bg-red-100 text-red-700">¡Entrega hoy!</Badge>
-                                )}
-                                {restantes !== null && restantes < 0 && (
-                                    <Badge className="bg-red-100 text-red-700">Vencida</Badge>
-                                )}
+                            <div className="flex items-center gap-1.5 text-xs text-neutral-500 pt-1 border-t">
+                                <GraduationCap className="h-3.5 w-3.5 text-neutral-400" />
+                                <span>Docente: {leccion.docente ? nombreCompleto(leccion.docente.user) : 'Sin docente'}</span>
                             </div>
                         </div>
                     </CardContent>
@@ -185,7 +200,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                                 <div className="space-y-3">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Badge variant={entrega.estado_entrega === 'entregado' ? 'default' : 'destructive'}>
-                                            {entrega.estado_entrega === 'entregado' ? '✅ Entregado' : '⚠️ Atrasado'}
+                                            {entrega.estado_entrega === 'entregado' ? '✅ Entregado a tiempo' : '⚠️ Entregado atrasado'}
                                         </Badge>
                                         <Badge variant={entrega.estado_calificacion === 'calificado' ? 'default' : 'outline'}>
                                             {entrega.estado_calificacion === 'calificado' 
@@ -194,7 +209,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                                         </Badge>
                                         {entrega.fecha_entrega && (
                                             <span className="text-xs text-neutral-500">
-                                                Entregado: {formatoFechaLarga(entrega.fecha_entrega)}
+                                                Entregado el: {formatoFechaHora(entrega.fecha_entrega)}
                                             </span>
                                         )}
                                     </div>
@@ -220,17 +235,32 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                                         </div>
                                     )}
                                     
-                                    {puedeEntregar && (
-                                        <div className="rounded bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
-                                            Puedes volver a subir archivos para reemplazar tu entrega actual.
+                                    {puedeEditarExistente ? (
+                                        <div className="rounded bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300">
+                                            Puedes volver a subir archivos para reemplazar tu entrega actual antes del límite ({formatoFechaHora(leccion.fecha_entrega)}).
                                         </div>
-                                    )}
+                                    ) : estadoVenc?.vencido ? (
+                                        <div className="rounded bg-neutral-100 border border-neutral-200 p-3 text-xs text-neutral-600 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400">
+                                            El plazo venció el {formatoFechaHora(leccion.fecha_entrega)}. Tu entrega actual ya no puede ser modificada.
+                                        </div>
+                                    ) : null}
                                 </div>
                             ) : (
-                                <div className="rounded bg-amber-50 border border-amber-200 p-4 text-sm text-amber-700">
-                                    ⚠️ Aún no has realizado tu entrega. 
-                                    {restantes !== null && restantes > 0 && ` Tienes ${restantes} días para entregar.`}
-                                    {restantes === 0 && ' ¡La entrega es hoy!'}
+                                <div className={`rounded border p-4 text-sm ${
+                                    estadoVenc?.vencido
+                                        ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300'
+                                        : 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300'
+                                }`}>
+                                    {estadoVenc?.vencido ? (
+                                        <>
+                                            ⚠️ La fecha límite ({formatoFechaHora(leccion.fecha_entrega)}) ya venció. Si subes tu tarea ahora, se registrará como <strong>atrasada</strong>.
+                                        </>
+                                    ) : (
+                                        <>
+                                            ⚠️ Aún no has realizado tu entrega. Fecha límite: <strong>{formatoFechaHora(leccion.fecha_entrega)}</strong>
+                                            {estadoVenc && ` (${estadoVenc.textoBadge})`}.
+                                        </>
+                                    )}
                                 </div>
                             )}
 

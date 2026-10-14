@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface Refuerzo {
@@ -32,11 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
+    return formatoFechaHora(fecha);
 }
 
 function agruparPorMateria(refuerzos: Refuerzo[]) {

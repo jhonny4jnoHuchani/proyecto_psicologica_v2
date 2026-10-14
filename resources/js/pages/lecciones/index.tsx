@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora, formatoRangoFechas, toDatetimeLocal } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 // ======================== TIPOS ========================
@@ -103,8 +104,7 @@ function iniciales(u?: UserData) {
 
 function formatoFechaCorta(fecha?: string | null) {
     if (!fecha) return null;
-    const d = new Date(`${fecha.split('T')[0]}T00:00:00`);
-    return d.toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
+    return formatoFechaHora(fecha);
 }
 
 function diasRestantes(fecha?: string | null) {
@@ -167,8 +167,8 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
             tema_id: String(leccion.tema_id || ''),
             titulo: leccion.titulo,
             descripcion: leccion.descripcion || '',
-            fecha_programada: leccion.fecha_programada || '',
-            fecha_entrega: leccion.fecha_entrega || '',
+            fecha_programada: toDatetimeLocal(leccion.fecha_programada),
+            fecha_entrega: toDatetimeLocal(leccion.fecha_entrega),
             estado: leccion.estado,
         });
         setErrors({});
@@ -770,12 +770,37 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                     <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>Fecha programada</Label>
-                                    <Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} />
+                                    <Label>Fecha y hora de inicio (programada)</Label>
+                                    <Input
+                                        type="datetime-local"
+                                        value={form.fecha_programada}
+                                        onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })}
+                                    />
+                                    <InputError message={errors.fecha_programada} />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>Fecha de entrega</Label>
-                                    <Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} />
+                                    <div className="flex items-center justify-between">
+                                        <Label>Fecha y hora de entrega *</Label>
+                                        {form.fecha_entrega && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const fechaBase = form.fecha_entrega.split('T')[0];
+                                                    setForm({ ...form, fecha_entrega: `${fechaBase}T23:59` });
+                                                }}
+                                                className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                                                title="Fijar a las 23:59 hrs de ese día"
+                                            >
+                                                Fijar 23:59
+                                            </button>
+                                        )}
+                                    </div>
+                                    <Input
+                                        type="datetime-local"
+                                        value={form.fecha_entrega}
+                                        onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })}
+                                    />
+                                    <InputError message={errors.fecha_entrega} />
                                 </div>
                             </div>
                             <DialogFooter>
@@ -818,12 +843,37 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                     <textarea value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} className="w-full rounded-md border p-2 text-sm" rows={3} />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>Fecha programada</Label>
-                                    <Input type="date" value={form.fecha_programada} onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })} />
+                                    <Label>Fecha y hora de inicio (programada)</Label>
+                                    <Input
+                                        type="datetime-local"
+                                        value={form.fecha_programada}
+                                        onChange={(e) => setForm({ ...form, fecha_programada: e.target.value })}
+                                    />
+                                    <InputError message={errors.fecha_programada} />
                                 </div>
                                 <div className="space-y-1">
-                                    <Label>Fecha de entrega</Label>
-                                    <Input type="date" value={form.fecha_entrega} onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })} />
+                                    <div className="flex items-center justify-between">
+                                        <Label>Fecha y hora de entrega *</Label>
+                                        {form.fecha_entrega && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const fechaBase = form.fecha_entrega.split('T')[0];
+                                                    setForm({ ...form, fecha_entrega: `${fechaBase}T23:59` });
+                                                }}
+                                                className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                                                title="Fijar a las 23:59 hrs de ese día"
+                                            >
+                                                Fijar 23:59
+                                            </button>
+                                        )}
+                                    </div>
+                                    <Input
+                                        type="datetime-local"
+                                        value={form.fecha_entrega}
+                                        onChange={(e) => setForm({ ...form, fecha_entrega: e.target.value })}
+                                    />
+                                    <InputError message={errors.fecha_entrega} />
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Estado</Label>

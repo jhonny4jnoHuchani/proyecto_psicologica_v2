@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\Leccion;
 use App\Models\Curso;
-use App\Models\Materia;
 use App\Models\Docente;
+use App\Models\Leccion;
+use App\Models\Materia;
 use Illuminate\Database\Seeder;
 
 class LeccionSeeder extends Seeder
@@ -24,8 +24,8 @@ class LeccionSeeder extends Seeder
                 'titulo' => 'Ensayo: Introducción a la Psicología Cognitiva',
                 'tema' => 'Capítulo 1: Fundamentos de la Psicología Cognitiva',
                 'descripcion' => 'Realizar un ensayo de 3 páginas sobre los fundamentos de la psicología cognitiva.',
-                'fecha_programada' => '2026-08-10',
-                'fecha_entrega' => '2026-08-15',
+                'fecha_programada' => '2026-08-10 08:00:00',
+                'fecha_entrega' => '2026-08-15 23:59:00',
                 'estado' => 'activo',
             ],
             [
@@ -35,8 +35,8 @@ class LeccionSeeder extends Seeder
                 'titulo' => 'Cuestionario: Procesos Cognitivos Básicos',
                 'tema' => 'Capítulo 2: Percepción, Atención y Memoria',
                 'descripcion' => 'Resolver el cuestionario de 20 preguntas sobre percepción, atención y memoria.',
-                'fecha_programada' => '2026-08-17',
-                'fecha_entrega' => '2026-08-20',
+                'fecha_programada' => '2026-08-17 08:00:00',
+                'fecha_entrega' => '2026-08-20 23:59:00',
                 'estado' => 'activo',
             ],
             [
@@ -46,8 +46,8 @@ class LeccionSeeder extends Seeder
                 'titulo' => 'Mapa Conceptual: Etapas del Desarrollo',
                 'tema' => 'Capítulo 3: Teoría de Piaget',
                 'descripcion' => 'Elaborar un mapa conceptual de las etapas del desarrollo humano según Piaget.',
-                'fecha_programada' => '2026-08-12',
-                'fecha_entrega' => '2026-08-18',
+                'fecha_programada' => '2026-08-12 08:00:00',
+                'fecha_entrega' => '2026-08-18 23:59:00',
                 'estado' => 'activo',
             ],
             [
@@ -57,8 +57,8 @@ class LeccionSeeder extends Seeder
                 'titulo' => 'Ejercicios de Estadística Descriptiva',
                 'tema' => 'Unidad 1: Medidas de Tendencia Central',
                 'descripcion' => 'Resolver los 10 ejercicios de media, mediana, moda y desviación estándar.',
-                'fecha_programada' => '2026-08-14',
-                'fecha_entrega' => '2026-08-21',
+                'fecha_programada' => '2026-08-14 08:00:00',
+                'fecha_entrega' => '2026-08-21 23:59:00',
                 'estado' => 'activo',
             ],
             [
@@ -68,8 +68,8 @@ class LeccionSeeder extends Seeder
                 'titulo' => 'Anteproyecto de Investigación',
                 'tema' => 'Módulo 2: Metodología de la Investigación Científica',
                 'descripcion' => 'Presentar un anteproyecto con planteamiento del problema, objetivos y marco teórico.',
-                'fecha_programada' => '2026-08-16',
-                'fecha_entrega' => '2026-08-25',
+                'fecha_programada' => '2026-08-16 08:00:00',
+                'fecha_entrega' => '2026-08-25 23:59:00',
                 'estado' => 'activo',
             ],
         ];

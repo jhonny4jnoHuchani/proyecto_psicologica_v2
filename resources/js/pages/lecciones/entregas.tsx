@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface UserData { nombre: string; apellido_paterno: string; apellido_materno: string; }
@@ -49,10 +50,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function formatoFechaLarga(fecha?: string | null) {
-    if (!fecha) return 'Sin fecha';
-    return new Date(`${fecha.split('T')[0]}T00:00:00`).toLocaleDateString('es-BO', {
-        day: 'numeric', month: 'long', year: 'numeric',
-    });
+    return formatoFechaHora(fecha);
 }
 
 export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEntregar }: Props) {

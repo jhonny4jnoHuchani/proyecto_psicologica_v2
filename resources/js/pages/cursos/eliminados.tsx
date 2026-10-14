@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface Gestion { id: number; año: number; etapa: string; }
@@ -71,7 +72,7 @@ export default function CursosEliminados({ cursos }: Props) {
                                         <td className="py-3 px-4">{c.gestion?.año} - {c.gestion?.etapa}</td>
                                         <td className="py-3 px-4">{c.paralelo}</td>
                                         <td className="py-3 px-4 capitalize">{c.turno}</td>
-                                        <td className="py-3 px-4 text-muted-foreground">{new Date(c.deleted_at).toLocaleDateString('es-BO')}</td>
+                                        <td className="py-3 px-4 text-muted-foreground">{formatoFechaHora(c.deleted_at)}</td>
                                         <td className="py-3 px-4 text-right">
                                             <Button variant="outline" size="sm" onClick={() => openRestore(c)}><RefreshCw className="h-4 w-4 mr-2" />Restaurar</Button>
                                         </td>

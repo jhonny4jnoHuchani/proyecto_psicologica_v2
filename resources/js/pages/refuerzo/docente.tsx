@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { BookOpen, CheckCircle2, Clock, MessageSquare, Sparkles, User } from 'lucide-react';
+import { BookOpen, CheckCircle2, Clock, FileText, MessageSquare, Sparkles, User } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import {
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface UserData {
@@ -49,11 +50,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
+    return formatoFechaHora(fecha);
 }
 
 export default function RefuerzoDocente({ refuerzos,  }: Props) {
@@ -76,18 +73,28 @@ export default function RefuerzoDocente({ refuerzos,  }: Props) {
 
             <div className="mx-auto max-w-5xl space-y-6 p-6">
                 {/* HEADER */}
-                <div>
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600 text-white">
-                            <Sparkles className="h-5 w-5" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs">
+                                <Sparkles className="h-5 w-5" />
+                            </div>
+                            <h1 className="text-2xl font-bold tracking-tight">
+                                Refuerzos de mis estudiantes
+                            </h1>
                         </div>
-                        <h1 className="text-2xl font-bold tracking-tight">
-                            Refuerzos de mis estudiantes
-                        </h1>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Preguntas generadas por la IA después de calificaciones menores a 70.
+                        </p>
                     </div>
-                    <p className="mt-2 text-sm text-neutral-500">
-                        Preguntas generadas por la IA después de calificaciones menores a 70.
-                    </p>
+
+                    <a
+                        href="/reportes"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 dark:border-purple-800 dark:text-purple-300 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 transition-colors shadow-xs"
+                    >
+                        <FileText className="h-3.5 w-3.5" />
+                        <span>Generar Reporte PDF</span>
+                    </a>
                 </div>
 
                 {/* STATS */}

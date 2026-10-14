@@ -8,9 +8,25 @@ declare global {
     }
 }
 
+export interface NotificacionItem {
+    id: number;
+    user_id: number;
+    tipo: string;
+    titulo: string;
+    mensaje: string;
+    url?: string | null;
+    leida: boolean;
+    leida_at?: string | null;
+    icono?: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Auth {
     user: User;
-    notificaciones?: any[];
+    roles?: string[];
+    permissions?: string[];
+    notificaciones?: NotificacionItem[];
 }
 
 export interface BreadcrumbItem {

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFecha } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface UserData {
@@ -70,7 +71,7 @@ export default function EstudiantesShow({ estudiante }: Props) {
                             <div><span className="font-medium">Apellido Materno:</span> {u.apellido_materno}</div>
                             <div><span className="font-medium">CI:</span> {u.ci}</div>
                             <div><span className="font-medium">Género:</span> {u.genero || '-'}</div>
-                            <div><span className="font-medium">Fecha Nacimiento:</span> {u.fecha_nacimiento || '-'}</div>
+                            <div><span className="font-medium">Fecha Nacimiento:</span> {u.fecha_nacimiento ? formatoFecha(u.fecha_nacimiento) : '-'}</div>
                             <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
                                 {u.direccion || 'Sin dirección'}

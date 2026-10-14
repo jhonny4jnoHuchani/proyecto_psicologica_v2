@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertTriangle, BookOpen, FileText, LoaderCircle, Paperclip, Send, Sparkles, Upload } from 'lucide-react';
+import { AlertTriangle, BookOpen, Clock, FileText, LoaderCircle, Paperclip, Send, Sparkles, Upload } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,12 +13,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora, obtenerEstadoVencimiento } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface MateriaData { id: number; nombre: string; codigo: string; }
 interface DocenteData { id: number; user: { nombre: string; apellido_paterno: string; apellido_materno: string; }; }
 interface LeccionData {
-    id: number; titulo: string; fecha_entrega: string | null;
+    id: number; titulo: string; fecha_programada?: string | null; fecha_entrega: string | null;
     materia: MateriaData; docente: DocenteData; curso: { paralelo: string; gestion: { año: number; etapa: string } };
 }
 interface CalificacionData { id: number; nota: number; comentarios: string | null; }
@@ -114,22 +115,55 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                             <p className="text-muted-foreground text-sm">No tienes tareas pendientes.</p>
                         )}
                         <div className="space-y-3">
-                            {leccionesPendientes?.map((l) => (
-                                <div key={l.id} className="flex items-center justify-between border rounded-lg p-3">
-                                    <div>
-                                        <p className="font-medium">{l.titulo}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {l.materia?.codigo} - {l.materia?.nombre} | Docente: {l.docente ? nombreCompleto(l.docente.user) : '-'}
-                                        </p>
-                                        <p className="text-xs text-red-500 dark:text-red-400 mt-1">
-                                            Entrega: {l.fecha_entrega || 'Sin fecha'}
-                                        </p>
+                            {leccionesPendientes?.map((l) => {
+                                const estadoVenc = obtenerEstadoVencimiento(l.fecha_entrega, l.fecha_programada);
+                                return (
+                                    <div key={l.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border rounded-lg p-3 hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-colors">
+                                        <div className="space-y-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-medium text-sm">{l.titulo}</p>
+                                                {estadoVenc && (
+                                                    <Badge
+                                                        className={`text-[10px] px-2 py-0 ${
+                                                            estadoVenc.vencido
+                                                                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                                                                : estadoVenc.esHoy
+                                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                                                                : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                                        }`}
+                                                    >
+                                                        <Clock className="mr-1 h-2.5 w-2.5" />
+                                                        {estadoVenc.textoBadge}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {l.materia?.codigo} - {l.materia?.nombre} | Docente: {l.docente ? nombreCompleto(l.docente.user) : '-'}
+                                            </p>
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                                {l.fecha_programada && (
+                                                    <span className="text-muted-foreground">
+                                                        Inicio: {formatoFechaHora(l.fecha_programada)}
+                                                    </span>
+                                                )}
+                                                <span className="font-medium text-rose-600 dark:text-rose-400">
+                                                    Límite: {formatoFechaHora(l.fecha_entrega)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                                            <Button size="sm" asChild variant="outline">
+                                                <Link href={`/lecciones/${l.id}`}>
+                                                    Ver detalle
+                                                </Link>
+                                            </Button>
+                                            <Button size="sm" onClick={() => openSubir(l)} className="bg-indigo-600 hover:bg-indigo-700">
+                                                <Upload className="h-4 w-4 mr-1.5" />Subir entrega
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <Button size="sm" onClick={() => openSubir(l)}>
-                                        <Upload className="h-4 w-4 mr-2" />Subir
-                                    </Button>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </CardContent>
                 </Card>
@@ -186,6 +220,11 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                             <p className="text-xs text-muted-foreground">
                                                                 Docente: {e.leccion?.docente ? nombreCompleto(e.leccion.docente.user) : '-'}
                                                             </p>
+                                                            {e.fecha_entrega && (
+                                                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                                    Entregado: {formatoFechaHora(e.fecha_entrega)}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                         <div className="flex gap-2">
                                                             <Badge variant={e.estado_entrega === 'entregado' ? 'default' : e.estado_entrega === 'atrasado' ? 'destructive' : 'secondary'}>
@@ -268,7 +307,16 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Subir Entrega</DialogTitle>
-                            <DialogDescription>{leccionSelect?.titulo}</DialogDescription>
+                            <DialogDescription asChild>
+                                <div className="space-y-1">
+                                    <p className="font-medium text-foreground">{leccionSelect?.titulo}</p>
+                                    {leccionSelect?.fecha_entrega && (
+                                        <p className="text-xs text-rose-600 dark:text-rose-400">
+                                            Fecha y hora límite: {formatoFechaHora(leccionSelect.fecha_entrega)}
+                                        </p>
+                                    )}
+                                </div>
+                            </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubir} className="space-y-4">
                             <div className="space-y-1">

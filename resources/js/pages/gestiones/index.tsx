@@ -25,6 +25,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFecha } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 // ========================
@@ -70,14 +71,9 @@ const initialForm: GestionForm = {
 // HELPERS DE FECHA
 // ========================
 
-// Para mostrar en la tabla: "1 ago 2025"
+// Para mostrar en la tabla: "1 de enero de 2026"
 const formatFecha = (fecha: string) => {
-    if (!fecha) return '-';
-    return new Date(fecha).toLocaleDateString('es-BO', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
+    return formatoFecha(fecha);
 };
 
 // Para precargar el <input type="date">, que exige formato YYYY-MM-DD

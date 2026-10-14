@@ -4,6 +4,7 @@ import { BookOpen, ArrowLeft, Calendar, User, Hash, FileText, Download } from 'l
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface MateriaOption { id: number; nombre: string; codigo: string; }
@@ -43,7 +44,7 @@ function colorForMateria(codigo?: string) {
 }
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return formatoFechaHora(fecha);
 }
 
 export default function LibroShow({ libro }: Props) {

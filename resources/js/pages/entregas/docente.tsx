@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface MateriaData { id: number; nombre: string; codigo: string; }
@@ -309,6 +310,11 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                                             <td className="py-3 px-4 text-xs">{e.leccion?.materia?.codigo}</td>
                                             <td className="py-3 px-4">
                                                 <Badge variant={e.estado_entrega === 'entregado' ? 'default' : 'destructive'}>{e.estado_entrega}</Badge>
+                                                {e.fecha_entrega && (
+                                                    <p className="text-[11px] text-muted-foreground mt-1">
+                                                        {formatoFechaHora(e.fecha_entrega)}
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="py-3 px-4 text-xs">
                                                 {e.calificacion ? (
