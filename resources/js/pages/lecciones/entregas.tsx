@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, BookOpen, CalendarDays, Clock, Eye, GraduationCap, LoaderCircle, RefreshCw, Sparkles, Star, UserX, Users, Wand2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, BookOpen, CalendarDays, Clock, Eye, GraduationCap, LoaderCircle, RefreshCw, Sparkles, Star, UserX, Users, Wand2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
@@ -73,6 +73,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
     const [regenerando, setRegenerando] = useState<number | null>(null);
     const [guardandoRefuerzo, setGuardandoRefuerzo] = useState(false);
     const [modalConfirmarRefrescar, setModalConfirmarRefrescar] = useState(false);
+    const [errorGeneracion, setErrorGeneracion] = useState<string | null>(null);
 
     const nombreCompleto = (u: UserData) => `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
 
@@ -111,8 +112,12 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                 setEstudianteRefuerzo(
                     entregaSelect ? nombreCompleto(entregaSelect.estudiante.user) : ''
                 );
+                setErrorGeneracion(null);
                 setModalRefuerzo(true);
                 generarPreguntas(flash.entrega_refuerzo_id);
+            } else if (flash?.motivo_no_refuerzo) {
+                toast.warning(`Atención: ${flash.motivo_no_refuerzo}`, { duration: 7000 });
+                router.reload({ only: ['entregas'] });
             } else {
                 // Recargar la página para actualizar la tabla
                 router.reload({ only: ['entregas'] });
@@ -132,6 +137,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
 
     const generarPreguntas = async (entregaId: number, limpiar: boolean = true) => {
         setCargandoRefuerzo(true);
+        setErrorGeneracion(null);
 
         if (limpiar) {
             setPreguntasRefuerzo([]);
@@ -146,15 +152,18 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
             if (res.data.success) {
                 setPreguntasRefuerzo(res.data.preguntas);
                 setRecomendacion(res.data.recomendacion || '');
+                toast.success('Preguntas generadas con éxito');
             } else {
-                toast.error(res.data.error || 'Error al generar las preguntas');
-                if (limpiar) setModalRefuerzo(false);
+                const errorMsg = res.data.error || 'Error al generar las preguntas';
+                setErrorGeneracion(errorMsg);
+                toast.error(errorMsg, { duration: 7000 });
             }
         } catch (err) {
             console.error(err);
-            const axiosErr = err as AxiosError<{ error?: string }>;
-            toast.error(axiosErr.response?.data?.error || 'Error al generar las preguntas');
-            if (limpiar) setModalRefuerzo(false);
+            const axiosErr = err as AxiosError<{ error?: string; message?: string }>;
+            const errorMsg = axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Error al generar las preguntas';
+            setErrorGeneracion(errorMsg);
+            toast.error(errorMsg, { duration: 7000 });
         } finally {
             setCargandoRefuerzo(false);
         }
@@ -424,6 +433,35 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                                 Estudiante: <strong>{estudianteRefuerzo}</strong> · Revisa y edita las preguntas antes de enviarlas.
                             </DialogDescription>
                         </DialogHeader>
+
+                        {/* Error al generar preguntas */}
+                        {errorGeneracion && preguntasRefuerzo.length === 0 && !cargandoRefuerzo && (
+                            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30 space-y-3">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                                    <div className="space-y-1">
+                                        <h4 className="text-sm font-semibold text-red-800 dark:text-red-300">
+                                            No se pudieron generar las preguntas con IA
+                                        </h4>
+                                        <p className="text-xs text-red-700 dark:text-red-400 whitespace-pre-line">
+                                            {errorGeneracion}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="pt-2 flex justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => entregaRefuerzoId && generarPreguntas(entregaRefuerzoId, true)}
+                                        className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:hover:bg-red-900/50"
+                                    >
+                                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                                        Reintentar generación
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
 
                         {preguntasRefuerzo.length === 0 && cargandoRefuerzo ? (
                             // Primera carga: no hay preguntas → mostrar spinner grande

@@ -29,6 +29,14 @@ class HandleInertiaRequests extends Middleware
                 'notificaciones' => $request->user() ? $request->user()->notificaciones()->noLeidas()->recientes(10)->get() : [],
             ],
             'config' => Configuracion::first(),  // ← NUEVO
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
+                'warning' => $request->session()->get('warning'),
+                'sugerir_refuerzo' => $request->session()->get('sugerir_refuerzo'),
+                'entrega_refuerzo_id' => $request->session()->get('entrega_refuerzo_id'),
+                'motivo_no_refuerzo' => $request->session()->get('motivo_no_refuerzo'),
+            ],
         ];
     }
 }

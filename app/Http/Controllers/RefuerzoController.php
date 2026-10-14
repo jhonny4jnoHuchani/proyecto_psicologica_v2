@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Refuerzo;
+use App\Models\Docente;
 use App\Models\Entrega;
 use App\Models\Estudiante;
-use App\Models\Docente;
+use App\Models\Refuerzo;
 use App\Services\IAService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,7 +34,7 @@ class RefuerzoController extends Controller
      */
     public function generar(Request $request)
     {
-        if (!auth()->user()->hasRole('admin|docente')) {
+        if (! auth()->user()->hasRole('admin|docente')) {
             abort(403);
         }
 
@@ -44,20 +44,89 @@ class RefuerzoController extends Controller
 
         $entrega = Entrega::with([
             'leccion.materia',
+            'leccion.curso',
             'leccion.temario',
             'calificacion',
         ])->findOrFail($request->entrega_id);
 
-        // Validar que tenga calificación
-        if (!$entrega->calificacion) {
+        // 1. Validar que tenga calificación
+        if (! $entrega->calificacion) {
+            $msg = 'La entrega no tiene calificación todavía.';
+            Log::warning("Intento de generar preguntas para la entrega #{$entrega->id} sin calificación.");
+
             return response()->json([
                 'success' => false,
-                'error' => 'La entrega no tiene calificación todavía.',
+                'error' => $msg,
             ], 422);
+        }
+
+        // 2. Validar que la nota sea menor a 70
+        if ($entrega->calificacion->nota >= 70) {
+            $msg = "La nota del estudiante es {$entrega->calificacion->nota}/100 (aprobada). Las preguntas de refuerzo son para notas menores a 70.";
+            Log::info("Refuerzo no requerido para entrega #{$entrega->id}: nota {$entrega->calificacion->nota} >= 70.");
+
+            return response()->json([
+                'success' => false,
+                'error' => $msg,
+            ], 422);
+        }
+
+        // 3. Validar que no exista ya un refuerzo
+        if (Refuerzo::where('entrega_id', $entrega->id)->exists()) {
+            $msg = 'Esta entrega ya cuenta con preguntas de refuerzo generadas.';
+            Log::info("Intento de generar refuerzo duplicado para entrega #{$entrega->id}.");
+
+            return response()->json([
+                'success' => false,
+                'error' => $msg,
+            ], 422);
+        }
+
+        // 4. Validar configuración de ayuda con IA en curso_materia
+        $cursoMateria = DB::table('curso_materia')
+            ->where('curso_id', $entrega->leccion->curso_id)
+            ->where('materia_id', $entrega->leccion->materia_id)
+            ->first();
+
+        if (! $cursoMateria) {
+            $msg = 'No se encontró la relación curso-materia para verificar los permisos de refuerzo.';
+            Log::warning("No se pueden generar preguntas para entrega #{$entrega->id}: No existe curso_materia (curso: {$entrega->leccion->curso_id}, materia: {$entrega->leccion->materia_id}).");
+
+            return response()->json([
+                'success' => false,
+                'error' => $msg,
+            ], 422);
+        }
+
+        if (! $cursoMateria->ayuda_ia_activa) {
+            $nombreMateria = $entrega->leccion->materia?->nombre ?? 'la materia';
+            $msg = "La ayuda de IA está desactivada para {$nombreMateria} en este curso.";
+            Log::warning("No se pueden generar preguntas para entrega #{$entrega->id}: 'ayuda_ia_activa' está deshabilitada en curso_materia.");
+
+            return response()->json([
+                'success' => false,
+                'error' => $msg,
+            ], 422);
+        }
+
+        // 5. Validar clave de API de Groq
+        if (empty(config('services.groq.key'))) {
+            $msg = 'La clave de la IA (GROQ_API_KEY) no está configurada en el servidor.';
+            Log::error("No se pueden generar preguntas para entrega #{$entrega->id}: GROQ_API_KEY no configurada.");
+
+            return response()->json([
+                'success' => false,
+                'error' => $msg,
+            ], 500);
         }
 
         try {
             $resultado = $this->iaService->generarPreguntas($entrega);
+
+            Log::info("Preguntas de refuerzo generadas correctamente para la entrega #{$entrega->id}", [
+                'estudiante_id' => $entrega->estudiante_id,
+                'total_preguntas' => count($resultado['preguntas']),
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -65,10 +134,13 @@ class RefuerzoController extends Controller
                 'recomendacion' => $resultado['recomendacion'],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error generando preguntas IA: ' . $e->getMessage());
+            Log::error("Error al generar preguntas IA para la entrega #{$entrega->id}: ".$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'error' => 'No se pudieron generar las preguntas. Intenta de nuevo.',
+                'error' => 'No se pudieron generar las preguntas: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -78,7 +150,7 @@ class RefuerzoController extends Controller
      */
     public function regenerarPregunta(Request $request)
     {
-        if (!auth()->user()->hasRole('admin|docente')) {
+        if (! auth()->user()->hasRole('admin|docente')) {
             abort(403);
         }
 
@@ -105,10 +177,13 @@ class RefuerzoController extends Controller
                 'pregunta' => $nuevaPregunta,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error regenerando pregunta: ' . $e->getMessage());
+            Log::error("Error al regenerar pregunta IA para entrega #{$entrega->id}: ".$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
-                'error' => 'No se pudo regenerar la pregunta.',
+                'error' => 'No se pudo regenerar la pregunta: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -118,7 +193,7 @@ class RefuerzoController extends Controller
      */
     public function guardar(Request $request): RedirectResponse
     {
-        if (!auth()->user()->hasRole('admin|docente')) {
+        if (! auth()->user()->hasRole('admin|docente')) {
             abort(403);
         }
 
@@ -142,7 +217,7 @@ class RefuerzoController extends Controller
             ->where('materia_id', $entrega->leccion->materia_id)
             ->first();
 
-        if (!$cursoMateria) {
+        if (! $cursoMateria) {
             return back()->with('error', 'No se encontró la relación curso-materia.');
         }
 
@@ -248,12 +323,12 @@ class RefuerzoController extends Controller
         $leccionId = $request->query('leccion_id');
 
         $refuerzos = Refuerzo::with([
-                'estudiante.user',
-                'leccion.materia',
-                'leccion.temario',
-            ])
-            ->whereHas('leccion', fn($q) => $q->where('docente_id', $docente?->id))
-            ->when($leccionId, fn($q) => $q->where('leccion_id', $leccionId))
+            'estudiante.user',
+            'leccion.materia',
+            'leccion.temario',
+        ])
+            ->whereHas('leccion', fn ($q) => $q->where('docente_id', $docente?->id))
+            ->when($leccionId, fn ($q) => $q->where('leccion_id', $leccionId))
             ->orderBy('created_at', 'desc')
             ->get();
 

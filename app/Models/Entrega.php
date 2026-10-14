@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class Entrega extends Model
 {
     use SoftDeletes;
@@ -52,8 +51,13 @@ class Entrega extends Model
      */
     public function sePuedeEditar(): bool
     {
-        if ($this->estado_calificacion === 'calificado') return false;
-        if ($this->leccion->fecha_entrega && now()->gt($this->leccion->fecha_entrega)) return false;
+        if ($this->estado_calificacion === 'calificado') {
+            return false;
+        }
+        if ($this->leccion->fecha_entrega && now()->gt($this->leccion->fecha_entrega)) {
+            return false;
+        }
+
         return true;
     }
 
