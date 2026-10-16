@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\HasObfuscatedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Gestion extends Model
 {
+    use HasObfuscatedRouteKey;
+
     protected $table = 'gestions';
+
+    protected $appends = ['hash_id'];
 
     protected $fillable = [
         'año',

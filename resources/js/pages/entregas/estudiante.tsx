@@ -19,11 +19,11 @@ import { type BreadcrumbItem } from '@/types';
 interface MateriaData { id: number; nombre: string; codigo: string; }
 interface DocenteData { id: number; user: { nombre: string; apellido_paterno: string; apellido_materno: string; }; }
 interface LeccionData {
-    id: number; titulo: string; fecha_programada?: string | null; fecha_entrega: string | null;
+    id: number; hash_id?: string; titulo: string; fecha_programada?: string | null; fecha_entrega: string | null;
     materia: MateriaData; docente: DocenteData; curso: { paralelo: string; gestion: { año: number; etapa: string } };
 }
 interface CalificacionData { id: number; nota: number; comentarios: string | null; }
-interface RefuerzoData { id: number; completado: boolean; }
+interface RefuerzoData { id: number; hash_id?: string; completado: boolean; }
 
 interface Entrega {
     id: number; estado_entrega: string; estado_calificacion: string;
@@ -153,7 +153,7 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                         </div>
                                         <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
                                             <Button size="sm" asChild variant="outline">
-                                                <Link href={`/lecciones/${l.id}`}>
+                                                <Link href={`/lecciones/${l.hash_id || l.id}`}>
                                                     Ver detalle
                                                 </Link>
                                             </Button>
@@ -218,15 +218,17 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                     role="button"
                                                     tabIndex={0}
                                                     onClick={() => {
-                                                        if (e.leccion?.id) {
-                                                            router.visit(`/lecciones/${e.leccion.id}`);
+                                                        const target = e.leccion?.hash_id || e.leccion?.id;
+                                                        if (target) {
+                                                            router.visit(`/lecciones/${target}`);
                                                         }
                                                     }}
                                                     onKeyDown={(ev) => {
                                                         if (ev.key === 'Enter' || ev.key === ' ') {
                                                             ev.preventDefault();
-                                                            if (e.leccion?.id) {
-                                                                router.visit(`/lecciones/${e.leccion.id}`);
+                                                            const target = e.leccion?.hash_id || e.leccion?.id;
+                                                            if (target) {
+                                                                router.visit(`/lecciones/${target}`);
                                                             }
                                                         }
                                                     }}
@@ -253,8 +255,9 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                                 className="h-7 text-xs gap-1 border-neutral-300 dark:border-neutral-700 group-hover:border-indigo-400 group-hover:bg-indigo-50 group-hover:text-indigo-700 dark:group-hover:border-indigo-600 dark:group-hover:bg-indigo-950/60 dark:group-hover:text-indigo-300 transition-all"
                                                                 onClick={(ev) => {
                                                                     ev.stopPropagation();
-                                                                    if (e.leccion?.id) {
-                                                                        router.visit(`/lecciones/${e.leccion.id}`);
+                                                                    const target = e.leccion?.hash_id || e.leccion?.id;
+                                                                    if (target) {
+                                                                        router.visit(`/lecciones/${target}`);
                                                                     }
                                                                 }}
                                                             >
@@ -320,7 +323,7 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                                 size="sm"
                                                                 className="bg-sky-600 hover:bg-sky-700 text-white text-xs h-8 shadow-xs"
                                                             >
-                                                                <Link href={`/refuerzos/${e.refuerzo!.id}`}>
+                                                                <Link href={`/refuerzos/${e.refuerzo?.hash_id || e.refuerzo!.id}`}>
                                                                     <span className="mr-1.5">📝</span>
                                                                     Iniciar práctica
                                                                 </Link>

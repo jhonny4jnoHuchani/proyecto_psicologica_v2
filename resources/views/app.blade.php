@@ -6,6 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">  
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <link rel="icon" type="image/webp" href="{{ $config && $config->logo ? asset('storage/'.$config->logo) : asset('storage/logos/ri0uWptALTdyWeHiLlg3QFIZlQgFBKGx869M7fX2.webp') }}">
+        <link rel="apple-touch-icon" href="{{ $config && $config->logo ? asset('storage/'.$config->logo) : asset('storage/logos/ri0uWptALTdyWeHiLlg3QFIZlQgFBKGx869M7fX2.webp') }}">
 
         <script>
             (function() {

@@ -39,6 +39,7 @@ interface Tema {
 
 interface Leccion {
     id: number;
+    hash_id?: string;
     titulo: string;
     tema_id: number | null;
     temario: Tema | null;
@@ -457,11 +458,11 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                                     <div key={l.id} className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all">
                                                                         <div className="min-w-0 flex-1">
                                                                             {isDocente ? (
-                                                                                <a href={`/lecciones/${l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                                <a href={`/lecciones/${l.hash_id || l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
                                                                                     {l.titulo}
                                                                                 </a>
                                                                             ) : (
-                                                                                <a href={`/lecciones/${l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                                <a href={`/lecciones/${l.hash_id || l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
                                                                                     {l.titulo}
                                                                                 </a>
                                                                             )}
@@ -501,7 +502,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
 
                                                                         <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
                                                                             {!isDocente ? (
-                                                                                <a href={`/lecciones/${l.id}`}>
+                                                                                <a href={`/lecciones/${l.hash_id || l.id}`}>
                                                                                     <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-7 text-xs">
                                                                                         <Send className="mr-1 h-3 w-3" />
                                                                                         Entregar
@@ -509,7 +510,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                                                 </a>
                                                                             ) : (
                                                                                 <>
-                                                                                    <a href={`/lecciones/${l.id}/entregas`}>
+                                                                                    <a href={`/lecciones/${l.hash_id || l.id}/entregas`}>
                                                                                         <Button variant="outline" size="icon" className="h-7 w-7" title="Ver entregas">
                                                                                             <Users className="h-3.5 w-3.5 text-blue-500" />
                                                                                         </Button>
@@ -575,11 +576,11 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                             <div key={l.id} className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all">
                                                                 <div className="min-w-0 flex-1">
                                                                     {isDocente ? (
-                                                                        <a href={`/lecciones/${l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                        <a href={`/lecciones/${l.hash_id || l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
                                                                             {l.titulo}
                                                                         </a>
                                                                     ) : (
-                                                                        <a href={`/lecciones/${l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                        <a href={`/lecciones/${l.hash_id || l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
                                                                             {l.titulo}
                                                                         </a>
                                                                     )}
@@ -618,7 +619,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                                 <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
                                                                     {isDocente && (
                                                                         <>
-                                                                            <a href={`/lecciones/${l.id}/entregas`}>
+                                                                            <a href={`/lecciones/${l.hash_id || l.id}/entregas`}>
                                                                                 <Button variant="outline" size="icon" className="h-7 w-7" title="Ver entregas">
                                                                                     <Users className="h-3.5 w-3.5 text-blue-500" />
                                                                                 </Button>

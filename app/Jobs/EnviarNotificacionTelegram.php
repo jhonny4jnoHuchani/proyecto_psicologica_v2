@@ -16,6 +16,7 @@ class EnviarNotificacionTelegram implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $backoff = 10;
 
     public function __construct(
@@ -27,7 +28,7 @@ class EnviarNotificacionTelegram implements ShouldQueue
         $notificacion = Notificacion::with('user.telegramVinculacion')
             ->find($this->notificacionId);
 
-        if (!$notificacion) {
+        if (! $notificacion) {
             return;
         }
 
@@ -36,22 +37,29 @@ class EnviarNotificacionTelegram implements ShouldQueue
             return;
         }
 
+        // Si la palanca de Telegram está apagada (false), no enviar nada ni generar error
+        if (! config('services.telegram.enabled', false)) {
+            return;
+        }
+
         $user = $notificacion->user;
         $vinculacion = $user?->telegramVinculacion;
 
         // 1. Sin Telegram vinculado → queda pendiente
-        if (!$vinculacion) {
+        if (! $vinculacion) {
             Log::info("Notif {$notificacion->id}: user sin Telegram vinculado, queda pendiente.");
+
             return;
         }
 
         // 2. Sin token configurado → error controlado
         $token = config('services.telegram.bot_token');
-        if (!$token || $token === 'xxxxx') {
+        if (! $token || $token === 'xxxxx') {
             $notificacion->update([
                 'enviada_telegram' => false,
                 'telegram_error' => 'Bot de Telegram no configurado.',
             ]);
+
             return;
         }
 
@@ -81,7 +89,7 @@ class EnviarNotificacionTelegram implements ShouldQueue
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error("Error enviando notif {$notificacion->id} a Telegram: " . $e->getMessage());
+            Log::error("Error enviando notif {$notificacion->id} a Telegram: ".$e->getMessage());
 
             $notificacion->update([
                 'enviada_telegram' => false,
@@ -107,7 +115,7 @@ class EnviarNotificacionTelegram implements ShouldQueue
         if ($notificacion->url) {
             $baseUrl = rtrim(config('app.url'), '/');
             $lineas[] = '';
-            $lineas[] = $baseUrl . $notificacion->url;
+            $lineas[] = $baseUrl.$notificacion->url;
         }
 
         return implode("\n", $lineas);

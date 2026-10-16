@@ -280,3 +280,22 @@ test('refuerzos generar endpoint captures and surfaces IAService exception messa
 
     expect($response->json('error'))->toContain('Rate limit exceeded from Groq (HTTP 429)');
 });
+
+test('docente can request AI feedback suggestion for an entrega', function () {
+    $data = crearEntregaTestData(true);
+
+    $response = $this->actingAs($data['userDocente'])
+        ->postJson(route('calificaciones.sugerir-retroalimentacion'), [
+            'entrega_id' => $data['entrega']->id,
+            'nota' => 45,
+        ]);
+
+    $response->assertOk()
+        ->assertJsonStructure([
+            'success',
+            'sugerencia',
+        ]);
+
+    expect($response->json('success'))->toBeTrue();
+    expect($response->json('sugerencia'))->not->toBeEmpty();
+});

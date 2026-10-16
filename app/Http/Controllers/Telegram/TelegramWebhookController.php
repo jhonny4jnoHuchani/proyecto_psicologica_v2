@@ -18,6 +18,10 @@ class TelegramWebhookController extends Controller
      */
     public function webhook(Request $request)
     {
+        if (! config('services.telegram.enabled', false)) {
+            return response()->json(['ok' => false, 'message' => 'Telegram deshabilitado en configuración']);
+        }
+
         $update = $request->all();
 
         Log::info('Telegram webhook', $update);

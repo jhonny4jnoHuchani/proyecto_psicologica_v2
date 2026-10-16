@@ -261,8 +261,12 @@ class RefuerzoController extends Controller
     /**
      * Ver un refuerzo específico y responderlo.
      */
-    public function show(Refuerzo $refuerzo): Response
+    public function show(Request $request, Refuerzo $refuerzo): Response|RedirectResponse
     {
+        if (is_numeric($request->route()->originalParameter('refuerzo'))) {
+            return redirect()->to(route('refuerzos.show', $refuerzo));
+        }
+
         // Seguridad: solo el dueño puede verlo
         $estudiante = Estudiante::where('user_id', Auth::id())->first();
 
@@ -300,13 +304,18 @@ class RefuerzoController extends Controller
             'respuestas.*' => 'nullable|string',
         ]);
 
+        $evaluacion = $this->iaService->evaluarRefuerzo($refuerzo, $request->respuestas);
+
         $refuerzo->update([
             'respuestas' => $request->respuestas,
             'completado' => true,
+            'nota' => $evaluacion['nota'],
+            'evaluacion_ia' => $evaluacion,
+            'fecha_evaluacion' => now(),
         ]);
 
-        return redirect()->route('refuerzos.index')
-            ->with('success', 'Respuestas enviadas. ¡Gracias por practicar!');
+        return redirect()->route('refuerzos.show', $refuerzo)
+            ->with('success', "¡Práctica de refuerzo completada y evaluada! Obtuviste una calificación de {$evaluacion['nota']}/100.");
     }
 
     // ============================================================

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Calificacion;
 use App\Models\Entrega;
 use App\Models\Refuerzo;
+use App\Services\IAService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,29 @@ class CalificacionController extends Controller
             'sugerir_refuerzo' => $sugerirRefuerzo,
             'entrega_refuerzo_id' => $sugerirRefuerzo ? $entrega->id : null,
             'motivo_no_refuerzo' => $motivoNoRefuerzo,
+        ]);
+    }
+
+    /**
+     * Genera una sugerencia de retroalimentación pedagógica con IA para el docente.
+     */
+    public function sugerirRetroalimentacion(Request $request, IAService $iaService): JsonResponse
+    {
+        if (! auth()->user()->hasRole('admin|docente')) {
+            abort(403);
+        }
+
+        $request->validate([
+            'entrega_id' => 'required|exists:entregas,id',
+            'nota' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $entrega = Entrega::findOrFail($request->entrega_id);
+        $sugerencia = $iaService->sugerirRetroalimentacion($entrega, (float) $request->nota);
+
+        return response()->json([
+            'success' => true,
+            'sugerencia' => $sugerencia,
         ]);
     }
 

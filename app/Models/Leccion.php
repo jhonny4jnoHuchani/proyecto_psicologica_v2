@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasObfuscatedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,9 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Leccion extends Model
 {
-    use SoftDeletes;
+    use HasObfuscatedRouteKey, SoftDeletes;
 
     protected $table = 'lecciones';
+
+    protected $appends = ['hash_id'];
 
     protected $fillable = [
         'materia_id',

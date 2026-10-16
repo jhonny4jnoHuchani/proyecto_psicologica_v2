@@ -68,10 +68,13 @@ class DashboardController extends Controller
         $refuerzosCompletados = (clone $refuerzosQuery)->where('completado', true)->count();
         $refuerzosPendientes = (clone $refuerzosQuery)->where('completado', false)->count();
 
+        $semaforo = $this->calcularSemaforoRezago($gestionId && $gestionId !== 'all' ? (int) $gestionId : null);
+
         return Inertia::render('dashboard', [
             'rol' => 'admin',
             'gestiones' => $gestiones,
             'filtro_gestion_id' => $gestionId ? (string) $gestionId : 'all',
+            'semaforo' => $semaforo,
             'stats' => [
                 'gestiones_activas' => Gestion::where('estado', 'activo')->count(),
                 'cursos_activos' => (clone $cursosQuery)->where('estado', 'activo')->count(),
@@ -109,10 +112,101 @@ class DashboardController extends Controller
             ])
             ->get();
 
+        $semaforo = $this->calcularSemaforoRezago(null, $docente?->id);
+
         return Inertia::render('dashboard', [
             'rol' => 'docente',
             'cursos' => $cursos,
+            'semaforo' => $semaforo,
         ]);
+    }
+
+    /**
+     * Calcula el Semáforo de Rezago Estudiantil para Alerta Temprana.
+     * Rojo: Riesgo Alto (promedio < 51 o >= 2 reprobadas)
+     * Amarillo: En Observación (promedio 51-69 o refuerzos pendientes)
+     * Verde: Desempeño Favorable (promedio >= 70)
+     */
+    private function calcularSemaforoRezago(?int $gestionId = null, ?int $docenteId = null): array
+    {
+        $query = Estudiante::with([
+            'user',
+            'cursos.gestion',
+            'entregas' => function ($q) use ($docenteId) {
+                if ($docenteId) {
+                    $q->whereHas('leccion', fn ($lq) => $lq->where('docente_id', $docenteId));
+                }
+                $q->with(['calificacion', 'refuerzo', 'leccion.materia']);
+            },
+        ]);
+
+        if ($gestionId) {
+            $query->whereHas('cursos', fn ($q) => $q->where('gestion_id', $gestionId));
+        }
+
+        if ($docenteId) {
+            $query->whereHas('cursos.materias', fn ($q) => $q->where('curso_materia.docente_id', $docenteId));
+        }
+
+        $estudiantes = $query->get();
+
+        $alto = [];
+        $medio = [];
+        $bajo = 0;
+
+        foreach ($estudiantes as $estudiante) {
+            $calificaciones = $estudiante->entregas->pluck('calificacion')->filter();
+            $notas = $calificaciones->pluck('nota')->map(fn ($n) => (float) $n);
+            $promedio = $notas->count() > 0 ? round($notas->avg(), 1) : null;
+            $reprobadas = $notas->filter(fn ($n) => $n < 70)->count();
+            $refuerzosPendientes = $estudiante->entregas->pluck('refuerzo')->filter()->where('completado', false)->count();
+
+            $cursoInfo = $estudiante->cursos->first();
+            $cursoStr = $cursoInfo ? "Paralelo {$cursoInfo->paralelo}" : 'Sin curso';
+
+            $item = [
+                'id' => $estudiante->id,
+                'hash_id' => $estudiante->hash_id ?? (string) $estudiante->id,
+                'nombre' => $estudiante->nombre_completo,
+                'codigo' => $estudiante->user?->ci ?? "EST-{$estudiante->id}",
+                'curso' => $cursoStr,
+                'promedio' => $promedio,
+                'tareas_reprobadas' => $reprobadas,
+                'refuerzos_pendientes' => $refuerzosPendientes,
+                'nivel' => 'bajo',
+                'motivo' => 'Al día',
+            ];
+
+            if (($promedio !== null && $promedio < 51) || $reprobadas >= 2) {
+                $item['nivel'] = 'alto';
+                $item['motivo'] = $promedio !== null && $promedio < 51
+                    ? "Promedio crítico ({$promedio}/100)"
+                    : "{$reprobadas} tareas reprobadas";
+                $alto[] = $item;
+            } elseif (($promedio !== null && $promedio < 70) || $refuerzosPendientes > 0 || $reprobadas === 1) {
+                $item['nivel'] = 'medio';
+                $item['motivo'] = $refuerzosPendientes > 0
+                    ? "{$refuerzosPendientes} refuerzo(s) pendiente(s)"
+                    : ($promedio !== null ? "Promedio regular ({$promedio}/100)" : '1 tarea observada');
+                $medio[] = $item;
+            } else {
+                $bajo++;
+            }
+        }
+
+        // Ordenar estudiantes en riesgo por promedio ascendente
+        usort($alto, fn ($a, $b) => ($a['promedio'] ?? 0) <=> ($b['promedio'] ?? 0));
+        usort($medio, fn ($a, $b) => ($a['promedio'] ?? 0) <=> ($b['promedio'] ?? 0));
+
+        return [
+            'resumen' => [
+                'alto' => count($alto),
+                'medio' => count($medio),
+                'bajo' => $bajo,
+                'total' => count($estudiantes),
+            ],
+            'estudiantes_riesgo' => array_merge($alto, $medio),
+        ];
     }
 
     private function dashboardEstudiante($user): Response

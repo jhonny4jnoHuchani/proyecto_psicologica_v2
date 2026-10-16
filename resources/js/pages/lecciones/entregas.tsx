@@ -60,6 +60,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
     const [nota, setNota] = useState('');
     const [comentarios, setComentarios] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [sugiriendoFeedback, setSugiriendoFeedback] = useState(false);
 
     // ==================== MODAL REFUERZO IA ====================
     const [modalRefuerzo, setModalRefuerzo] = useState(false);
@@ -86,6 +87,32 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
         setModalCalificar(true);
     };
 
+
+    const handleSugerirFeedback = async () => {
+        if (!entregaSelect?.id) return;
+        const notaNum = parseFloat(nota);
+        if (isNaN(notaNum) || notaNum < 0 || notaNum > 100) {
+            toast.warning('Ingresa primero una nota válida (0-100) para generar la retroalimentación.');
+            return;
+        }
+
+        setSugiriendoFeedback(true);
+        try {
+            const res = await window.axios.post('/calificaciones/sugerir-retroalimentacion', {
+                entrega_id: entregaSelect.id,
+                nota: notaNum,
+            });
+
+            if (res.data?.sugerencia) {
+                setComentarios(res.data.sugerencia);
+                toast.success('Retroalimentación pedagógica generada. Puedes revisarla y editarla.');
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'No se pudo generar la retroalimentación.');
+        } finally {
+            setSugiriendoFeedback(false);
+        }
+    };
 
     const handleCalificar: FormEventHandler = async (e) => {
         e.preventDefault();
@@ -386,9 +413,41 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                                 <Label>Nota (0-100) *</Label>
                                 <Input type="number" min="0" max="100" step="0.01" value={nota} onChange={(e) => setNota(e.target.value)} required />
                             </div>
-                            <div className="space-y-1">
-                                <Label>Comentarios</Label>
-                                <textarea value={comentarios} onChange={(e) => setComentarios(e.target.value)} className="w-full rounded-md border p-2 text-sm" rows={3} />
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <Label>Comentarios / Retroalimentación</Label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleSugerirFeedback}
+                                        disabled={sugiriendoFeedback || !nota}
+                                        className="h-7 px-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                                        title="Genera retroalimentación pedagógica constructiva con IA basada en la nota y el tema"
+                                    >
+                                        {sugiriendoFeedback ? (
+                                            <>
+                                                <LoaderCircle className="mr-1.5 h-3 w-3 animate-spin" />
+                                                Redactando con IA...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="mr-1.5 h-3.5 w-3.5 text-purple-500" />
+                                                ✨ Sugerir con IA
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                                <textarea
+                                    value={comentarios}
+                                    onChange={(e) => setComentarios(e.target.value)}
+                                    className="w-full rounded-md border p-2.5 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+                                    rows={4}
+                                    placeholder="Retroalimentación constructiva para el estudiante..."
+                                />
+                                <p className="text-[11px] text-neutral-400">
+                                    Puedes escribir tus propios comentarios o pulsar <strong>✨ Sugerir con IA</strong> para obtener una propuesta basada en la nota ({nota || '0'}/100) y la bibliografía.
+                                </p>
                             </div>
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={() => setModalCalificar(false)}>Cancelar</Button>

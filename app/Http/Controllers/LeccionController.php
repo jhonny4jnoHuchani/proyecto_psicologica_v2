@@ -122,8 +122,13 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección eliminada.');
     }
 
-    public function show(Leccion $leccion): Response
+    public function show(Request $request, Leccion $leccion): Response|RedirectResponse
     {
+        // Si la URL en la barra de direcciones contiene el ID numérico, redirigir al código cifrado
+        if (is_numeric($request->route()->originalParameter('leccion'))) {
+            return redirect()->to(route('lecciones.show', $leccion));
+        }
+
         $user = Auth::user();
 
         $entrega = null;
@@ -142,8 +147,12 @@ class LeccionController extends Controller
         ]);
     }
 
-    public function entregas(Leccion $leccion): Response
+    public function entregas(Request $request, Leccion $leccion): Response|RedirectResponse
     {
+        if (is_numeric($request->route('leccion'))) {
+            return redirect()->to(route('lecciones.entregas', $leccion));
+        }
+
         $entregas = Entrega::with(['estudiante.user', 'calificacion'])
             ->where('leccion_id', $leccion->id)
             ->orderBy('created_at', 'desc')

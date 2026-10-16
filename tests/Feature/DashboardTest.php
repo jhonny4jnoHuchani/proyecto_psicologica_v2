@@ -33,6 +33,9 @@ test('admin can visit dashboard and receive statistical data', function () {
         ->has('stats.promedio_general')
         ->has('stats.tasa_aprobacion')
         ->has('stats.total_refuerzos')
+        ->has('semaforo.resumen.alto')
+        ->has('semaforo.resumen.medio')
+        ->has('semaforo.resumen.bajo')
     );
 });
 
@@ -74,5 +77,6 @@ test('docente can visit dashboard and receive cursos data', function () {
         ->component('dashboard')
         ->where('rol', 'docente')
         ->has('cursos')
+        ->has('semaforo.resumen.alto')
     );
 });

@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { BookOpen, CheckCircle2, Clock, FileText, MessageSquare, Sparkles, User } from 'lucide-react';
+import { AlertTriangle, Award, BookOpen, CheckCircle, CheckCircle2, Clock, FileText, MessageSquare, Sparkles, User } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -19,9 +19,19 @@ interface UserData {
     apellido_materno: string;
 }
 
+interface EvaluacionIA {
+    nota: number;
+    conceptos_dominados: string[];
+    que_mejorar: string[];
+    recomendacion: string;
+}
+
 interface Refuerzo {
     id: number;
     completado: boolean;
+    nota?: number | null;
+    evaluacion_ia?: EvaluacionIA | null;
+    fecha_evaluacion?: string | null;
     created_at: string;
     preguntas: string[];
     respuestas: (string | null)[] | null;
@@ -218,14 +228,22 @@ export default function RefuerzoDocente({ refuerzos,  }: Props) {
                                                         variant={r.completado ? 'default' : 'outline'}
                                                         className={
                                                             r.completado
-                                                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                                                ? r.nota !== null && r.nota !== undefined
+                                                                    ? r.nota >= 70
+                                                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-300 font-semibold'
+                                                                        : r.nota >= 51
+                                                                        ? 'bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 font-semibold'
+                                                                        : 'bg-red-100 text-red-800 hover:bg-red-100 border-red-300 font-semibold'
+                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                                                                 : 'border-amber-200 text-amber-700'
                                                         }
                                                     >
                                                         {r.completado ? (
                                                             <>
                                                                 <CheckCircle2 className="mr-1 h-3 w-3" />
-                                                                Completado
+                                                                {r.nota !== null && r.nota !== undefined
+                                                                    ? `Evaluado: ${r.nota}/100`
+                                                                    : 'Completado'}
                                                             </>
                                                         ) : (
                                                             <>
@@ -240,10 +258,59 @@ export default function RefuerzoDocente({ refuerzos,  }: Props) {
 
                                         <CollapsibleContent>
                                             <div className="border-t bg-neutral-50/50 p-4 space-y-4">
+                                                {/* Diagnóstico de Evaluación IA del Refuerzo */}
+                                                {r.completado && r.evaluacion_ia && (
+                                                    <div className="rounded-xl border border-purple-200 bg-white p-4 shadow-xs space-y-3">
+                                                        <div className="flex items-center justify-between pb-2 border-b">
+                                                            <div className="flex items-center gap-2">
+                                                                <Award className="h-4 w-4 text-purple-600" />
+                                                                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                                                                    Diagnóstico del Refuerzo Evaluado
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-sm font-extrabold text-neutral-900">
+                                                                Nota: <span className={r.nota && r.nota >= 70 ? 'text-emerald-600' : r.nota && r.nota >= 51 ? 'text-amber-600' : 'text-red-600'}>{r.nota}</span> / 100
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                                            <div className="rounded-lg bg-emerald-50/80 p-3 border border-emerald-200/80 space-y-1">
+                                                                <p className="font-semibold text-emerald-800 flex items-center gap-1.5">
+                                                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                                                                    Conceptos dominados
+                                                                </p>
+                                                                <ul className="space-y-1 text-emerald-900">
+                                                                    {r.evaluacion_ia.conceptos_dominados?.map((cd, i) => (
+                                                                        <li key={i}>• {cd}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+
+                                                            <div className="rounded-lg bg-amber-50/80 p-3 border border-amber-200/80 space-y-1">
+                                                                <p className="font-semibold text-amber-800 flex items-center gap-1.5">
+                                                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                                                                    Puntos que debe reforzar
+                                                                </p>
+                                                                <ul className="space-y-1 text-amber-900">
+                                                                    {r.evaluacion_ia.que_mejorar?.map((qm, i) => (
+                                                                        <li key={i}>• {qm}</li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+
+                                                        {r.evaluacion_ia.recomendacion && (
+                                                            <p className="text-xs text-purple-900 bg-purple-50/60 p-2.5 rounded-lg border border-purple-100">
+                                                                <strong>Recomendación formativa: </strong> {r.evaluacion_ia.recomendacion}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 {r.recomendacion && (
                                                     <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
                                                         <p className="text-xs font-medium text-purple-700">
-                                                            📝 Recomendación de estudio
+                                                            📝 Recomendación inicial de estudio
                                                         </p>
                                                         <p className="mt-1 text-sm text-purple-900 whitespace-pre-line">
                                                             {r.recomendacion}
