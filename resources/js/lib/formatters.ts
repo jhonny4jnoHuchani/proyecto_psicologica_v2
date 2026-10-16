@@ -290,3 +290,181 @@ export function obtenerEstadoVencimiento(
     };
 }
 
+const DIAS_SEMANA = [
+    'domingo',
+    'lunes',
+    'martes',
+    'miércoles',
+    'jueves',
+    'viernes',
+    'sábado',
+];
+
+/**
+ * Formato estilo Moodle / LMS:
+ * Ej: "martes, 8 de septiembre de 2026, 00:00"
+ * Ej: "domingo, 13 de septiembre de 2026, 17:41"
+ */
+export function formatoFechaMoodle(fechaStr?: string | null): string {
+    if (!fechaStr) return 'Sin fecha';
+    const partes = parsearFechaPartes(fechaStr);
+    if (!partes) return String(fechaStr);
+
+    const d = new Date(
+        partes.año,
+        partes.mes,
+        partes.dia,
+        partes.horas,
+        partes.minutos
+    );
+    const diaSemana = DIAS_SEMANA[d.getDay()] ?? '';
+    const nombreMes = MESES[partes.mes] ?? '';
+    const hh = partes.horas.toString().padStart(2, '0');
+    const mm = partes.minutos.toString().padStart(2, '0');
+
+    return `${diaSemana}, ${partes.dia} de ${nombreMes} de ${partes.año}, ${hh}:${mm}`;
+}
+
+export interface TiempoRestanteInfo {
+    texto: string;
+    esAnticipado: boolean;
+    esAtrasado: boolean;
+    esVencido: boolean;
+}
+
+/**
+ * Calcula el texto de tiempo restante al estilo exacto de Moodle / LMS:
+ * - "La tarea fue enviada 1 día 6 horas antes de la fecha límite"
+ * - "La tarea fue enviada 3 horas 20 minutos después de la fecha límite"
+ * - "2 días 5 horas restantes"
+ * - "La tarea está retrasada por 1 día 2 horas"
+ */
+export function calcularTiempoRestanteMoodle(
+    fechaEntregaStr?: string | null,
+    fechaLimiteStr?: string | null
+): TiempoRestanteInfo {
+    if (!fechaLimiteStr) {
+        return {
+            texto: fechaEntregaStr ? 'Entregado (sin fecha límite)' : 'Sin fecha límite',
+            esAnticipado: false,
+            esAtrasado: false,
+            esVencido: false,
+        };
+    }
+
+    const partesLimite = parsearFechaPartes(fechaLimiteStr);
+    if (!partesLimite) {
+        return { texto: '-', esAnticipado: false, esAtrasado: false, esVencido: false };
+    }
+
+    const fechaLimite = new Date(
+        partesLimite.año,
+        partesLimite.mes,
+        partesLimite.dia,
+        partesLimite.horas,
+        partesLimite.minutos,
+        0
+    );
+
+    if (fechaEntregaStr) {
+        const partesEntrega = parsearFechaPartes(fechaEntregaStr);
+        if (!partesEntrega) {
+            return { texto: 'Entregado', esAnticipado: false, esAtrasado: false, esVencido: false };
+        }
+        const fechaEntrega = new Date(
+            partesEntrega.año,
+            partesEntrega.mes,
+            partesEntrega.dia,
+            partesEntrega.horas,
+            partesEntrega.minutos,
+            0
+        );
+
+        const diffMs = fechaLimite.getTime() - fechaEntrega.getTime();
+        const anticipado = diffMs >= 0;
+        const absDiff = Math.abs(diffMs);
+
+        const totalMin = Math.floor(absDiff / 60000);
+        const totalHoras = Math.floor(totalMin / 60);
+        const dias = Math.floor(totalHoras / 24);
+        const horas = totalHoras % 24;
+        const minutos = totalMin % 60;
+
+        let tiempoTxt = '';
+        if (dias > 0) {
+            tiempoTxt = `${dias} día${dias !== 1 ? 's' : ''}${horas > 0 ? ` ${horas} hora${horas !== 1 ? 's' : ''}` : ''}`;
+        } else if (horas > 0) {
+            tiempoTxt = `${horas} hora${horas !== 1 ? 's' : ''}${minutos > 0 ? ` ${minutos} minuto${minutos !== 1 ? 's' : ''}` : ''}`;
+        } else {
+            tiempoTxt = `${Math.max(1, minutos)} minuto${minutos !== 1 ? 's' : ''}`;
+        }
+
+        if (anticipado) {
+            return {
+                texto: `La tarea fue enviada ${tiempoTxt} antes de la fecha límite`,
+                esAnticipado: true,
+                esAtrasado: false,
+                esVencido: false,
+            };
+        } else {
+            return {
+                texto: `La tarea fue enviada ${tiempoTxt} después de la fecha límite`,
+                esAnticipado: false,
+                esAtrasado: true,
+                esVencido: true,
+            };
+        }
+    }
+
+    // Aún no entregado: calcular contra el momento actual
+    const ahora = new Date();
+    const diffMs = fechaLimite.getTime() - ahora.getTime();
+
+    if (diffMs <= 0) {
+        const absDiff = Math.abs(diffMs);
+        const totalMin = Math.floor(absDiff / 60000);
+        const totalHoras = Math.floor(totalMin / 60);
+        const dias = Math.floor(totalHoras / 24);
+        const horas = totalHoras % 24;
+
+        let tiempoTxt = '';
+        if (dias > 0) {
+            tiempoTxt = `${dias} día${dias !== 1 ? 's' : ''}${horas > 0 ? ` ${horas} hora${horas !== 1 ? 's' : ''}` : ''}`;
+        } else if (horas > 0) {
+            tiempoTxt = `${horas} hora${horas !== 1 ? 's' : ''}`;
+        } else {
+            tiempoTxt = `${Math.max(1, totalMin)} minutos`;
+        }
+
+        return {
+            texto: `La tarea está retrasada por ${tiempoTxt}`,
+            esAnticipado: false,
+            esAtrasado: true,
+            esVencido: true,
+        };
+    }
+
+    const totalMin = Math.floor(diffMs / 60000);
+    const totalHoras = Math.floor(totalMin / 60);
+    const dias = Math.floor(totalHoras / 24);
+    const horas = totalHoras % 24;
+    const minutos = totalMin % 60;
+
+    let tiempoTxt = '';
+    if (dias > 0) {
+        tiempoTxt = `${dias} día${dias !== 1 ? 's' : ''}${horas > 0 ? ` ${horas} hora${horas !== 1 ? 's' : ''}` : ''}`;
+    } else if (horas > 0) {
+        tiempoTxt = `${horas} hora${horas !== 1 ? 's' : ''} ${minutos} minutos`;
+    } else {
+        tiempoTxt = `${Math.max(1, minutos)} minutos`;
+    }
+
+    return {
+        texto: `${tiempoTxt} restantes`,
+        esAnticipado: false,
+        esAtrasado: false,
+        esVencido: false,
+    };
+}
+
+

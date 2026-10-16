@@ -4,17 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Curso;
 use App\Models\Docente;
+use App\Models\Entrega;
+use App\Models\Estudiante;
 use App\Models\Leccion;
 use App\Models\Materia;
+use App\Models\Tema;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\Estudiante;
-use App\Models\Entrega;
-use App\Models\Tema;
 
 class LeccionController extends Controller
 {
@@ -25,24 +25,26 @@ class LeccionController extends Controller
         $materiaId = $request->query('materia_id');
 
         $lecciones = Leccion::with(['materia', 'temario', 'docente.user', 'curso'])
-            ->when($cursoId, fn($q) => $q->where('curso_id', $cursoId))
-            ->when($materiaId, fn($q) => $q->where('materia_id', $materiaId))
+            ->when($cursoId, fn ($q) => $q->where('curso_id', $cursoId))
+            ->when($materiaId, fn ($q) => $q->where('materia_id', $materiaId))
             ->when($user->hasRole('docente'), function ($q) use ($user) {
                 $docente = Docente::where('user_id', $user->id)->first();
-                if ($docente) $q->where('docente_id', $docente->id);
+                if ($docente) {
+                    $q->where('docente_id', $docente->id);
+                }
             })
             ->orderBy('created_at', 'desc')
             ->get();
 
         if ($user->hasRole('docente')) {
             $docente = Docente::where('user_id', $user->id)->first();
-            $cursos = Curso::whereHas('materias', fn($q) => $q->where('curso_materia.docente_id', $docente?->id))
+            $cursos = Curso::whereHas('materias', fn ($q) => $q->where('curso_materia.docente_id', $docente?->id))
                 ->with('gestion')->get();
-            $materias = Materia::whereHas('cursos', fn($q) => $q->where('curso_materia.docente_id', $docente?->id))->get();
+            $materias = Materia::whereHas('cursos', fn ($q) => $q->where('curso_materia.docente_id', $docente?->id))->get();
         } elseif ($user->hasRole('estudiante')) {
             $estudiante = $user->estudiante;
             $cursos = $estudiante?->cursos()->with('gestion')->get() ?? collect();
-            $materias = Materia::whereHas('cursos.estudiantes', fn($q) => $q->where('estudiante_id', $estudiante?->id))->get();
+            $materias = Materia::whereHas('cursos.estudiantes', fn ($q) => $q->where('estudiante_id', $estudiante?->id))->get();
         } else {
             $cursos = Curso::with('gestion')->get();
             $materias = Materia::all();
@@ -116,17 +118,18 @@ class LeccionController extends Controller
     public function destroy(Leccion $leccion): RedirectResponse
     {
         $leccion->delete();
+
         return back()->with('success', 'Lección eliminada.');
     }
 
     public function show(Leccion $leccion): Response
     {
         $user = Auth::user();
-        
+
         $entrega = null;
         if ($user->hasRole('estudiante')) {
             $estudiante = Estudiante::where('user_id', $user->id)->first();
-            $entrega = Entrega::with('calificacion')
+            $entrega = Entrega::with(['calificacion', 'refuerzo'])
                 ->where('leccion_id', $leccion->id)
                 ->where('estudiante_id', $estudiante?->id)
                 ->first();
@@ -149,11 +152,11 @@ class LeccionController extends Controller
         $estudiantesSinEntregar = Estudiante::whereHas('cursos', function ($q) use ($leccion) {
             $q->where('curso_id', $leccion->curso_id);
         })
-        ->whereDoesntHave('entregas', function ($q) use ($leccion) {
-            $q->where('leccion_id', $leccion->id);
-        })
-        ->with('user')
-        ->get();
+            ->whereDoesntHave('entregas', function ($q) use ($leccion) {
+                $q->where('leccion_id', $leccion->id);
+            })
+            ->with('user')
+            ->get();
 
         return Inertia::render('lecciones/entregas', [
             'leccion' => $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']),

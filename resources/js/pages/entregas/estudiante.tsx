@@ -226,7 +226,12 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <Button size="sm" variant="outline" asChild className="h-7 text-xs">
+                                                                <Link href={`/lecciones/${e.leccion?.id}`}>
+                                                                    Ver detalle
+                                                                </Link>
+                                                            </Button>
                                                             <Badge variant={e.estado_entrega === 'entregado' ? 'default' : e.estado_entrega === 'atrasado' ? 'destructive' : 'secondary'}>
                                                                 {e.estado_entrega}
                                                             </Badge>
@@ -256,32 +261,34 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                         </div>
                                                     )}
 
-                                                    {/* 🎯 BANNER DE REFUERZO PENDIENTE */}
+                                                    {/* 🎯 BANNER DE REFUERZO INMEDIATO (CORRECTIVO) */}
                                                     {tieneRefuerzoPendiente && (
-                                                        <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-3">
-                                                            <div className="flex items-start gap-3">
-                                                                <div className="rounded-full bg-amber-200 p-1.5 shrink-0">
-                                                                    <AlertTriangle className="h-4 w-4 text-amber-700" />
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm font-semibold text-amber-800">
-                                                                        ¡Tienes un refuerzo pendiente!
-                                                                    </p>
-                                                                    <p className="text-xs text-amber-700 mt-0.5">
-                                                                        La IA generó 10 preguntas para ayudarte a mejorar en este tema.
-                                                                    </p>
-                                                                    <Button
-                                                                        asChild
-                                                                        size="sm"
-                                                                        className="mt-2 bg-amber-600 hover:bg-amber-700 text-white"
-                                                                    >
-                                                                        <Link href={`/refuerzos/${e.refuerzo!.id}`}>
-                                                                            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                                                                            Responder ahora
-                                                                        </Link>
-                                                                    </Button>
-                                                                </div>
+                                                        <div className="rounded-lg border border-sky-300 bg-sky-50/80 dark:bg-sky-950/40 dark:border-sky-800 p-3.5 space-y-2 relative overflow-hidden">
+                                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-500" />
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-xs font-bold text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
+                                                                    <span>🔧</span>
+                                                                    <span>REFUERZO INMEDIATO (Correctivo)</span>
+                                                                </p>
+                                                                {e.calificacion?.nota && (
+                                                                    <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                                                        Nota: {Math.round(e.calificacion.nota)}/100 ⚠️
+                                                                    </span>
+                                                                )}
                                                             </div>
+                                                            <p className="text-xs text-neutral-700 dark:text-neutral-300">
+                                                                Recomendación: Responde estas 10 preguntas de práctica para reforzar los conceptos clave de este tema.
+                                                            </p>
+                                                            <Button
+                                                                asChild
+                                                                size="sm"
+                                                                className="bg-sky-600 hover:bg-sky-700 text-white text-xs h-8 shadow-xs"
+                                                            >
+                                                                <Link href={`/refuerzos/${e.refuerzo!.id}`}>
+                                                                    <span className="mr-1.5">📝</span>
+                                                                    Iniciar práctica
+                                                                </Link>
+                                                            </Button>
                                                         </div>
                                                     )}
 
