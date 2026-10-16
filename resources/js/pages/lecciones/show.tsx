@@ -637,142 +637,144 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                 {/* ============================================================== */}
                 {/* 5. DOS CUADROS DIVIDIDOS (MACHINE LEARNING + REFUERZO INMEDIATO)*/}
                 {/* ============================================================== */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4">
-                    {/* ------------------------------------------------------------ */}
-                    {/* CUADRO 1 (IZQUIERDA): MACHINE LEARNING                       */}
-                    {/* ------------------------------------------------------------ */}
-                    <div className="rounded-xl border border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-background dark:from-indigo-950/30 dark:via-purple-950/20 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
-                        <div className="space-y-2.5">
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm tracking-wide">
-                                    <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                                    <span>MÓDULO DE MACHINE LEARNING</span>
-                                </div>
-                                <Badge
-                                    variant="outline"
-                                    className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 font-medium"
-                                >
-                                    Aquí hay que trabajar
-                                </Badge>
-                            </div>
-
-                            <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                Espacio reservado para el modelo predictivo de Machine Learning. Aquí se procesará el historial académico, las calificaciones y patrones de asimilación del estudiante para emitir recomendaciones adaptativas.
-                            </p>
-                        </div>
-
-                        <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
-                            <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">
-                                <span>Predicción de Rendimiento:</span>
-                                <span className="text-indigo-600 dark:text-indigo-400 text-[11px]">
-                                    Integración pendiente
-                                </span>
-                            </div>
-                            <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
-                                <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
-                            </div>
-                            <p className="text-[11px] text-muted-foreground">
-                                Datos esperados: Detección temprana de rezago y recomendación preventiva de contenidos.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* ------------------------------------------------------------ */}
-                    {/* CUADRO 2 (DERECHA): REFUERZO INMEDIATO (CORRECTIVO) - IMAGEN 3*/}
-                    {/* ------------------------------------------------------------ */}
-                    <div className="rounded-xl border border-sky-300 bg-sky-50/70 dark:bg-sky-950/30 dark:border-sky-800/80 p-5 shadow-xs flex flex-col justify-between space-y-3.5 relative overflow-hidden">
-                        {/* Acento lateral decorativo tipo corchete / wireframe */}
-                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-sky-500 dark:bg-sky-400" />
-
-                        <div className="space-y-2.5 pl-1">
-                            {/* Cabecera del cuadro idéntica a la Imagen 3 */}
-                            <div className="flex items-center justify-between gap-2">
-                                <h3 className="font-bold text-sm tracking-wide text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
-                                    <span>🔧</span>
-                                    <span>REFUERZO INMEDIATO (Correctivo)</span>
-                                </h3>
-                                {esNotaBaja && (
-                                    <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">
-                                        Acción requerida
+                {Boolean(entrega?.calificacion && entrega?.estado_calificacion === 'calificado') && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4">
+                        {/* ------------------------------------------------------------ */}
+                        {/* CUADRO 1 (IZQUIERDA): MACHINE LEARNING                       */}
+                        {/* ------------------------------------------------------------ */}
+                        <div className="rounded-xl border border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-background dark:from-indigo-950/30 dark:via-purple-950/20 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
+                            <div className="space-y-2.5">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm tracking-wide">
+                                        <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                        <span>MÓDULO DE MACHINE LEARNING</span>
+                                    </div>
+                                    <Badge
+                                        variant="outline"
+                                        className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 font-medium"
+                                    >
+                                        Aquí hay que trabajar
                                     </Badge>
+                                </div>
+
+                                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                                    Espacio reservado para el modelo predictivo de Machine Learning. Aquí se procesará el historial académico, las calificaciones y patrones de asimilación del estudiante para emitir recomendaciones adaptativas.
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
+                                <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">
+                                    <span>Predicción de Rendimiento:</span>
+                                    <span className="text-indigo-600 dark:text-indigo-400 text-[11px]">
+                                        Integración pendiente
+                                    </span>
+                                </div>
+                                <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
+                                    <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
+                                </div>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Datos esperados: Detección temprana de rezago y recomendación preventiva de contenidos.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* ------------------------------------------------------------ */}
+                        {/* CUADRO 2 (DERECHA): REFUERZO INMEDIATO (CORRECTIVO) - IMAGEN 3*/}
+                        {/* ------------------------------------------------------------ */}
+                        <div className="rounded-xl border border-sky-300 bg-sky-50/70 dark:bg-sky-950/30 dark:border-sky-800/80 p-5 shadow-xs flex flex-col justify-between space-y-3.5 relative overflow-hidden">
+                            {/* Acento lateral decorativo tipo corchete / wireframe */}
+                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-sky-500 dark:bg-sky-400" />
+
+                            <div className="space-y-2.5 pl-1">
+                                {/* Cabecera del cuadro idéntica a la Imagen 3 */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <h3 className="font-bold text-sm tracking-wide text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
+                                        <span>🔧</span>
+                                        <span>REFUERZO INMEDIATO (Correctivo)</span>
+                                    </h3>
+                                    {esNotaBaja && (
+                                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">
+                                            Acción requerida
+                                        </Badge>
+                                    )}
+                                </div>
+
+                                {/* Subtítulo dinámico con nombre y nota del estudiante */}
+                                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                    {estudianteNombre}, tu nota en {temaNombre} fue{' '}
+                                    <span className={esNotaBaja ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
+                                        {calificacionNota !== null ? `${Math.round(calificacionNota)}/100` : 'pendiente'}
+                                    </span>{' '}
+                                    {esNotaBaja ? '⚠️' : '✅'}
+                                </p>
+
+                                {/* Sección Recomendación con viñetas idénticas a la Imagen 3 */}
+                                <div className="space-y-1.5 pt-1 text-xs text-neutral-700 dark:text-neutral-300">
+                                    <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                        Recomendación:
+                                    </p>
+                                    <ul className="space-y-1 list-none pl-1">
+                                        <li className="flex items-start gap-1.5">
+                                            <span className="text-neutral-500 shrink-0">•</span>
+                                            <span>
+                                                Vuelve a leer: <strong>pág. {paginasLibro}</strong> ({temaNombre})
+                                            </span>
+                                        </li>
+                                        <li className="flex items-start gap-1.5">
+                                            <span className="text-neutral-500 shrink-0">•</span>
+                                            <span>Responde estas 10 preguntas de práctica</span>
+                                        </li>
+                                        <li className="flex items-start gap-1.5">
+                                            <span className="text-neutral-500 shrink-0">•</span>
+                                            <span>Esto te ayudará en el examen final</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Botón de acción: [📝 Iniciar práctica] redirigido al refuerzo */}
+                            <div className="pt-2 pl-1">
+                                {tieneRefuerzo ? (
+                                    refuerzoCompletado ? (
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="outline"
+                                            className="w-full sm:w-auto border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 text-xs"
+                                        >
+                                            <Link href={`/refuerzos/${entrega?.refuerzo?.id}`}>
+                                                <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
+                                                ✅ Práctica completada (Ver respuestas)
+                                            </Link>
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-medium shadow-xs text-xs"
+                                        >
+                                            <Link href={`/refuerzos/${entrega?.refuerzo?.id}`}>
+                                                <span className="mr-1.5">📝</span>
+                                                Iniciar práctica
+                                                <ExternalLink className="ml-1.5 h-3 w-3" />
+                                            </Link>
+                                        </Button>
+                                    )
+                                ) : esNotaBaja ? (
+                                    <div className="rounded-md bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-2 text-xs text-amber-800 dark:text-amber-300">
+                                        El docente habilitará las 10 preguntas de práctica con IA en breve.
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                        {calificacionNota !== null
+                                            ? '¡Felicidades! Has aprobado este tema exitosamente.'
+                                            : 'Las preguntas de refuerzo se activarán cuando tu tarea sea calificada.'}
+                                    </p>
                                 )}
                             </div>
-
-                            {/* Subtítulo dinámico con nombre y nota del estudiante */}
-                            <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                                {estudianteNombre}, tu nota en {temaNombre} fue{' '}
-                                <span className={esNotaBaja ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                                    {calificacionNota !== null ? `${Math.round(calificacionNota)}/100` : 'pendiente'}
-                                </span>{' '}
-                                {esNotaBaja ? '⚠️' : '✅'}
-                            </p>
-
-                            {/* Sección Recomendación con viñetas idénticas a la Imagen 3 */}
-                            <div className="space-y-1.5 pt-1 text-xs text-neutral-700 dark:text-neutral-300">
-                                <p className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                    Recomendación:
-                                </p>
-                                <ul className="space-y-1 list-none pl-1">
-                                    <li className="flex items-start gap-1.5">
-                                        <span className="text-neutral-500 shrink-0">•</span>
-                                        <span>
-                                            Vuelve a leer: <strong>pág. {paginasLibro}</strong> ({temaNombre})
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-1.5">
-                                        <span className="text-neutral-500 shrink-0">•</span>
-                                        <span>Responde estas 10 preguntas de práctica</span>
-                                    </li>
-                                    <li className="flex items-start gap-1.5">
-                                        <span className="text-neutral-500 shrink-0">•</span>
-                                        <span>Esto te ayudará en el examen final</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* Botón de acción: [📝 Iniciar práctica] redirigido al refuerzo */}
-                        <div className="pt-2 pl-1">
-                            {tieneRefuerzo ? (
-                                refuerzoCompletado ? (
-                                    <Button
-                                        asChild
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full sm:w-auto border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 text-xs"
-                                    >
-                                        <Link href={`/refuerzos/${entrega?.refuerzo?.id}`}>
-                                            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
-                                            ✅ Práctica completada (Ver respuestas)
-                                        </Link>
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        asChild
-                                        size="sm"
-                                        className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-medium shadow-xs text-xs"
-                                    >
-                                        <Link href={`/refuerzos/${entrega?.refuerzo?.id}`}>
-                                            <span className="mr-1.5">📝</span>
-                                            Iniciar práctica
-                                            <ExternalLink className="ml-1.5 h-3 w-3" />
-                                        </Link>
-                                    </Button>
-                                )
-                            ) : esNotaBaja ? (
-                                <div className="rounded-md bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-2 text-xs text-amber-800 dark:text-amber-300">
-                                    El docente habilitará las 10 preguntas de práctica con IA en breve.
-                                </div>
-                            ) : (
-                                <p className="text-xs text-muted-foreground italic">
-                                    {calificacionNota !== null
-                                        ? '¡Felicidades! Has aprobado este tema exitosamente.'
-                                        : 'Las preguntas de refuerzo se activarán cuando tu tarea sea calificada.'}
-                                </p>
-                            )}
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* ============================================================== */}
                 {/* 6. MODAL PARA SUBIR / EDITAR ENTREGA                           */}

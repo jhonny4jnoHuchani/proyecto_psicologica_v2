@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertTriangle, BookOpen, Clock, FileText, LoaderCircle, Paperclip, Send, Sparkles, Upload } from 'lucide-react';
+import { AlertTriangle, BookOpen, ChevronRight, Clock, FileText, LoaderCircle, Paperclip, Send, Sparkles, Upload } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -213,10 +213,30 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                             const tieneRefuerzoPendiente = e.refuerzo && !e.refuerzo.completado;
 
                                             return (
-                                                <div key={e.id} className="border rounded-lg p-4 space-y-3">
+                                                <div
+                                                    key={e.id}
+                                                    role="button"
+                                                    tabIndex={0}
+                                                    onClick={() => {
+                                                        if (e.leccion?.id) {
+                                                            router.visit(`/lecciones/${e.leccion.id}`);
+                                                        }
+                                                    }}
+                                                    onKeyDown={(ev) => {
+                                                        if (ev.key === 'Enter' || ev.key === ' ') {
+                                                            ev.preventDefault();
+                                                            if (e.leccion?.id) {
+                                                                router.visit(`/lecciones/${e.leccion.id}`);
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="group relative border rounded-lg p-4 space-y-3 cursor-pointer transition-all duration-200 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:bg-neutral-50/60 dark:hover:bg-neutral-900/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                                                >
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="font-medium">{e.leccion?.titulo}</p>
+                                                            <p className="font-medium text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                                                {e.leccion?.titulo}
+                                                            </p>
                                                             <p className="text-xs text-muted-foreground">
                                                                 Docente: {e.leccion?.docente ? nombreCompleto(e.leccion.docente.user) : '-'}
                                                             </p>
@@ -227,10 +247,19 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                             )}
                                                         </div>
                                                         <div className="flex flex-wrap items-center gap-2">
-                                                            <Button size="sm" variant="outline" asChild className="h-7 text-xs">
-                                                                <Link href={`/lecciones/${e.leccion?.id}`}>
-                                                                    Ver detalle
-                                                                </Link>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="h-7 text-xs gap-1 border-neutral-300 dark:border-neutral-700 group-hover:border-indigo-400 group-hover:bg-indigo-50 group-hover:text-indigo-700 dark:group-hover:border-indigo-600 dark:group-hover:bg-indigo-950/60 dark:group-hover:text-indigo-300 transition-all"
+                                                                onClick={(ev) => {
+                                                                    ev.stopPropagation();
+                                                                    if (e.leccion?.id) {
+                                                                        router.visit(`/lecciones/${e.leccion.id}`);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Ver detalle
+                                                                <ChevronRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
                                                             </Button>
                                                             <Badge variant={e.estado_entrega === 'entregado' ? 'default' : e.estado_entrega === 'atrasado' ? 'destructive' : 'secondary'}>
                                                                 {e.estado_entrega}
@@ -246,12 +275,16 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
                                                     )}
 
                                                     {e.archivos_enviado && e.archivos_enviado.length > 0 && (
-                                                        <div className="flex gap-3">
+                                                        <div
+                                                            className="flex gap-3 relative z-10"
+                                                            onClick={(ev) => ev.stopPropagation()}
+                                                        >
                                                             {e.archivos_enviado.map((archivo, i) => (
                                                                 <a
                                                                     key={i}
                                                                     href={`/storage/${archivo}`}
                                                                     target="_blank"
+                                                                    rel="noreferrer"
                                                                     className="flex items-center gap-1 text-xs text-primary hover:underline"
                                                                 >
                                                                     <Paperclip className="h-3 w-3" />
@@ -263,7 +296,10 @@ export default function EntregasEstudiante({ entregas, leccionesPendientes }: Pr
 
                                                     {/* 🎯 BANNER DE REFUERZO INMEDIATO (CORRECTIVO) */}
                                                     {tieneRefuerzoPendiente && (
-                                                        <div className="rounded-lg border border-sky-300 bg-sky-50/80 dark:bg-sky-950/40 dark:border-sky-800 p-3.5 space-y-2 relative overflow-hidden">
+                                                        <div
+                                                            className="rounded-lg border border-sky-300 bg-sky-50/80 dark:bg-sky-950/40 dark:border-sky-800 p-3.5 space-y-2 relative overflow-hidden z-10"
+                                                            onClick={(ev) => ev.stopPropagation()}
+                                                        >
                                                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-sky-500" />
                                                             <div className="flex items-center justify-between">
                                                                 <p className="text-xs font-bold text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
