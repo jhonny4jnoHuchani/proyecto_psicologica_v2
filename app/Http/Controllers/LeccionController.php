@@ -33,6 +33,12 @@ class LeccionController extends Controller
                     $q->where('docente_id', $docente->id);
                 }
             })
+            ->when($user->hasRole('estudiante'), function ($q) use ($user) {
+                $estudiante = $user->estudiante;
+                $cursoIds = $estudiante?->cursos()->pluck('cursos.id') ?? collect();
+                $q->whereIn('curso_id', $cursoIds)
+                    ->where('estado', 'activo');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -41,17 +47,20 @@ class LeccionController extends Controller
             $cursos = Curso::whereHas('materias', fn ($q) => $q->where('curso_materia.docente_id', $docente?->id))
                 ->with('gestion')->get();
             $materias = Materia::whereHas('cursos', fn ($q) => $q->where('curso_materia.docente_id', $docente?->id))->get();
+            $temas = Tema::orderBy('materia_id')->orderBy('orden')->get();
         } elseif ($user->hasRole('estudiante')) {
             $estudiante = $user->estudiante;
             $cursos = $estudiante?->cursos()->with('gestion')->get() ?? collect();
             $materias = Materia::whereHas('cursos.estudiantes', fn ($q) => $q->where('estudiante_id', $estudiante?->id))->get();
+            $cursoIds = $cursos->pluck('id');
+            $temas = Tema::whereHas('lecciones', function ($q) use ($cursoIds) {
+                $q->whereIn('curso_id', $cursoIds)->where('estado', 'activo');
+            })->orderBy('materia_id')->orderBy('orden')->get();
         } else {
             $cursos = Curso::with('gestion')->get();
             $materias = Materia::all();
+            $temas = Tema::orderBy('materia_id')->orderBy('orden')->get();
         }
-
-        $docentes = Docente::with('user')->get();
-        $temas = Tema::orderBy('materia_id')->orderBy('orden')->get();
 
         return Inertia::render('lecciones/index', [
             'lecciones' => $lecciones,

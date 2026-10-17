@@ -271,7 +271,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                                     {libros?.map((l) => {
                                         const color = colorForMateria(l.materia?.codigo);
                                         return (
-                                            <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50">
+                                            <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/60">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-start gap-3">
                                                         <span className={`mt-1 h-full min-h-8 w-1 rounded-full ${color.dot}`} />

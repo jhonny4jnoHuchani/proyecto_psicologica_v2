@@ -255,7 +255,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                     </Button>
 
                     {!esEstudiante && (
-                        <Button size="sm" asChild variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-900 dark:text-indigo-300">
+                        <Button size="sm" asChild variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-200">
                             <Link href={`/lecciones/${leccion.hash_id || leccion.id}/entregas`}>
                                 <FileText className="mr-1.5 h-4 w-4" />
                                 Ver entregas del curso
@@ -355,7 +355,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                             variant="outline"
                             size="sm"
                             onClick={() => setMostrarResumen(!mostrarResumen)}
-                            className="h-8 gap-1.5 text-xs border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50"
+                            className="h-8 gap-1.5 text-xs border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-200"
                         >
                             <Sparkles className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
                             {mostrarResumen ? 'Ocultar Resumen' : 'Resumir'}
@@ -742,7 +742,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                                             asChild
                                             size="sm"
                                             variant="outline"
-                                            className="w-full sm:w-auto border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 text-xs"
+                                            className="w-full sm:w-auto border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-200 text-xs"
                                         >
                                             <Link href={`/refuerzos/${entrega?.refuerzo?.hash_id || entrega?.refuerzo?.id}`}>
                                                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />

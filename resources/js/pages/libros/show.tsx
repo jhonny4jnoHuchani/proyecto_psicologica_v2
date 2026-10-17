@@ -113,7 +113,7 @@ export default function LibroShow({ libro }: Props) {
                             {libro.archivo && (
                                 <div className="border-t pt-4">
                                     <a href={`/storage/${libro.archivo}`} target="_blank">
-                                        <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                                        <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300">
                                             <Download className="mr-2 h-4 w-4" />Ver / Descargar PDF
                                         </Button>
                                     </a>

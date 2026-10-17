@@ -126,14 +126,23 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [processing, setProcessing] = useState(false);
 
-    // Acordeón: set de temas abiertos
-    const [temasAbiertos, setTemasAbiertos] = useState<Record<string, boolean>>({});
+    const isDocente = rol === 'docente' || rol === 'admin';
+    const nombreCompleto = (u: UserData) => `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
+
+    // Acordeón: set de temas abiertos (para estudiantes se abren por defecto los que tienen tareas)
+    const [temasAbiertos, setTemasAbiertos] = useState<Record<string, boolean>>(() => {
+        if (!isDocente) {
+            const inicial: Record<string, boolean> = { 'sin-tema': true };
+            temas.forEach(t => {
+                inicial[String(t.id)] = true;
+            });
+            return inicial;
+        }
+        return {};
+    });
 
     const [filtroCurso, setFiltroCurso] = useState(filtros.curso_id ? String(filtros.curso_id) : '');
     const [filtroMateria, setFiltroMateria] = useState(filtros.materia_id ? String(filtros.materia_id) : '');
-
-    const isDocente = rol === 'docente' || rol === 'admin';
-    const nombreCompleto = (u: UserData) => `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
 
     const resetForm = () => { setForm(initialForm); setErrors({}); };
 
@@ -231,11 +240,18 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
         return grupos;
     }, [lecciones]);
 
-    // Temas disponibles según filtros (materia seleccionada)
+    // Temas disponibles según filtros (materia seleccionada) y rol de usuario
     const temasFiltrados = useMemo(() => {
-        if (!filtroMateria || filtroMateria === 'none') return temas;
-        return temas.filter(t => String(t.materia_id) === filtroMateria);
-    }, [temas, filtroMateria]);
+        let lista = temas;
+        if (filtroMateria && filtroMateria !== 'none') {
+            lista = lista.filter(t => String(t.materia_id) === filtroMateria);
+        }
+        // En la vista de los estudiantes: SOLO mostrar temas que tengan al menos una tarea o lección asignada
+        if (!isDocente) {
+            lista = lista.filter(t => (leccionesPorTema[String(t.id)]?.length ?? 0) > 0);
+        }
+        return lista;
+    }, [temas, filtroMateria, isDocente, leccionesPorTema]);
 
     const hoy = new Date();
     const [mes, setMes] = useState(hoy.getMonth());
@@ -372,12 +388,12 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                         {isDocente && filtroCurso && filtroMateria && (
                             <>
                                 <a href={`/reportes/pdf?curso_id=${filtroCurso}&materia_id=${filtroMateria}`}>
-                                    <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                                    <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300">
                                         <FileText className="mr-1 h-4 w-4" />PDF
                                     </Button>
                                 </a>
                                 <a href={`/reportes/excel?curso_id=${filtroCurso}&materia_id=${filtroMateria}`}>
-                                    <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50">
+                                    <Button variant="outline" size="sm" className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300">
                                         <FileSpreadsheet className="mr-1 h-4 w-4" />Excel
                                     </Button>
                                 </a>
@@ -390,15 +406,31 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                     <Card className="shadow-sm lg:col-span-2">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Listado por temas</CardTitle>
-                            <span className="text-xs text-neutral-400">{lecciones?.length ?? 0} resultado(s)</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-neutral-400">{lecciones?.length ?? 0} lección{lecciones?.length !== 1 ? 'es' : ''}</span>
+                                {!isDocente && (
+                                    <Badge variant="outline" className="text-[10px] text-indigo-600 border-indigo-200 dark:text-indigo-400 dark:border-indigo-800">
+                                        {temasFiltrados.length} tema{temasFiltrados.length !== 1 ? 's' : ''} con tareas
+                                    </Badge>
+                                )}
+                            </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="divide-y">
-                                {temasFiltrados.length === 0 && (
+                                {temasFiltrados.length === 0 && (leccionesPorTema['sin-tema']?.length ?? 0) === 0 && (
                                     <div className="py-14 text-center">
                                         <div className="flex flex-col items-center gap-2 text-neutral-400">
-                                            <Sparkles className="h-8 w-8" />
-                                            <p className="text-sm font-medium text-neutral-500">No hay temas en esta materia</p>
+                                            <Sparkles className="h-8 w-8 text-neutral-400 dark:text-neutral-500" />
+                                            <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                                                {!isDocente
+                                                    ? 'No tienes tareas ni lecciones asignadas en este momento'
+                                                    : 'No hay temas en esta materia'}
+                                            </p>
+                                            {!isDocente && (
+                                                <p className="text-xs text-neutral-400 max-w-sm">
+                                                    Los temas aparecerán aquí tan pronto como tus docentes asignen lecciones o actividades a tu curso.
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -413,7 +445,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                     return (
                                         <div key={tema.id}>
                                             {/* ENCABEZADO DEL TEMA */}
-                                            <div className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 transition-colors">
+                                            <div className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleTema(key)}
@@ -433,7 +465,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                                        className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-200"
                                                         onClick={() => openCreateInTema(tema.materia_id, tema.id)}
                                                     >
                                                         <Plus className="mr-1 h-3.5 w-3.5" />
@@ -503,7 +535,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                                         <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
                                                                             {!isDocente ? (
                                                                                 <a href={`/lecciones/${l.hash_id || l.id}`}>
-                                                                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 h-7 text-xs">
+                                                                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-xs h-7 text-xs">
                                                                                         <Send className="mr-1 h-3 w-3" />
                                                                                         Entregar
                                                                                     </Button>
@@ -541,11 +573,11 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                         <button
                                             type="button"
                                             onClick={() => toggleTema('sin-tema')}
-                                            className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
+                                            className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
                                         >
                                             <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform ${temasAbiertos['sin-tema'] ? '' : '-rotate-90'}`} />
                                             <span className="h-2 w-2 rounded-full bg-neutral-300" />
-                                            <span className="font-medium text-sm text-neutral-600">Sin tema específico</span>
+                                            <span className="font-medium text-sm text-neutral-600 dark:text-neutral-300">Sin tema específico</span>
                                             <Badge variant="outline" className="ml-2 text-[10px]">
                                                 {leccionesPorTema['sin-tema'].length} lección{leccionesPorTema['sin-tema'].length !== 1 ? 'es' : ''}
                                             </Badge>
@@ -653,10 +685,10 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                         {meses[mes]} {año}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <button onClick={() => cambiarMes(-1)} className="rounded p-1 hover:bg-neutral-100">
+                                        <button onClick={() => cambiarMes(-1)} className="rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                                             <ChevronLeft className="h-4 w-4" />
                                         </button>
-                                        <button onClick={() => cambiarMes(1)} className="rounded p-1 hover:bg-neutral-100">
+                                        <button onClick={() => cambiarMes(1)} className="rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
                                             <ChevronRight className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -669,7 +701,7 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                         <div key={i} className="group relative flex justify-center py-0.5">
                                             {dia && (
                                                 <div className={`flex h-7 w-7 flex-col items-center justify-center rounded-full text-xs transition-colors
-                                                    ${esHoy(dia) ? 'bg-indigo-600 font-semibold text-white' : 'text-neutral-700 hover:bg-neutral-100'}`}>
+                                                    ${esHoy(dia) ? 'bg-indigo-600 font-semibold text-white' : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}>
                                                     {dia}
                                                     {esFechaEntrega(dia) && !esHoy(dia) && (
                                                         <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-amber-500" />

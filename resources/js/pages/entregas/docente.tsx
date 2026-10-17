@@ -347,7 +347,7 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                                                             size="icon"
                                                             onClick={() => abrirRefuerzoManual(e)}
                                                             title="Generar preguntas de refuerzo IA"
-                                                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/40 border-purple-200"
+                                                            className="text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 dark:hover:text-purple-200"
                                                         >
                                                             <Sparkles className="h-4 w-4" />
                                                         </Button>
@@ -412,7 +412,7 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                                     size="sm"
                                     onClick={actualizarTodas}
                                     disabled={cargandoRefuerzo || guardandoRefuerzo}
-                                    className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
+                                    className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950/60 dark:hover:text-purple-200 dark:hover:border-purple-700"
                                     title="Generar 10 preguntas nuevas"
                                 >
                                     <Wand2 className={`mr-1.5 h-3.5 w-3.5 ${cargandoRefuerzo ? 'animate-pulse' : ''}`} />

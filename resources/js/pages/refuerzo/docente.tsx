@@ -186,38 +186,38 @@ export default function RefuerzoDocente({ refuerzos,  }: Props) {
                                         <CollapsibleTrigger asChild>
                                             <button
                                                 type="button"
-                                                className="flex w-full items-start justify-between gap-3 p-4 text-left hover:bg-neutral-50 transition-colors"
+                                                className="flex w-full items-start justify-between gap-3 p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
                                             >
                                                 <div className="flex min-w-0 flex-1 items-start gap-3">
                                                     <div
                                                         className={`rounded-lg p-2 shrink-0 ${
                                                             r.completado
-                                                                ? 'bg-emerald-100'
-                                                                : 'bg-amber-100'
+                                                                ? 'bg-emerald-100 dark:bg-emerald-950/60 dark:border dark:border-emerald-800/60'
+                                                                : 'bg-amber-100 dark:bg-amber-950/60 dark:border dark:border-amber-800/60'
                                                         }`}
                                                     >
                                                         {r.completado ? (
-                                                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                                            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                                                         ) : (
-                                                            <Clock className="h-4 w-4 text-amber-600" />
+                                                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                                                         )}
                                                     </div>
                                                     <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2 text-xs text-neutral-500">
+                                                        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                                                             <User className="h-3.5 w-3.5" />
-                                                            <span className="font-medium text-neutral-700">
+                                                            <span className="font-medium text-neutral-700 dark:text-neutral-200">
                                                                 {nombreCompleto(r.estudiante.user)}
                                                             </span>
                                                         </div>
-                                                        <div className="mt-1 flex items-center gap-2 text-xs text-purple-600">
+                                                        <div className="mt-1 flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
                                                             <BookOpen className="h-3.5 w-3.5" />
                                                             {r.leccion.materia.codigo} ·{' '}
                                                             {r.leccion.materia.nombre}
                                                         </div>
-                                                        <p className="mt-1 text-sm text-neutral-600 truncate">
+                                                        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300 truncate">
                                                             {r.leccion.titulo}
                                                         </p>
-                                                        <p className="text-xs text-neutral-400 mt-1">
+                                                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
                                                             Generado el {formatoFecha(r.created_at)}
                                                         </p>
                                                     </div>
@@ -225,17 +225,17 @@ export default function RefuerzoDocente({ refuerzos,  }: Props) {
 
                                                 <div className="flex items-center gap-2 shrink-0">
                                                     <Badge
-                                                        variant={r.completado ? 'default' : 'outline'}
+                                                        variant="outline"
                                                         className={
                                                             r.completado
                                                                 ? r.nota !== null && r.nota !== undefined
                                                                     ? r.nota >= 70
-                                                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-300 font-semibold'
+                                                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 font-semibold'
                                                                         : r.nota >= 51
-                                                                        ? 'bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 font-semibold'
-                                                                        : 'bg-red-100 text-red-800 hover:bg-red-100 border-red-300 font-semibold'
-                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                                                : 'border-amber-200 text-amber-700'
+                                                                        ? 'bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 font-semibold'
+                                                                        : 'bg-red-100 text-red-800 hover:bg-red-100 border-red-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 font-semibold'
+                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
+                                                                : 'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/40'
                                                         }
                                                     >
                                                         {r.completado ? (

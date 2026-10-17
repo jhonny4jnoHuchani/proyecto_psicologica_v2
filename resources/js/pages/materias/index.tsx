@@ -123,7 +123,7 @@ export default function MateriasIndex({ materias }: Props) {
                                         <tr><td colSpan={3} className="py-8 text-center text-neutral-500">No hay materias registradas</td></tr>
                                     )}
                                     {materias?.map((materia) => (
-                                        <tr key={materia.id} className="border-b hover:bg-neutral-50">
+                                        <tr key={materia.id} className="border-b hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
                                             <td className="py-3 px-4 font-medium">{materia.codigo}</td>
                                             <td className="py-3 px-4">{materia.nombre}</td>
                                             <td className="py-3 px-4 text-right">
