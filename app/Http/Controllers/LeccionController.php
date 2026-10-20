@@ -67,7 +67,6 @@ class LeccionController extends Controller
             'cursos' => $cursos,
             'materias' => $materias,
             'temas' => $temas,
-            'docentes' => $docentes,
             'filtros' => [
                 'curso_id' => $cursoId ? (int) $cursoId : null,
                 'materia_id' => $materiaId ? (int) $materiaId : null,

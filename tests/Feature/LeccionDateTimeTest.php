@@ -174,3 +174,45 @@ test('entrega submitted after deadline timestamp is marked atrasado', function (
 
     Carbon::setTestNow();
 });
+
+test('lecciones index loads successfully for docente without undefined variable errors', function () {
+    $userDocente = User::factory()->create();
+    $userDocente->assignRole('docente');
+    Docente::create(['user_id' => $userDocente->id, 'especialidad' => 'Psicología']);
+
+    $response = $this->actingAs($userDocente)->get('/lecciones');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('lecciones/index')
+        ->has('lecciones')
+        ->has('cursos')
+        ->has('materias')
+        ->has('temas')
+        ->has('filtros')
+    );
+});
+
+test('lecciones index loads successfully with filter query params', function () {
+    $userAdmin = User::factory()->create();
+    $userAdmin->assignRole('admin');
+
+    $gestion = Gestion::create([
+        'año' => 2026,
+        'etapa' => '2do Semestre',
+        'fecha_inicio' => '2026-07-01',
+        'fecha_fin' => '2026-12-31',
+        'estado' => 'activo',
+    ]);
+    $curso = Curso::create(['gestion_id' => $gestion->id, 'paralelo' => 'A', 'turno' => 'tarde', 'cupos' => 30, 'estado' => 'activo']);
+    $materia = Materia::create(['codigo' => 'PSI-301', 'nombre' => 'Psicoterapia']);
+
+    $response = $this->actingAs($userAdmin)->get("/lecciones?curso_id={$curso->id}&materia_id={$materia->id}");
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('lecciones/index')
+        ->where('filtros.curso_id', $curso->id)
+        ->where('filtros.materia_id', $materia->id)
+    );
+});
