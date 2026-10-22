@@ -13,6 +13,10 @@ return new class extends Migration
             $table->string('color_primario', 7)->default('#4f46e5');
             $table->string('color_secundario', 7)->default('#06b6d4');
             $table->string('logo')->nullable();
+            $table->text('mision')->nullable();
+            $table->text('vision')->nullable();
+            $table->string('lema', 200)->nullable();
+            $table->string('organigrama')->nullable();
             $table->timestamps();
         });
     }

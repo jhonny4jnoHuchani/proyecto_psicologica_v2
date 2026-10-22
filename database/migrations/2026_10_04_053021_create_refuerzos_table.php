@@ -18,6 +18,9 @@ return new class extends Migration
             $table->json('respuestas')->nullable();
             $table->text('recomendacion')->nullable();
             $table->boolean('completado')->default(false);
+            $table->decimal('nota', 5, 2)->nullable();
+            $table->json('evaluacion_ia')->nullable();
+            $table->timestamp('fecha_evaluacion')->nullable();
             $table->timestamps();
         });
     }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface Materia {
@@ -52,8 +53,8 @@ export default function MateriasEliminadas({ materias }: Props) {
                             <tbody>
                                 {(!materias || materias.length === 0) && <tr><td colSpan={4} className="py-8 text-center text-neutral-500">No hay materias eliminadas</td></tr>}
                                 {materias?.map((m) => (
-                                    <tr key={m.id} className="border-b hover:bg-neutral-50">
-                                        <td className="py-3 px-4">{m.codigo}</td><td className="py-3 px-4">{m.nombre}</td><td className="py-3 px-4">{new Date(m.deleted_at).toLocaleDateString('es-BO')}</td>
+                                    <tr key={m.id} className="border-b hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
+                                        <td className="py-3 px-4">{m.codigo}</td><td className="py-3 px-4">{m.nombre}</td><td className="py-3 px-4">{formatoFechaHora(m.deleted_at)}</td>
                                         <td className="py-3 px-4 text-right"><Button variant="outline" size="sm" onClick={() => openRestore(m)}><RefreshCw className="h-4 w-4 mr-2" />Restaurar</Button></td>
                                     </tr>
                                 ))}

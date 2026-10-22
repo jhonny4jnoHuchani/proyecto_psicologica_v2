@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\HasObfuscatedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class Curso extends Model
 {
-    use SoftDeletes;
+    use HasObfuscatedRouteKey, SoftDeletes;
 
     protected $table = 'cursos';
+
+    protected $appends = ['hash_id'];
 
     protected $fillable = [
         'gestion_id',
@@ -37,7 +39,7 @@ class Curso extends Model
     public function materias(): BelongsToMany
     {
         return $this->belongsToMany(Materia::class, 'curso_materia')
-            ->withPivot('docente_id', 'ayuda_ia_activa', 'imagen')  
+            ->withPivot('docente_id', 'ayuda_ia_activa', 'imagen')
             ->withTimestamps();
     }
 

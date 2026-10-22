@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasObfuscatedRouteKey;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,9 +10,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Libro extends Model
 {
-    use HasFactory, SoftDeletes; // ← NUEVO: habilita soft deletes
+    use HasFactory, HasObfuscatedRouteKey, SoftDeletes; // ← NUEVO: habilita soft deletes
 
     protected $table = 'libros';
+
+    protected $appends = ['hash_id'];
 
     protected $fillable = [
         'materia_id',

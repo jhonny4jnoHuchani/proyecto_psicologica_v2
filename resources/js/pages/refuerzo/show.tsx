@@ -1,20 +1,32 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, BookOpen, CheckCircle2, LoaderCircle, Send, Sparkles } from 'lucide-react';
+import { AlertCircle, AlertTriangle, ArrowLeft, Award, BookOpen, CheckCircle, CheckCircle2, LoaderCircle, Send, Sparkles, TrendingUp } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import { toast } from 'sonner';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 
+interface EvaluacionIA {
+    nota: number;
+    conceptos_dominados: string[];
+    que_mejorar: string[];
+    recomendacion: string;
+}
+
 interface Refuerzo {
     id: number;
+    hash_id?: string;
     preguntas: string[];
     respuestas: (string | null)[] | null;
     recomendacion: string | null;
     completado: boolean;
+    nota?: number | null;
+    evaluacion_ia?: EvaluacionIA | null;
+    fecha_evaluacion?: string | null;
     leccion: {
         id: number;
         titulo: string;
@@ -22,6 +34,10 @@ interface Refuerzo {
             nombre: string;
             codigo: string;
         };
+        temario?: {
+            nombre: string;
+            paginas_libro?: string;
+        } | null;
     };
 }
 
@@ -51,11 +67,12 @@ export default function RefuerzoShow({ refuerzo }: Props) {
         e.preventDefault();
         setProcessing(true);
 
-        router.post(`/refuerzos/${refuerzo.id}/responder`, {
+        const routeKey = refuerzo.hash_id || refuerzo.id;
+        router.post(`/refuerzos/${routeKey}/responder`, {
             respuestas,
         }, {
             onSuccess: () => {
-                toast.success('Respuestas enviadas. ¡Gracias por practicar!');
+                toast.success('¡Respuestas evaluadas exitosamente!');
             },
             onError: () => {
                 setProcessing(false);
@@ -122,7 +139,7 @@ export default function RefuerzoShow({ refuerzo }: Props) {
                                 )}
                             </div>
                             <p className="text-xs text-neutral-500">
-                                Estas preguntas son solo de refuerzo. No tienen nota, pero te ayudarán a comprender mejor los conceptos.
+                                Este cuestionario formativo es evaluado sobre <strong>100 puntos</strong> y te indicará tus conceptos dominados y exactamente qué temas debes mejorar.
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-5">
@@ -160,30 +177,132 @@ export default function RefuerzoShow({ refuerzo }: Props) {
                                 {processing ? (
                                     <>
                                         <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                                        Enviando...
+                                        Evaluando respuestas con IA...
                                     </>
                                 ) : (
                                     <>
                                         <Send className="mr-2 h-4 w-4" />
-                                        Enviar respuestas ({respondidas}/{total})
+                                        Enviar y evaluar respuestas ({respondidas}/{total})
                                     </>
                                 )}
                             </Button>
                         </div>
                     )}
 
-                    {/* MENSAJE SI YA COMPLETÓ */}
+                    {/* RESULTADO Y EVALUACIÓN SOBRE 100 */}
                     {refuerzo.completado && (
-                        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                                <p className="text-sm font-medium text-emerald-700">
-                                    Ya enviaste tus respuestas. ¡Gracias por practicar!
-                                </p>
+                        <div className="mt-6 space-y-4">
+                            <Card className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-white via-purple-50/20 to-indigo-50/30 dark:from-neutral-900 dark:via-purple-950/20 dark:to-neutral-900 shadow-md">
+                                <CardHeader className="pb-3">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <Award className="h-5 w-5 text-purple-600" />
+                                                <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">
+                                                    Evaluación Pedagógica del Cuestionario
+                                                </span>
+                                            </div>
+                                            <CardTitle className="text-xl">
+                                                Resultado del Refuerzo de Aprendizaje
+                                            </CardTitle>
+                                        </div>
+
+                                        {/* Badge de Nota sobre 100 */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-right">
+                                                <div className="text-xs text-neutral-500 font-medium">Calificación Obtenida</div>
+                                                <div className="text-2xl md:text-3xl font-extrabold text-neutral-900 dark:text-neutral-100">
+                                                    {refuerzo.nota !== null && refuerzo.nota !== undefined ? (
+                                                        <>
+                                                            <span className={refuerzo.nota >= 70 ? 'text-emerald-600' : refuerzo.nota >= 51 ? 'text-amber-600' : 'text-red-600'}>
+                                                                {refuerzo.nota}
+                                                            </span>
+                                                            <span className="text-sm font-normal text-neutral-400"> / 100</span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-sm font-medium text-neutral-500">Completado</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {refuerzo.nota !== null && refuerzo.nota !== undefined && (
+                                                <Badge
+                                                    className={
+                                                        refuerzo.nota >= 70
+                                                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                                            : refuerzo.nota >= 51
+                                                            ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                                            : 'bg-red-100 text-red-800 border-red-300'
+                                                    }
+                                                    variant="outline"
+                                                >
+                                                    {refuerzo.nota >= 70 ? 'Aprobado Excelente' : refuerzo.nota >= 51 ? 'En Desarrollo' : 'Necesita Refuerzo'}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent className="space-y-4 pt-0">
+                                    {/* Diagnóstico: Conceptos dominados y Qué mejorar */}
+                                    {refuerzo.evaluacion_ia && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                                            {/* Conceptos Dominados */}
+                                            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/20 space-y-2">
+                                                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-semibold text-sm">
+                                                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                                    Conceptos que Dominas
+                                                </div>
+                                                <ul className="space-y-1.5 text-xs text-emerald-900 dark:text-emerald-200">
+                                                    {refuerzo.evaluacion_ia.conceptos_dominados?.map((cd, idx) => (
+                                                        <li key={idx} className="flex items-start gap-1.5">
+                                                            <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                                                            <span>{cd}</span>
+                                                        </li>
+                                                    ))}
+                                                    {(!refuerzo.evaluacion_ia.conceptos_dominados || refuerzo.evaluacion_ia.conceptos_dominados.length === 0) && (
+                                                        <li className="italic text-neutral-500">Se requiere mayor precisión conceptual.</li>
+                                                    )}
+                                                </ul>
+                                            </div>
+
+                                            {/* Qué debe mejorar */}
+                                            <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 space-y-2">
+                                                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold text-sm">
+                                                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                                    ¿Qué Tienes que Mejorar?
+                                                </div>
+                                                <ul className="space-y-1.5 text-xs text-amber-900 dark:text-amber-200">
+                                                    {refuerzo.evaluacion_ia.que_mejorar?.map((qm, idx) => (
+                                                        <li key={idx} className="flex items-start gap-1.5">
+                                                            <span className="text-amber-600 font-bold mt-0.5">•</span>
+                                                            <span>{qm}</span>
+                                                        </li>
+                                                    ))}
+                                                    {(!refuerzo.evaluacion_ia.que_mejorar || refuerzo.evaluacion_ia.que_mejorar.length === 0) && (
+                                                        <li className="text-emerald-700">¡Muy buen nivel de respuestas en general!</li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Recomendación final */}
+                                    {refuerzo.evaluacion_ia?.recomendacion && (
+                                        <div className="rounded-xl border border-purple-200 bg-purple-50/60 p-3.5 dark:border-purple-900/40 dark:bg-purple-950/20 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-2.5">
+                                            <Sparkles className="h-4 w-4 text-purple-600 shrink-0 mt-0.5" />
+                                            <div>
+                                                <strong className="font-semibold">Orientación del docente evaluador: </strong>
+                                                <span>{refuerzo.evaluacion_ia.recomendacion}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-center text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900">
+                                Tus respuestas han quedado registradas. Puedes revisarlas y repasar los conceptos en cualquier momento.
                             </div>
-                            <p className="text-xs text-emerald-600 mt-1">
-                                Puedes volver a revisar tus respuestas cuando quieras.
-                            </p>
                         </div>
                     )}
                 </form>

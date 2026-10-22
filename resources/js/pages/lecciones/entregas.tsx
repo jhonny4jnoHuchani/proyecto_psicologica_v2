@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { ArrowLeft, BookOpen, CalendarDays, Clock, Eye, GraduationCap, LoaderCircle, RefreshCw, Sparkles, Star, UserX, Users, Wand2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, BookOpen, CalendarDays, Clock, Eye, GraduationCap, LoaderCircle, RefreshCw, Sparkles, Star, UserX, Users, Wand2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface UserData { nombre: string; apellido_paterno: string; apellido_materno: string; }
@@ -49,10 +50,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function formatoFechaLarga(fecha?: string | null) {
-    if (!fecha) return 'Sin fecha';
-    return new Date(`${fecha.split('T')[0]}T00:00:00`).toLocaleDateString('es-BO', {
-        day: 'numeric', month: 'long', year: 'numeric',
-    });
+    return formatoFechaHora(fecha);
 }
 
 export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEntregar }: Props) {
@@ -62,6 +60,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
     const [nota, setNota] = useState('');
     const [comentarios, setComentarios] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [sugiriendoFeedback, setSugiriendoFeedback] = useState(false);
 
     // ==================== MODAL REFUERZO IA ====================
     const [modalRefuerzo, setModalRefuerzo] = useState(false);
@@ -73,6 +72,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
     const [regenerando, setRegenerando] = useState<number | null>(null);
     const [guardandoRefuerzo, setGuardandoRefuerzo] = useState(false);
     const [modalConfirmarRefrescar, setModalConfirmarRefrescar] = useState(false);
+    const [errorGeneracion, setErrorGeneracion] = useState<string | null>(null);
 
     const nombreCompleto = (u: UserData) => `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
 
@@ -87,6 +87,32 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
         setModalCalificar(true);
     };
 
+
+    const handleSugerirFeedback = async () => {
+        if (!entregaSelect?.id) return;
+        const notaNum = parseFloat(nota);
+        if (isNaN(notaNum) || notaNum < 0 || notaNum > 100) {
+            toast.warning('Ingresa primero una nota válida (0-100) para generar la retroalimentación.');
+            return;
+        }
+
+        setSugiriendoFeedback(true);
+        try {
+            const res = await window.axios.post('/calificaciones/sugerir-retroalimentacion', {
+                entrega_id: entregaSelect.id,
+                nota: notaNum,
+            });
+
+            if (res.data?.sugerencia) {
+                setComentarios(res.data.sugerencia);
+                toast.success('Retroalimentación pedagógica generada. Puedes revisarla y editarla.');
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'No se pudo generar la retroalimentación.');
+        } finally {
+            setSugiriendoFeedback(false);
+        }
+    };
 
     const handleCalificar: FormEventHandler = async (e) => {
         e.preventDefault();
@@ -111,8 +137,12 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                 setEstudianteRefuerzo(
                     entregaSelect ? nombreCompleto(entregaSelect.estudiante.user) : ''
                 );
+                setErrorGeneracion(null);
                 setModalRefuerzo(true);
                 generarPreguntas(flash.entrega_refuerzo_id);
+            } else if (flash?.motivo_no_refuerzo) {
+                toast.warning(`Atención: ${flash.motivo_no_refuerzo}`, { duration: 7000 });
+                router.reload({ only: ['entregas'] });
             } else {
                 // Recargar la página para actualizar la tabla
                 router.reload({ only: ['entregas'] });
@@ -132,6 +162,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
 
     const generarPreguntas = async (entregaId: number, limpiar: boolean = true) => {
         setCargandoRefuerzo(true);
+        setErrorGeneracion(null);
 
         if (limpiar) {
             setPreguntasRefuerzo([]);
@@ -146,15 +177,18 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
             if (res.data.success) {
                 setPreguntasRefuerzo(res.data.preguntas);
                 setRecomendacion(res.data.recomendacion || '');
+                toast.success('Preguntas generadas con éxito');
             } else {
-                toast.error(res.data.error || 'Error al generar las preguntas');
-                if (limpiar) setModalRefuerzo(false);
+                const errorMsg = res.data.error || 'Error al generar las preguntas';
+                setErrorGeneracion(errorMsg);
+                toast.error(errorMsg, { duration: 7000 });
             }
         } catch (err) {
             console.error(err);
-            const axiosErr = err as AxiosError<{ error?: string }>;
-            toast.error(axiosErr.response?.data?.error || 'Error al generar las preguntas');
-            if (limpiar) setModalRefuerzo(false);
+            const axiosErr = err as AxiosError<{ error?: string; message?: string }>;
+            const errorMsg = axiosErr.response?.data?.error || axiosErr.response?.data?.message || 'Error al generar las preguntas';
+            setErrorGeneracion(errorMsg);
+            toast.error(errorMsg, { duration: 7000 });
         } finally {
             setCargandoRefuerzo(false);
         }
@@ -302,38 +336,41 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {entregas.length === 0 && (
-                            <p className="text-sm text-neutral-500">Ningún estudiante ha entregado aún.</p>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400">Ningún estudiante ha entregado aún.</p>
                         )}
                         {entregas.map((e) => (
-                            <div key={e.id} className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div key={e.id} className="flex flex-col gap-3 rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 sm:flex-row sm:items-center sm:justify-between bg-card">
                                 <div className="flex-1 space-y-1">
-                                    <p className="font-medium">{nombreCompleto(e.estudiante.user)}</p>
+                                    <p className="font-semibold text-neutral-900 dark:text-neutral-100">{nombreCompleto(e.estudiante.user)}</p>
                                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                                        <Badge variant={e.estado_entrega === 'entregado' ? 'default' : 'destructive'}>
+                                        <Badge variant={e.estado_entrega === 'entregado' ? 'success' : 'destructive'}>
                                             {e.estado_entrega === 'entregado' ? '✅ Entregado' : '⚠️ Atrasado'}
                                         </Badge>
-                                        <Badge variant={e.estado_calificacion === 'calificado' ? 'default' : 'outline'}>
+                                        <Badge variant={e.estado_calificacion === 'calificado' ? 'warning' : 'outline'}>
                                             {e.estado_calificacion === 'calificado' ? `⭐ ${e.calificacion?.nota}/100` : '⏳ Sin calificar'}
                                         </Badge>
                                         {e.fecha_entrega && (
-                                            <span className="text-neutral-500">
+                                            <span className="text-neutral-500 dark:text-neutral-400 text-xs">
                                                 {formatoFechaLarga(e.fecha_entrega)}
                                             </span>
                                         )}
                                     </div>
                                     {e.calificacion?.comentarios && (
-                                        <p className="text-xs text-neutral-600 mt-1">📝 {e.calificacion.comentarios}</p>
+                                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-neutral-50/80 px-2.5 py-1 text-xs text-neutral-700 dark:border-neutral-700/60 dark:bg-neutral-800/60 dark:text-neutral-200">
+                                            <span>📝</span>
+                                            <span>{e.calificacion.comentarios}</span>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {e.archivos_enviado?.map((a, i) => (
-                                        <a key={i} href={`/storage/${a}`} target="_blank">
-                                            <Button variant="outline" size="sm">
+                                        <a key={i} href={`/storage/${a}`} target="_blank" rel="noreferrer">
+                                            <Button variant="outline" size="sm" className="border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900 dark:border-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-100">
                                                 <Eye className="mr-1 h-3.5 w-3.5" />Archivo {i + 1}
                                             </Button>
                                         </a>
                                     ))}
-                                    <Button size="sm" className="bg-amber-500 hover:bg-amber-600" onClick={() => openCalificar(e)}>
+                                    <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white font-medium shadow-xs" onClick={() => openCalificar(e)}>
                                         <Star className="mr-1 h-3.5 w-3.5" />
                                         {e.calificacion ? 'Editar nota' : 'Calificar'}
                                     </Button>
@@ -347,7 +384,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                 {estudiantesSinEntregar.length > 0 && (
                     <Card>
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-lg text-neutral-500">
+                            <CardTitle className="flex items-center gap-2 text-lg text-neutral-600 dark:text-neutral-400">
                                 <UserX className="h-5 w-5" />
                                 No han entregado ({estudiantesSinEntregar.length})
                             </CardTitle>
@@ -355,8 +392,11 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                         <CardContent>
                             <div className="flex flex-wrap gap-3">
                                 {estudiantesSinEntregar.map((e) => (
-                                    <div key={e.id} className="flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-sm">
-                                        <Clock className="h-3.5 w-3.5 text-neutral-400" />
+                                    <div
+                                        key={e.id}
+                                        className="flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-100 px-3.5 py-1 text-sm font-medium text-neutral-700 dark:border-neutral-700 dark:bg-neutral-800/90 dark:text-neutral-200 shadow-2xs"
+                                    >
+                                        <Clock className="h-3.5 w-3.5 text-neutral-400 dark:text-neutral-400" />
                                         {nombreCompleto(e.user)}
                                     </div>
                                 ))}
@@ -379,9 +419,41 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                                 <Label>Nota (0-100) *</Label>
                                 <Input type="number" min="0" max="100" step="0.01" value={nota} onChange={(e) => setNota(e.target.value)} required />
                             </div>
-                            <div className="space-y-1">
-                                <Label>Comentarios</Label>
-                                <textarea value={comentarios} onChange={(e) => setComentarios(e.target.value)} className="w-full rounded-md border p-2 text-sm" rows={3} />
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                    <Label>Comentarios / Retroalimentación</Label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleSugerirFeedback}
+                                        disabled={sugiriendoFeedback || !nota}
+                                        className="h-7 px-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                                        title="Genera retroalimentación pedagógica constructiva con IA basada en la nota y el tema"
+                                    >
+                                        {sugiriendoFeedback ? (
+                                            <>
+                                                <LoaderCircle className="mr-1.5 h-3 w-3 animate-spin" />
+                                                Redactando con IA...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="mr-1.5 h-3.5 w-3.5 text-purple-500" />
+                                                ✨ Sugerir con IA
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                                <textarea
+                                    value={comentarios}
+                                    onChange={(e) => setComentarios(e.target.value)}
+                                    className="w-full rounded-md border p-2.5 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+                                    rows={4}
+                                    placeholder="Retroalimentación constructiva para el estudiante..."
+                                />
+                                <p className="text-[11px] text-neutral-400">
+                                    Puedes escribir tus propios comentarios o pulsar <strong>✨ Sugerir con IA</strong> para obtener una propuesta basada en la nota ({nota || '0'}/100) y la bibliografía.
+                                </p>
                             </div>
                             <DialogFooter>
                                 <Button type="button" variant="outline" onClick={() => setModalCalificar(false)}>Cancelar</Button>
@@ -413,7 +485,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                                     size="sm"
                                     onClick={actualizarTodas}
                                     disabled={cargandoRefuerzo || guardandoRefuerzo}
-                                    className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300"
+                                    className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 dark:border-purple-800 dark:text-purple-300 dark:hover:bg-purple-950/60 dark:hover:text-purple-200 dark:hover:border-purple-700"
                                     title="Generar 10 preguntas nuevas"
                                 >
                                     <Wand2 className={`mr-1.5 h-3.5 w-3.5 ${cargandoRefuerzo ? 'animate-pulse' : ''}`} />
@@ -424,6 +496,35 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                                 Estudiante: <strong>{estudianteRefuerzo}</strong> · Revisa y edita las preguntas antes de enviarlas.
                             </DialogDescription>
                         </DialogHeader>
+
+                        {/* Error al generar preguntas */}
+                        {errorGeneracion && preguntasRefuerzo.length === 0 && !cargandoRefuerzo && (
+                            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30 space-y-3">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                                    <div className="space-y-1">
+                                        <h4 className="text-sm font-semibold text-red-800 dark:text-red-300">
+                                            No se pudieron generar las preguntas con IA
+                                        </h4>
+                                        <p className="text-xs text-red-700 dark:text-red-400 whitespace-pre-line">
+                                            {errorGeneracion}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="pt-2 flex justify-end">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => entregaRefuerzoId && generarPreguntas(entregaRefuerzoId, true)}
+                                        className="border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/60 dark:hover:text-red-200"
+                                    >
+                                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                                        Reintentar generación
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
 
                         {preguntasRefuerzo.length === 0 && cargandoRefuerzo ? (
                             // Primera carga: no hay preguntas → mostrar spinner grande
@@ -491,7 +592,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                                 type="button"
                                 onClick={guardarRefuerzo}
                                 disabled={guardandoRefuerzo || cargandoRefuerzo || preguntasRefuerzo.length === 0}
-                                className="bg-purple-600 hover:bg-purple-700"
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-xs"
                             >
                                 {guardandoRefuerzo && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
                                 Guardar y enviar al estudiante
@@ -539,7 +640,7 @@ export default function LeccionesEntregas({ leccion, entregas, estudiantesSinEnt
                             <Button
                                 type="button"
                                 onClick={ejecutarRefrescar}
-                                className="bg-purple-600 hover:bg-purple-700"
+                                className="bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-xs"
                             >
                                 <Wand2 className="mr-2 h-4 w-4" />
                                 Sí, generar nuevas

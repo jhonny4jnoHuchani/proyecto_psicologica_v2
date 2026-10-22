@@ -6,11 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface Refuerzo {
     id: number;
+    hash_id?: string;
     completado: boolean;
+    nota?: number | null;
     created_at: string;
     leccion: {
         id: number;
@@ -32,11 +35,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    });
+    return formatoFechaHora(fecha);
 }
 
 function agruparPorMateria(refuerzos: Refuerzo[]) {
@@ -222,7 +221,7 @@ export default function RefuerzoIndex({ refuerzos }: Props) {
                                                         size="sm"
                                                         className="bg-purple-600 hover:bg-purple-700 shrink-0 h-8 text-xs"
                                                     >
-                                                        <Link href={`/refuerzos/${r.id}`}>
+                                                        <Link href={`/refuerzos/${r.hash_id || r.id}`}>
                                                             Responder
                                                             <ArrowRight className="ml-1 h-3 w-3" />
                                                         </Link>
@@ -278,7 +277,7 @@ export default function RefuerzoIndex({ refuerzos }: Props) {
                                             {refuerzosMateria.map((r) => (
                                                 <Link
                                                     key={r.id}
-                                                    href={`/refuerzos/${r.id}`}
+                                                    href={`/refuerzos/${r.hash_id || r.id}`}
                                                     className="group flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-white p-3 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all"
                                                 >
                                                     <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -296,9 +295,17 @@ export default function RefuerzoIndex({ refuerzos }: Props) {
                                                     </div>
                                                     <Badge
                                                         variant="outline"
-                                                        className="border-emerald-200 text-emerald-600 shrink-0 text-[10px]"
+                                                        className={
+                                                            r.nota !== null && r.nota !== undefined
+                                                                ? r.nota >= 70
+                                                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 shrink-0 text-xs font-semibold'
+                                                                    : r.nota >= 51
+                                                                    ? 'border-amber-300 bg-amber-50 text-amber-700 shrink-0 text-xs font-semibold'
+                                                                    : 'border-red-300 bg-red-50 text-red-700 shrink-0 text-xs font-semibold'
+                                                                : 'border-emerald-200 text-emerald-600 shrink-0 text-[10px]'
+                                                        }
                                                     >
-                                                        ✅ Completado
+                                                        {r.nota !== null && r.nota !== undefined ? `Nota: ${r.nota}/100` : '✅ Completado'}
                                                     </Badge>
                                                 </Link>
                                             ))}

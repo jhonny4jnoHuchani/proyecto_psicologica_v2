@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface MateriaOption { id: number; nombre: string; codigo: string; }
@@ -42,7 +43,7 @@ function colorForMateria(codigo?: string) {
 }
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return formatoFechaHora(fecha);
 }
 
 export default function LibrosTrashed({ libros }: Props) {
@@ -128,7 +129,7 @@ export default function LibrosTrashed({ libros }: Props) {
                                     {libros?.map((l) => {
                                         const color = colorForMateria(l.materia?.codigo);
                                         return (
-                                            <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50">
+                                            <tr key={l.id} className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/60">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-start gap-3">
                                                         <span className={`mt-1 h-full min-h-8 w-1 rounded-full ${color.dot}`} />

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('titulo', 200);
             $table->string('tema', 200)->nullable();
             $table->text('descripcion')->nullable();
-            $table->date('fecha_programada')->nullable();
-            $table->date('fecha_entrega')->nullable();
+            $table->dateTime('fecha_programada')->nullable();
+            $table->dateTime('fecha_entrega')->nullable();
             $table->string('imagen', 255)->nullable();
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
             $table->timestamps();

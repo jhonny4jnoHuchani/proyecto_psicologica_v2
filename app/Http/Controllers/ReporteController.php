@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CalificacionesExport;
 use App\Models\Curso;
 use App\Models\Docente;
 use App\Models\Entrega;
 use App\Models\Leccion;
 use App\Models\Materia;
-use App\Exports\CalificacionesExport;
+use App\Models\Refuerzo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,7 +51,9 @@ class ReporteController extends Controller
     private function validarAcceso($cursoId, $materiaId = null)
     {
         $user = Auth::user();
-        if ($user->hasRole('admin')) return;
+        if ($user->hasRole('admin')) {
+            return;
+        }
 
         $docente = Docente::where('user_id', $user->id)->first();
 
@@ -62,7 +65,7 @@ class ReporteController extends Controller
                 }
             })->exists();
 
-        if (!$acceso) {
+        if (! $acceso) {
             abort(403, 'No tienes permiso para generar este reporte.');
         }
     }
@@ -83,10 +86,10 @@ class ReporteController extends Controller
         $estudiantes = $curso->estudiantes()
             ->with('user')
             ->get()
-            ->sortBy(fn($e) => $e->user->apellido_paterno);
+            ->sortBy(fn ($e) => $e->user->apellido_paterno);
 
         $lecciones = Leccion::where('curso_id', $curso->id)
-            ->when($request->materia_id, fn($q) => $q->where('materia_id', $request->materia_id))
+            ->when($request->materia_id, fn ($q) => $q->where('materia_id', $request->materia_id))
             ->orderBy('fecha_entrega')
             ->get();
 
@@ -94,7 +97,7 @@ class ReporteController extends Controller
             ->whereIn('leccion_id', $lecciones->pluck('id'))
             ->get();
 
-        $nombreArchivo = 'reporte-' . Str::slug($curso->gestion->año . '-' . $curso->paralelo) . '.pdf';
+        $nombreArchivo = 'reporte-'.Str::slug($curso->gestion->año.'-'.$curso->paralelo).'.pdf';
 
         $pdf = Pdf::loadView('reportes.calificaciones', [
             'curso' => $curso,
@@ -103,6 +106,43 @@ class ReporteController extends Controller
             'lecciones' => $lecciones,
             'entregas' => $entregas,
         ])->setPaper('a4', 'landscape');
+
+        return $pdf->download($nombreArchivo);
+    }
+
+    public function refuerzosPdf(Request $request)
+    {
+        $request->validate([
+            'curso_id' => 'required|exists:cursos,id',
+            'materia_id' => 'nullable|exists:materias,id',
+        ]);
+
+        $this->validarAcceso($request->curso_id, $request->materia_id);
+
+        $curso = Curso::with('gestion')->findOrFail($request->curso_id);
+        $materia = $request->materia_id ? Materia::find($request->materia_id) : null;
+
+        $refuerzos = Refuerzo::with([
+            'estudiante.user',
+            'leccion.materia',
+            'entrega.calificacion',
+        ])
+            ->whereHas('leccion', function ($q) use ($curso, $request) {
+                $q->where('curso_id', $curso->id);
+                if ($request->materia_id) {
+                    $q->where('materia_id', $request->materia_id);
+                }
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $nombreArchivo = 'reporte-refuerzos-ia-'.Str::slug($curso->gestion->año.'-'.$curso->paralelo).'.pdf';
+
+        $pdf = Pdf::loadView('reportes.refuerzos', [
+            'curso' => $curso,
+            'materia' => $materia,
+            'refuerzos' => $refuerzos,
+        ])->setPaper('a4', 'portrait');
 
         return $pdf->download($nombreArchivo);
     }
@@ -117,7 +157,7 @@ class ReporteController extends Controller
         $this->validarAcceso($request->curso_id, $request->materia_id);
 
         $curso = Curso::with('gestion')->findOrFail($request->curso_id);
-        $nombreArchivo = 'reporte-' . Str::slug($curso->gestion->año . '-' . $curso->paralelo) . '.xlsx';
+        $nombreArchivo = 'reporte-'.Str::slug($curso->gestion->año.'-'.$curso->paralelo).'.xlsx';
 
         return Excel::download(
             new CalificacionesExport($curso, $request->materia_id),

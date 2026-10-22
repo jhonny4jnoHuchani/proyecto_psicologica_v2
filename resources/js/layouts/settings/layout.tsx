@@ -16,6 +16,11 @@ const sidebarNavItems: NavItem[] = [
         url: '/settings/password',
         icon: null,
     },
+    {
+        title: 'Tema y Apariencia',
+        url: '/settings/appearance',
+        icon: null,
+    },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

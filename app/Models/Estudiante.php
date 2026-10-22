@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasObfuscatedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,9 +11,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Estudiante extends Model
 {
-    use SoftDeletes;
+    use HasObfuscatedRouteKey, SoftDeletes;
 
     protected $table = 'estudiantes';
+
+    protected $appends = ['hash_id'];
 
     protected $fillable = [
         'user_id',
@@ -41,7 +44,7 @@ class Estudiante extends Model
 
     public function getNombreCompletoAttribute(): string
     {
-        return $this->user 
+        return $this->user
             ? "{$this->user->apellido_paterno} {$this->user->apellido_materno}, {$this->user->nombre}"
             : 'Sin usuario';
     }

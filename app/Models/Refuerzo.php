@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\HasObfuscatedRouteKey;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Refuerzo extends Model
 {
+    use HasObfuscatedRouteKey;
+
     protected $table = 'refuerzos';
+
+    protected $appends = ['hash_id'];
 
     protected $fillable = [
         'entrega_id',
@@ -18,6 +23,9 @@ class Refuerzo extends Model
         'respuestas',
         'recomendacion',
         'completado',
+        'nota',
+        'evaluacion_ia',
+        'fecha_evaluacion',
     ];
 
     protected function casts(): array
@@ -26,6 +34,9 @@ class Refuerzo extends Model
             'preguntas' => 'array',
             'respuestas' => 'array',
             'completado' => 'boolean',
+            'nota' => 'float',
+            'evaluacion_ia' => 'array',
+            'fecha_evaluacion' => 'datetime',
         ];
     }
 

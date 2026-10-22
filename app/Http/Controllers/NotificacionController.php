@@ -19,4 +19,14 @@ class NotificacionController extends Controller
 
         return back();
     }
+
+    public function marcarTodasLeidas(Request $request)
+    {
+        $request->user()->notificaciones()->noLeidas()->update([
+            'leida' => true,
+            'leida_at' => now(),
+        ]);
+
+        return back();
+    }
 }

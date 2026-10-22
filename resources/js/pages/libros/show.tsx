@@ -4,6 +4,7 @@ import { BookOpen, ArrowLeft, Calendar, User, Hash, FileText, Download } from 'l
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface MateriaOption { id: number; nombre: string; codigo: string; }
@@ -43,7 +44,7 @@ function colorForMateria(codigo?: string) {
 }
 
 function formatoFecha(fecha: string) {
-    return new Date(fecha).toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return formatoFechaHora(fecha);
 }
 
 export default function LibroShow({ libro }: Props) {
@@ -112,7 +113,7 @@ export default function LibroShow({ libro }: Props) {
                             {libro.archivo && (
                                 <div className="border-t pt-4">
                                     <a href={`/storage/${libro.archivo}`} target="_blank">
-                                        <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                                        <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300">
                                             <Download className="mr-2 h-4 w-4" />Ver / Descargar PDF
                                         </Button>
                                     </a>

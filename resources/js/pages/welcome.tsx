@@ -22,6 +22,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { formatoFecha } from '@/lib/formatters';
 
 
 
@@ -73,11 +74,7 @@ const RUTA_INGRESO = [
 ];
 
 const formatFecha = (fecha: string | null) => {
-    if (!fecha) return null;
-    const d = new Date(fecha);
-    if (Number.isNaN(d.getTime())) return fecha;
-    return d.toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' });
-                                              //  23 - feb (fecbrero)  2026
+    return formatoFecha(fecha);
 };
 
 const convocatoriaAbierta = (c: Convocatoria) => {

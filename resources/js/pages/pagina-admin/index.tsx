@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 // ======================== TIPOS ========================
@@ -355,8 +356,8 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                             <p className="font-medium">{c.titulo}</p>
                                             {c.descripcion && <p className="text-sm text-neutral-500 truncate">{c.descripcion}</p>}
                                             <div className="flex gap-2 mt-1">
-                                                {c.fecha_inicio && <Badge variant="outline">{c.fecha_inicio}</Badge>}
-                                                {c.fecha_fin && <Badge variant="outline">hasta {c.fecha_fin}</Badge>}
+                                                {c.fecha_inicio && <Badge variant="outline">{formatoFechaHora(c.fecha_inicio)}</Badge>}
+                                                {c.fecha_fin && <Badge variant="outline">hasta {formatoFechaHora(c.fecha_fin)}</Badge>}
                                                 <Badge variant={c.activo ? 'default' : 'secondary'}>{c.activo ? 'Activo' : 'Inactivo'}</Badge>
                                                 {c.deleted_at && <Badge variant="destructive">Eliminada</Badge>}
                                                 {c.link_video && <Badge variant="outline">🎥 Video</Badge>}

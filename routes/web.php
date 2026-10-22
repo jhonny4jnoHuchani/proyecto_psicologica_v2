@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdministrativoController;
 use App\Http\Controllers\CalificacionController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\CursoController;
@@ -18,7 +19,6 @@ use App\Http\Controllers\RecomendacionController;
 use App\Http\Controllers\RefuerzoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\AdministrativoController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Models\Autoridad;
 use App\Models\Configuracion;
@@ -175,12 +175,14 @@ Route::middleware(['auth'])->group(function () {
     // Calificaciones
     Route::middleware(['role:docente|admin'])->group(function () {
         Route::post('/calificaciones', [CalificacionController::class, 'store'])->name('calificaciones.store');
+        Route::post('/calificaciones/sugerir-retroalimentacion', [CalificacionController::class, 'sugerirRetroalimentacion'])->name('calificaciones.sugerir-retroalimentacion');
     });
 
     // Reportes (admin y docente)
     Route::middleware(['role:admin|docente'])->prefix('reportes')->name('reportes.')->controller(ReporteController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/pdf', 'pdf')->name('pdf');
+        Route::get('/refuerzos-pdf', 'refuerzosPdf')->name('refuerzos-pdf');
         Route::get('/excel', 'excel')->name('excel');
     });
 
@@ -217,9 +219,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/estudiante/recomendaciones', [RecomendacionController::class, 'index'])
         ->name('estudiante.recomendaciones');
 
-    // Notificaciones (Marcar como leída)
+    // Notificaciones (Marcar como leída y marcar todas)
     Route::post('/notificaciones/{notificacion}/marcar-leida', [NotificacionController::class, 'marcarLeida'])
         ->name('notificaciones.marcar-leida');
+    Route::post('/notificaciones/marcar-todas-leidas', [NotificacionController::class, 'marcarTodasLeidas'])
+        ->name('notificaciones.marcar-todas-leidas');
 
 });
 

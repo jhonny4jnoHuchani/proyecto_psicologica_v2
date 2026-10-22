@@ -91,7 +91,7 @@ export function AppSidebar() {
         }
     ];
 
-    let activeGroups = [];
+    let activeGroups: typeof adminGroups = [];
     if (isAdmin) activeGroups = adminGroups;
     else if (isDocente) activeGroups = docenteGroups;
     else if (isEstudiante) activeGroups = estudianteGroups;

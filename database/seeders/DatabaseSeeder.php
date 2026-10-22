@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             'ci' => '1234567 LP',
             'celular' => '7777777',
 
-            'email' => 'admin@sistema.com',//usuario
+            'email' => 'admin@email.com',//usuario
             'password' => bcrypt('admin'),//contraseña
             'genero' => 'F',
             'fecha_nacimiento' => '1990-01-01',

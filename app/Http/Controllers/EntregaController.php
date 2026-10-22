@@ -61,7 +61,7 @@ class EntregaController extends Controller
 
         $leccionId = request('leccion_id');
 
-        $entregas = Entrega::with(['estudiante.user', 'leccion.materia', 'calificacion'])
+        $entregas = Entrega::with(['estudiante.user', 'leccion.materia', 'calificacion', 'refuerzo'])
             ->whereHas('leccion', fn ($q) => $q->where('docente_id', $docente->id))
             ->when($leccionId, fn ($q) => $q->where('leccion_id', $leccionId))
             ->orderBy('created_at', 'desc')
@@ -141,7 +141,7 @@ class EntregaController extends Controller
             titulo: 'Tarea entregada',
             mensaje: "Tu entrega para la tarea \"{$leccion->titulo}\" fue recibida correctamente.",
             url: "/lecciones/{$leccion->id}",
-            mandarTelegram: true, // Podemos notificar tanto por web como por telegram
+            // mandarTelegram: true, // Podemos notificar tanto por web como por telegram
         );
 
         return back()->with('success', 'Entrega subida exitosamente.');

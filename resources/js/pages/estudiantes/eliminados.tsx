@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 interface UserData {
@@ -114,7 +115,7 @@ export default function EstudiantesEliminados({ estudiantes }: Props) {
                                             <td className="py-3 px-4">{nombreCompleto(estudiante.user)}</td>
                                             <td className="py-3 px-4">{estudiante.user.ci}</td>
                                             <td className="py-3 px-4">{estudiante.user.celular}</td>
-                                            <td className="py-3 px-4 text-muted-foreground">{new Date(estudiante.deleted_at).toLocaleDateString('es-BO')}</td>
+                                            <td className="py-3 px-4 text-muted-foreground">{formatoFechaHora(estudiante.deleted_at)}</td>
                                             <td className="py-3 px-4 text-right">
                                                 <Button variant="outline" size="sm" onClick={() => openRestore(estudiante)}>
                                                     <RefreshCw className="h-4 w-4 mr-2" />
