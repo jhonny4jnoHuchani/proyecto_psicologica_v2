@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+<<<<<<< HEAD
+=======
+use App\Services\MachineLearningService;
+>>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
 
 class LeccionController extends Controller
 {
@@ -130,15 +134,26 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección eliminada.');
     }
 
+<<<<<<< HEAD
     public function show(Request $request, Leccion $leccion): Response|RedirectResponse
     {
         // Si la URL en la barra de direcciones contiene el ID numérico, redirigir al código cifrado
+=======
+          public function show(Request $request, Leccion $leccion, MachineLearningService $mlService): Response|RedirectResponse
+    {
+>>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
         if (is_numeric($request->route()->originalParameter('leccion'))) {
             return redirect()->to(route('lecciones.show', $leccion));
         }
 
         $user = Auth::user();
 
+<<<<<<< HEAD
+=======
+        // 1. Cargamos la lección con sus relaciones
+        $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']);
+
+>>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
         $entrega = null;
         if ($user->hasRole('estudiante')) {
             $estudiante = Estudiante::where('user_id', $user->id)->first();
@@ -148,10 +163,49 @@ class LeccionController extends Controller
                 ->first();
         }
 
+        // 2. Lógica del Machine Learning
+        $prediccion_ml = null;
+        $tema_siguiente = null;
+        $paginas_siguiente = null;
+
+        if ($entrega && $entrega->calificacion) {
+            
+            // Forzamos a que sea un número entero (65 en vez de "65.00")
+            $notaActual = (int) round($entrega->calificacion->nota);
+
+            // Buscar el siguiente tema (con un orden mayor al actual)
+            $ordenActual = $leccion->temario ? $leccion->temario->orden : 0;
+            
+            $temaSiguienteObj = Tema::where('materia_id', $leccion->materia_id)
+                ->where('orden', '>', $ordenActual)
+                ->where('estado', '!=', 'omitido')
+                ->orderBy('orden', 'asc')
+                ->first();
+
+            if ($temaSiguienteObj) {
+                $tema_siguiente = $temaSiguienteObj->nombre;
+                $paginas_siguiente = $temaSiguienteObj->paginas_libro;
+
+                // Llamamos a Python
+                $prediccion_ml = $mlService->getPrediccion(
+                    $leccion->materia_id,
+                    $notaActual // <-- Aquí enviamos el entero (ej: 65)
+                );
+            }
+        }
+
+        // --- DEBUG TEMPORAL ---
+        // Descomenta esta línea si sigue saliendo 0. Te mostrará qué está pasando exactamente.
+        // dd($prediccion_ml, $notaActual, $temaSiguienteObj);
+        // ----------------------
+
         return Inertia::render('lecciones/show', [
-            'leccion' => $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']),
+            'leccion' => $leccion,
             'entrega' => $entrega,
             'rol' => $user->roles->first()?->name,
+            'prediccion_ml' => $prediccion_ml,
+            'tema_siguiente' => $tema_siguiente,
+            'paginas_siguiente' => $paginas_siguiente,
         ]);
     }
 

@@ -3,6 +3,10 @@ import {
     AlertTriangle,
     ArrowLeft,
     Bot,
+<<<<<<< HEAD
+=======
+    BookOpen,
+>>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
     Calendar,
     CheckCircle2,
     ChevronDown,
@@ -124,9 +128,21 @@ interface Props {
     leccion: LeccionData;
     entrega: EntregaData | null;
     rol: string;
+        // 👇LÍNEAS nuevas de ML:
+    prediccion_ml?: {
+        prediccion_sin_leer: number;
+        prediccion_con_leer: number;
+        beneficio: number;
+    } | null;
+    tema_siguiente?: string | null;
+    paginas_siguiente?: string | null;
 }
 
+<<<<<<< HEAD
 export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }: Props) {
+=======
+export default function LeccionesShow({ leccion, entrega: entregaInicial, rol, prediccion_ml, tema_siguiente, paginas_siguiente  }: Props) {
+>>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
     const pageProps = usePage<SharedData>().props;
     const authUser = pageProps.auth?.user;
     const { flash } = pageProps as { flash?: { success?: string; error?: string } };
@@ -644,6 +660,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                         {/* ------------------------------------------------------------ */}
                         {/* CUADRO 1 (IZQUIERDA): MACHINE LEARNING                       */}
                         {/* ------------------------------------------------------------ */}
+<<<<<<< HEAD
                         <div className="rounded-xl border border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-background dark:from-indigo-950/30 dark:via-purple-950/20 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
                             <div className="space-y-2.5">
                                 <div className="flex items-center justify-between gap-2">
@@ -680,6 +697,104 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }:
                             </div>
                         </div>
 
+=======
+<div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-background dark:from-indigo-950/40 dark:via-purple-950/30 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
+    <div className="space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm tracking-wide">
+                <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <span>PREDICCIÓN DE RENDIMIENTO PARA EL PROXIMO TEMA</span>
+            </div>
+            <Badge
+                variant="outline"
+                className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 font-medium"
+            >
+                ML Predictivo
+            </Badge>
+        </div>
+
+        <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            Basado en tu historial académico y el análisis de {temaNombre}, nuestro modelo predice tu rendimiento en el próximo tema.
+        </p>
+    </div>
+
+    {/* Mostrar predicciones si existen */}
+    {prediccion_ml ? (
+        <div className="space-y-3">
+            {/* Próximo tema */}
+            {tema_siguiente && (
+                <div className="rounded-lg bg-indigo-100/60 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 p-2.5">
+                    <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium mb-1">
+                        Próximo tema:
+                    </p>
+                    <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                        {tema_siguiente}
+                    </p>
+                    {paginas_siguiente && (
+                        <p className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-1">
+                            📖 Lectura recomendada: {paginas_siguiente}
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {/* Dos predicciones */}
+            <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-2.5">
+                    <p className="text-[10px] text-rose-700 dark:text-rose-300 font-semibold mb-1">
+                        ⚠️ Sin prepararte:
+                    </p>
+                    <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                        ~{prediccion_ml.prediccion_sin_leer}/100
+                    </p>
+                </div>
+                <div className="rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5">
+                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mb-1">
+                        ✅ Leyendo {paginas_siguiente || 'el material'}:
+                    </p>
+                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                        ~{prediccion_ml.prediccion_con_leer}/100
+                    </p>
+                </div>
+            </div>
+
+            {/* Beneficio */}
+            <div className="rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-950/60 dark:to-purple-950/60 border border-indigo-200 dark:border-indigo-800 p-2.5 text-center">
+                <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+                     Beneficio de prepararte:
+                </p>
+                <p className="text-base font-bold text-indigo-900 dark:text-indigo-100">
+                    +{prediccion_ml.beneficio} puntos
+                </p>
+            </div>
+
+            {/* Mensaje informativo (reemplaza al botón) */}
+            {paginas_siguiente && (
+                <div className="w-full bg-orange-500 text-white py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2">
+                    <BookOpen className="h-4 w-4" />
+                    Leer el texto guía ({paginas_siguiente})
+                </div>
+            )}
+        </div>
+    ) : (
+        <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
+            <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">
+                <span>Estado del modelo:</span>
+                <span className="text-amber-600 dark:text-amber-400 text-[11px]">
+                    Procesando datos
+                </span>
+            </div>
+            <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
+                <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+                El sistema está analizando tu desempeño para generar predicciones personalizadas.
+            </p>
+        </div>
+    )}
+</div>
+
+>>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
                         {/* ------------------------------------------------------------ */}
                         {/* CUADRO 2 (DERECHA): REFUERZO INMEDIATO (CORRECTIVO) - IMAGEN 3*/}
                         {/* ------------------------------------------------------------ */}
