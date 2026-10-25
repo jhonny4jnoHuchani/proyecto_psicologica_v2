@@ -47,13 +47,28 @@ class NotificacionService
         User $user,
         float $nota,
         string $nombreTarea,
+        ?string $nombreMateria = null,
+        ?string $comentarios = null,
+        ?string $url = null,
+        bool $mandarTelegram = true,
     ): Notificacion {
+        $mensaje = "Tu tarea \"{$nombreTarea}\"";
+        if ($nombreMateria) {
+            $mensaje .= " ({$nombreMateria})";
+        }
+        $mensaje .= " fue calificada con {$nota}/100.";
+
+        if (! empty(trim($comentarios ?? ''))) {
+            $mensaje .= "\n\n💬 Observaciones:\n\"{$comentarios}\"";
+        }
+
         return self::crear(
             user: $user,
             tipo: 'tarea_calificada',
-            titulo: "Tarea calificada: {$nota}/100",
-            mensaje: "Tu tarea \"{$nombreTarea}\" fue calificada con {$nota}/100.",
-            url: '/entregas',
+            titulo: "📝 Tarea calificada: {$nota}/100",
+            mensaje: $mensaje,
+            url: $url ?? '/entregas',
+            mandarTelegram: $mandarTelegram,
         );
     }
 
@@ -77,7 +92,7 @@ class NotificacionService
     /**
      * Atajo: credenciales enviadas.
      */
-    public static function credencialesEnviadas(User $user): Notificacion
+    public static function credencialesEnviadas(User $user, bool $mandarTelegram = false): Notificacion
     {
         return self::crear(
             user: $user,
@@ -85,6 +100,7 @@ class NotificacionService
             titulo: 'Credenciales enviadas',
             mensaje: 'Tus credenciales de acceso fueron enviadas por Telegram.',
             url: '/',
+            mandarTelegram: $mandarTelegram,
         );
     }
 
@@ -94,14 +110,27 @@ class NotificacionService
     public static function tareaNueva(
         User $user,
         string $titulo,
-        int $leccionId,
-        bool $mandarTelegram = false,
+        int|string $leccionId,
+        ?string $materiaNombre = null,
+        ?string $fechaEntrega = null,
+        bool $mandarTelegram = true,
     ): Notificacion {
+        $mensaje = "Se publicó una nueva tarea: \"{$titulo}\"";
+        if ($materiaNombre) {
+            $mensaje .= " en la materia {$materiaNombre}.";
+        } else {
+            $mensaje .= ".";
+        }
+
+        if ($fechaEntrega) {
+            $mensaje .= "\n📅 Fecha límite de entrega: {$fechaEntrega}";
+        }
+
         return self::crear(
             user: $user,
             tipo: 'tarea_nueva',
-            titulo: "Nueva tarea: {$titulo}",
-            mensaje: "Se publicó una nueva tarea: \"{$titulo}\".",
+            titulo: "📚 Nueva tarea: {$titulo}",
+            mensaje: $mensaje,
             url: "/lecciones/{$leccionId}",
             mandarTelegram: $mandarTelegram,
         );

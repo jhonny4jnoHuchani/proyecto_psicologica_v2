@@ -17,13 +17,13 @@ class CalificacionObserver
             // 1. ¿Es una creación o una actualización?
             $esNueva = $calificacion->wasRecentlyCreated;
 
-            // 2. Si es update, verificar que la nota haya cambiado
-            if (! $esNueva && ! $calificacion->wasChanged('nota')) {
-                return; // no cambió la nota → no notificar
+            // 2. Si es update, verificar que la nota o comentarios hayan cambiado
+            if (! $esNueva && ! $calificacion->wasChanged(['nota', 'comentarios'])) {
+                return; // no hubo cambios relevantes → no notificar
             }
 
             // 3. Cargar relaciones necesarias
-            $calificacion->loadMissing('entrega.estudiante.user', 'entrega.leccion');
+            $calificacion->loadMissing('entrega.estudiante.user', 'entrega.leccion.materia');
 
             $entrega = $calificacion->entrega;
             $estudiante = $entrega?->estudiante;
@@ -36,16 +36,23 @@ class CalificacionObserver
                 return;
             }
 
-            // 5. Obtener nombre de la tarea (ajustar campo si es necesario)
-            $nombreTarea = $entrega->leccion->titulo
-                ?? $entrega->leccion->nombre
+            // 5. Obtener datos de la tarea
+            $leccion = $entrega->leccion;
+            $nombreTarea = $leccion?->titulo
+                ?? $leccion?->nombre
                 ?? 'Tarea';
+            $nombreMateria = $leccion?->materia?->nombre;
+            $leccionKey = $leccion ? $leccion->getRouteKey() : null;
 
             // 6. Notificar
             NotificacionService::tareaCalificada(
                 user: $user,
                 nota: (float) $calificacion->nota,
                 nombreTarea: $nombreTarea,
+                nombreMateria: $nombreMateria,
+                comentarios: $calificacion->comentarios,
+                url: $leccionKey ? "/lecciones/{$leccionKey}" : '/entregas',
+                mandarTelegram: true,
             );
 
         } catch (\Exception $e) {

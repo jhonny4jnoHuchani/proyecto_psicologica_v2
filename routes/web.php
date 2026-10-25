@@ -97,7 +97,6 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('cursos')->name('cursos.')->controller(CursoController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/eliminados', 'trashed')->name('trashed');
-            Route::get('/{curso}', 'show')->name('show');
             Route::post('/', 'store')->name('store');
             Route::put('/{curso}', 'update')->name('update');
             Route::delete('/{curso}', 'destroy')->name('destroy');
@@ -147,6 +146,13 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/convocatorias/{id}/restore', 'restoreConvocatoria')->name('convocatorias.restore');
         });
     });
+
+    // ========================
+    // CURSOS (Admin y Docente)
+    // ========================
+    Route::get('/cursos/{curso}', [CursoController::class, 'show'])
+        ->name('cursos.show')
+        ->middleware('role:admin|docente');
 
     // ========================
     // LECCIONES (Admin, Docente, Estudiante)

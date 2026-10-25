@@ -20,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->web(append: [
             HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
+            // AddLinkHeadersForPreloadedAssets::class, // Deshabilitado para evitar headers excesivos en FastCGI (502 upstream sent too big header)
             RedirectNumericRouteKeys::class,
         ]);
 

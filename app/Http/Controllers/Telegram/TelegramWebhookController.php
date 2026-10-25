@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Telegram;
 
 use App\Http\Controllers\Controller;
+use App\Models\CredencialTemporal;
 use App\Models\TelegramVinculacion;
 use App\Models\User;
+use App\Services\NotificacionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -102,9 +105,17 @@ class TelegramWebhookController extends Controller
             return;
         }
 
-        // Verificar que el user no esté ya vinculado a OTRO chat
-        $yaVinculado = TelegramVinculacion::where('user_id', $user->id)->exists();
-        if ($yaVinculado) {
+        // Verificar que el user no esté ya vinculado
+        $vinculacionExistente = TelegramVinculacion::where('user_id', $user->id)->first();
+        if ($vinculacionExistente) {
+            if ($vinculacionExistente->chat_id === (string) $chatId) {
+                Cache::forget("tg:{$chatId}");
+                $this->enviarMensaje($chatId, "ℹ️ Ya te encuentras vinculado a este chat de Telegram, {$user->nombre}.");
+                $this->enviarCredenciales($chatId, $user, false);
+
+                return;
+            }
+
             $this->enviarMensaje($chatId, '⚠️ Este CI ya está vinculado a otro Telegram.');
 
             return;
@@ -170,16 +181,71 @@ class TelegramWebhookController extends Controller
 
         Cache::forget("tg:{$chatId}");
 
-        $this->enviarMensaje(
-            $chatId,
-            "🎉 ¡Vinculación exitosa!\n\n".
-            'A partir de ahora recibirás tus notificaciones aquí.'
-        );
+        // 🎉 Enviar mensaje de bienvenida con usuario y contraseña
+        $this->enviarCredenciales($chatId, $user, true);
+
+        // Notificación interna en la campanita web
+        NotificacionService::credencialesEnviadas($user, false);
 
         // Flush de notificaciones pendientes
         Artisan::call('telegram:flush-pendientes', [
             'user_id' => $user->id,
         ]);
+    }
+
+    /**
+     * Envía las credenciales de acceso al usuario por Telegram.
+     */
+    private function enviarCredenciales(int $chatId, User $user, bool $esPrimeraVinculacion = false): void
+    {
+        // 1. Obtener o resolver la contraseña
+        $credencial = CredencialTemporal::where('user_id', $user->id)->latest()->first();
+
+        if ($credencial && ! empty($credencial->password_temporal)) {
+            $password = $credencial->password_temporal;
+            $credencial->update([
+                'enviada' => true,
+                'enviada_at' => now(),
+            ]);
+        } elseif (Hash::check('password', $user->password)) {
+            $password = 'password';
+            CredencialTemporal::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'password_temporal' => $password,
+                    'enviada' => true,
+                    'enviada_at' => now(),
+                ]
+            );
+        } else {
+            // Contraseña basada en apellido y CI
+            $password = strtolower($user->apellido_paterno.'_'.$user->ci);
+            $user->update(['password' => Hash::make($password)]);
+            CredencialTemporal::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'password_temporal' => $password,
+                    'enviada' => true,
+                    'enviada_at' => now(),
+                ]
+            );
+        }
+
+        $loginUrl = rtrim(config('app.url'), '/').'/login';
+
+        $encabezado = $esPrimeraVinculacion
+            ? "🎉 ¡Vinculación exitosa!\n\n"
+            : "🔐 Tus datos de acceso:\n\n";
+
+        $mensaje = $encabezado.
+            "Hola, {$user->nombre}. Tus datos para ingresar a la plataforma son:\n\n".
+            "🌐 Enlace de acceso:\n{$loginUrl}\n\n".
+            "👤 Usuario (Correo): {$user->email}\n".
+            "🔑 Contraseña: {$password}\n".
+            "🆔 CI: {$user->ci}\n\n".
+            "A partir de ahora recibirás todas tus notificaciones y tareas aquí.";
+
+        $this->enviarMensaje($chatId, $mensaje);
     }
 
     /**
