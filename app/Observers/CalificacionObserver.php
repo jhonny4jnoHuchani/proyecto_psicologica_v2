@@ -18,7 +18,7 @@ class CalificacionObserver
             $esNueva = $calificacion->wasRecentlyCreated;
 
             // 2. Si es update, verificar que la nota haya cambiado
-            if (!$esNueva && !$calificacion->wasChanged('nota')) {
+            if (! $esNueva && ! $calificacion->wasChanged('nota')) {
                 return; // no cambió la nota → no notificar
             }
 
@@ -30,8 +30,9 @@ class CalificacionObserver
             $user = $estudiante?->user;
 
             // 4. Validaciones defensivas
-            if (!$user) {
+            if (! $user) {
                 Log::warning("Calificacion {$calificacion->id}: no se encontró user para notificar.");
+
                 return;
             }
 
@@ -49,7 +50,7 @@ class CalificacionObserver
 
         } catch (\Exception $e) {
             // Nunca romper el flujo del docente por un error de notificación
-            Log::error("Error en CalificacionObserver: " . $e->getMessage());
+            Log::error('Error en CalificacionObserver: '.$e->getMessage());
         }
     }
 }

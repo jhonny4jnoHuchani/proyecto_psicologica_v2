@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CredencialTemporal;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\User;
@@ -11,7 +12,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\CredencialTemporal;
 
 class EstudianteController extends Controller
 {
@@ -90,8 +90,6 @@ class EstudianteController extends Controller
             'tipo_inscripcion' => $request->tipo_inscripcion,
         ]);
 
-
-
         // Inscribir al curso
         $estudiante->cursos()->attach($request->curso_id, [
             'fecha_inscripcion' => now(),
@@ -102,14 +100,13 @@ class EstudianteController extends Controller
         $user->assignRole('estudiante');
 
         // ' Guardar credencial temporal para Telegram
-        \App\Models\CredencialTemporal::create([
+        CredencialTemporal::create([
             'user_id' => $user->id,
             'password_temporal' => $password,
         ]);
 
         return redirect()->route('estudiantes.index')
-        ->with('success', "Estudiante creado e inscrito. Contraseña: {$password}");
-
+            ->with('success', "Estudiante creado e inscrito. Contraseña: {$password}");
 
     }
 
@@ -158,7 +155,7 @@ class EstudianteController extends Controller
             $request->curso_id => [
                 'fecha_inscripcion' => now(),
                 'estado' => 'activo',
-            ]
+            ],
         ]);
 
         return redirect()->route('estudiantes.index')
@@ -185,7 +182,7 @@ class EstudianteController extends Controller
     public function resetPassword(Estudiante $estudiante): RedirectResponse
     {
         $user = $estudiante->user;
-        $nuevaPassword = strtolower($user->apellido_paterno . '_' . $user->ci);
+        $nuevaPassword = strtolower($user->apellido_paterno.'_'.$user->ci);
         $user->update(['password' => bcrypt($nuevaPassword)]);
 
         return redirect()->route('estudiantes.index')

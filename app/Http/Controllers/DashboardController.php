@@ -114,10 +114,40 @@ class DashboardController extends Controller
 
         $semaforo = $this->calcularSemaforoRezago(null, $docente?->id);
 
+        $docenteId = $docente?->id;
+        $entregasPendientesCount = $docenteId
+            ? Entrega::whereHas('leccion', fn ($q) => $q->where('docente_id', $docenteId))
+                ->where('estado_calificacion', '!=', 'calificado')
+                ->count()
+            : 0;
+
+        $totalLecciones = $docenteId
+            ? Leccion::where('docente_id', $docenteId)->count()
+            : 0;
+
+        $totalRefuerzos = $docenteId
+            ? Refuerzo::whereHas('entrega.leccion', fn ($q) => $q->where('docente_id', $docenteId))->count()
+            : 0;
+
+        $ultimasEntregas = $docenteId
+            ? Entrega::with(['estudiante.user', 'leccion.materia'])
+                ->whereHas('leccion', fn ($q) => $q->where('docente_id', $docenteId))
+                ->where('estado_calificacion', '!=', 'calificado')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get()
+            : collect();
+
         return Inertia::render('dashboard', [
             'rol' => 'docente',
             'cursos' => $cursos,
             'semaforo' => $semaforo,
+            'docente_stats' => [
+                'entregas_pendientes' => $entregasPendientesCount,
+                'total_lecciones' => $totalLecciones,
+                'total_refuerzos' => $totalRefuerzos,
+            ],
+            'ultimas_entregas_pendientes' => $ultimasEntregas,
         ]);
     }
 
@@ -217,9 +247,61 @@ class DashboardController extends Controller
             ->with(['gestion', 'materias'])
             ->get() ?? collect();
 
+        $cursoIds = $cursos->pluck('id');
+        $estudianteId = $estudiante?->id;
+
+        // Lecciones activas en sus cursos que NO han sido entregadas por el estudiante
+        $tareasPendientes = ($estudianteId && $cursoIds->isNotEmpty())
+            ? Leccion::with(['materia', 'docente.user', 'curso.gestion'])
+                ->whereIn('curso_id', $cursoIds)
+                ->where('estado', 'activo')
+                ->whereDoesntHave('entregas', fn ($q) => $q->where('estudiante_id', $estudianteId))
+                ->orderBy('fecha_entrega', 'asc')
+                ->limit(6)
+                ->get()
+            : collect();
+
+        // Refuerzos generados pendientes de responder
+        $refuerzosPendientes = $estudianteId
+            ? Refuerzo::with(['entrega.leccion.materia', 'entrega.calificacion'])
+                ->where('estudiante_id', $estudianteId)
+                ->where('completado', false)
+                ->orderBy('created_at', 'desc')
+                ->limit(4)
+                ->get()
+            : collect();
+
+        // Últimas entregas calificadas con notas y comentarios
+        $ultimasCalificaciones = $estudianteId
+            ? Entrega::with(['leccion.materia', 'calificacion'])
+                ->where('estudiante_id', $estudianteId)
+                ->where('estado_calificacion', 'calificado')
+                ->whereHas('calificacion')
+                ->orderBy('updated_at', 'desc')
+                ->limit(4)
+                ->get()
+            : collect();
+
+        // Promedio del estudiante
+        $notas = $estudianteId
+            ? Calificacion::whereHas('entrega', fn ($q) => $q->where('estudiante_id', $estudianteId))->pluck('nota')
+            : collect();
+        $promedioGeneral = $notas->count() > 0 ? round((float) $notas->avg(), 1) : null;
+
+        $totalMaterias = $cursos->pluck('materias')->flatten()->unique('id')->count();
+
         return Inertia::render('dashboard', [
             'rol' => 'estudiante',
             'cursos' => $cursos,
+            'tareas_pendientes' => $tareasPendientes,
+            'refuerzos_pendientes' => $refuerzosPendientes,
+            'ultimas_calificaciones' => $ultimasCalificaciones,
+            'resumen' => [
+                'total_materias' => $totalMaterias,
+                'tareas_pendientes_count' => $tareasPendientes->count(),
+                'refuerzos_pendientes_count' => $refuerzosPendientes->count(),
+                'promedio_general' => $promedioGeneral,
+            ],
         ]);
     }
 

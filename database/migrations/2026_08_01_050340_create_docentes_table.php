@@ -17,6 +17,7 @@ return new class extends Migration
             $table->softDeletes(); // ← Soft Delete
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('docentes');

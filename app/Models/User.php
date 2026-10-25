@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles; 
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, HasRoles, Notifiable;
     // use HasRoles; ← Se activa cuando instalemos Spatie
 
     /**
@@ -21,17 +22,17 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'nombre',             
-        'apellido_paterno',    
-        'apellido_materno',    
-        'ci',                  
-        'celular',             
+        'nombre',
+        'apellido_paterno',
+        'apellido_materno',
+        'ci',
+        'celular',
         'email',
         'password',
-        'genero',              
-        'fecha_nacimiento',    
-        'direccion',           
-        'foto_perfil',        
+        'genero',
+        'fecha_nacimiento',
+        'direccion',
+        'foto_perfil',
     ];
 
     /**
@@ -61,7 +62,7 @@ class User extends Authenticatable
     // ========================
     // RELACIONES (Próximamente)
     // ========================
-    
+
     // Agregar en app/Models/User.php
     public function docente(): HasOne
     {
@@ -73,7 +74,6 @@ class User extends Authenticatable
     {
         return $this->hasOne(Estudiante::class);
     }
-
 
     // Nombre completo automático
     // public function getNombreCompletoAttribute(): string

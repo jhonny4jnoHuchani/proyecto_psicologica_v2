@@ -6,15 +6,16 @@ use App\Models\Curso;
 use App\Models\Entrega;
 use App\Models\Leccion;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class CalificacionesExport implements FromCollection, WithHeadings, WithTitle, ShouldAutoSize, WithStyles
+class CalificacionesExport implements FromCollection, ShouldAutoSize, WithHeadings, WithStyles, WithTitle
 {
     protected $curso;
+
     protected $materiaId;
 
     public function __construct(Curso $curso, $materiaId = null)
@@ -31,7 +32,7 @@ class CalificacionesExport implements FromCollection, WithHeadings, WithTitle, S
     public function headings(): array
     {
         $lecciones = Leccion::where('curso_id', $this->curso->id)
-            ->when($this->materiaId, fn($q) => $q->where('materia_id', $this->materiaId))
+            ->when($this->materiaId, fn ($q) => $q->where('materia_id', $this->materiaId))
             ->orderBy('fecha_entrega')
             ->get();
 
@@ -39,6 +40,7 @@ class CalificacionesExport implements FromCollection, WithHeadings, WithTitle, S
         foreach ($lecciones as $leccion) {
             $headers[] = $leccion->titulo;
         }
+
         return $headers;
     }
 
@@ -48,10 +50,10 @@ class CalificacionesExport implements FromCollection, WithHeadings, WithTitle, S
         $estudiantes = $this->curso->estudiantes()
             ->with('user')
             ->get()
-            ->sortBy(fn($e) => $e->user->apellido_paterno);
+            ->sortBy(fn ($e) => $e->user->apellido_paterno);
 
         $lecciones = Leccion::where('curso_id', $this->curso->id)
-            ->when($this->materiaId, fn($q) => $q->where('materia_id', $this->materiaId))
+            ->when($this->materiaId, fn ($q) => $q->where('materia_id', $this->materiaId))
             ->orderBy('fecha_entrega')
             ->get();
 
@@ -64,7 +66,7 @@ class CalificacionesExport implements FromCollection, WithHeadings, WithTitle, S
         foreach ($estudiantes as $estudiante) {
             $row = [
                 $index++,
-                $estudiante->user->apellido_paterno . ' ' . $estudiante->user->apellido_materno . ', ' . $estudiante->user->nombre,
+                $estudiante->user->apellido_paterno.' '.$estudiante->user->apellido_materno.', '.$estudiante->user->nombre,
                 $estudiante->user->ci,
             ];
             foreach ($lecciones as $leccion) {
@@ -79,6 +81,7 @@ class CalificacionesExport implements FromCollection, WithHeadings, WithTitle, S
             }
             $data[] = $row;
         }
+
         return collect($data);
     }
 

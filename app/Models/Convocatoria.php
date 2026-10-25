@@ -48,8 +48,13 @@ class Convocatoria extends Model
      */
     public function getVigenteAttribute(): bool
     {
-        if (!$this->activo) return false;
-        if ($this->fecha_fin && $this->fecha_fin < now()) return false;
+        if (! $this->activo) {
+            return false;
+        }
+        if ($this->fecha_fin && $this->fecha_fin < now()) {
+            return false;
+        }
+
         return true;
     }
 }

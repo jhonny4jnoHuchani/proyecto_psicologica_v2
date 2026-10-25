@@ -23,7 +23,7 @@ class RecomendacionController extends Controller
         $estudiante = $user->estudiante;
 
         // Si no tiene perfil de estudiante (ej: es admin o docente)
-        if (!$estudiante) {
+        if (! $estudiante) {
             return Inertia::render('Recomendaciones/Index', [
                 'sin_datos' => true,
                 'mensaje' => 'No tienes un perfil de estudiante asociado a esta cuenta.',
@@ -70,7 +70,7 @@ class RecomendacionController extends Controller
             ->first()->promedio;
 
         // 🌟 CORRECCIÓN: Convertimos el promedio a un número ENTERO para Python
-        $notaEntera = (int) round($promedioTemaActual); 
+        $notaEntera = (int) round($promedioTemaActual);
 
         // ═══════════════════════════════════════════════════════════
         // 4. BUSCAR EL SIGUIENTE TEMA (el que viene en el temario)
@@ -81,7 +81,7 @@ class RecomendacionController extends Controller
             ->first();
 
         // Si ya completó todos los temas de esa materia
-        if (!$temaSiguiente) {
+        if (! $temaSiguiente) {
             return Inertia::render('Recomendaciones/Index', [
                 'sin_datos' => true,
                 'mensaje' => "¡Felicidades! Has completado todos los temas de {$temaActual->materia->nombre}. 🎓",
@@ -103,7 +103,7 @@ class RecomendacionController extends Controller
             'sin_datos' => false,
 
             // Datos del estudiante
-            'estudiante_nombre' => $user->nombre . ' ' . $user->apellido_paterno,
+            'estudiante_nombre' => $user->nombre.' '.$user->apellido_paterno,
 
             // Datos del tema actual (ya evaluado)
             'materia_nombre' => $temaActual->materia->nombre,

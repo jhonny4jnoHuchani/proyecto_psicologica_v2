@@ -37,7 +37,7 @@ class DocenteSeeder extends Seeder
 
                     'email' => 'maria.lopez@upea.edu.bo',
                     'password' => bcrypt('password'),
-                    
+
                     'genero' => 'F',
                 ],
                 'especialidad' => 'Psicología del Desarrollo',
@@ -76,7 +76,7 @@ class DocenteSeeder extends Seeder
         foreach ($docentes as $docente) {
             $user = User::create($docente['user']);
             $user->assignRole('docente');  // ← ASIGNAR ROL
-            
+
             Docente::create([
                 'user_id' => $user->id,
                 'especialidad' => $docente['especialidad'],

@@ -15,7 +15,7 @@ class MateriaSeeder extends Seeder
             ['codigo' => 'PSI-103', 'nombre' => 'COMUNICACIÓN Y LENGUAJE'],
             ['codigo' => 'PSI-104', 'nombre' => 'ESTRATEGIAS DE APRENDIZAJE'],
             ['codigo' => 'PSI-105', 'nombre' => 'PRINCIPIOS UNIVERSITARIOS'],
-            
+
         ];
 
         foreach ($materias as $materia) {

@@ -9,16 +9,13 @@ use App\Models\Estudiante;
 use App\Models\Leccion;
 use App\Models\Materia;
 use App\Models\Tema;
+use App\Services\MachineLearningService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-<<<<<<< HEAD
-=======
-use App\Services\MachineLearningService;
->>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
 
 class LeccionController extends Controller
 {
@@ -28,7 +25,19 @@ class LeccionController extends Controller
         $cursoId = $request->query('curso_id');
         $materiaId = $request->query('materia_id');
 
-        $lecciones = Leccion::with(['materia', 'temario', 'docente.user', 'curso'])
+        $estudianteId = $user->hasRole('estudiante') ? $user->estudiante?->id : null;
+
+        $lecciones = Leccion::with([
+            'materia',
+            'temario',
+            'docente.user',
+            'curso.gestion',
+            'entregas' => function ($q) use ($estudianteId) {
+                if ($estudianteId) {
+                    $q->where('estudiante_id', $estudianteId)->with(['calificacion', 'refuerzo']);
+                }
+            },
+        ])
             ->when($cursoId, fn ($q) => $q->where('curso_id', $cursoId))
             ->when($materiaId, fn ($q) => $q->where('materia_id', $materiaId))
             ->when($user->hasRole('docente'), function ($q) use ($user) {
@@ -134,26 +143,16 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección eliminada.');
     }
 
-<<<<<<< HEAD
-    public function show(Request $request, Leccion $leccion): Response|RedirectResponse
+    public function show(Request $request, Leccion $leccion, MachineLearningService $mlService): Response|RedirectResponse
     {
-        // Si la URL en la barra de direcciones contiene el ID numérico, redirigir al código cifrado
-=======
-          public function show(Request $request, Leccion $leccion, MachineLearningService $mlService): Response|RedirectResponse
-    {
->>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
         if (is_numeric($request->route()->originalParameter('leccion'))) {
             return redirect()->to(route('lecciones.show', $leccion));
         }
 
         $user = Auth::user();
 
-<<<<<<< HEAD
-=======
         // 1. Cargamos la lección con sus relaciones
         $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']);
-
->>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
         $entrega = null;
         if ($user->hasRole('estudiante')) {
             $estudiante = Estudiante::where('user_id', $user->id)->first();
@@ -169,13 +168,13 @@ class LeccionController extends Controller
         $paginas_siguiente = null;
 
         if ($entrega && $entrega->calificacion) {
-            
+
             // Forzamos a que sea un número entero (65 en vez de "65.00")
             $notaActual = (int) round($entrega->calificacion->nota);
 
             // Buscar el siguiente tema (con un orden mayor al actual)
             $ordenActual = $leccion->temario ? $leccion->temario->orden : 0;
-            
+
             $temaSiguienteObj = Tema::where('materia_id', $leccion->materia_id)
                 ->where('orden', '>', $ordenActual)
                 ->where('estado', '!=', 'omitido')
@@ -209,30 +208,8 @@ class LeccionController extends Controller
         ]);
     }
 
-    public function entregas(Request $request, Leccion $leccion): Response|RedirectResponse
+    public function entregas(Request $request, Leccion $leccion): RedirectResponse
     {
-        if (is_numeric($request->route('leccion'))) {
-            return redirect()->to(route('lecciones.entregas', $leccion));
-        }
-
-        $entregas = Entrega::with(['estudiante.user', 'calificacion'])
-            ->where('leccion_id', $leccion->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $estudiantesSinEntregar = Estudiante::whereHas('cursos', function ($q) use ($leccion) {
-            $q->where('curso_id', $leccion->curso_id);
-        })
-            ->whereDoesntHave('entregas', function ($q) use ($leccion) {
-                $q->where('leccion_id', $leccion->id);
-            })
-            ->with('user')
-            ->get();
-
-        return Inertia::render('lecciones/entregas', [
-            'leccion' => $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']),
-            'entregas' => $entregas,
-            'estudiantesSinEntregar' => $estudiantesSinEntregar,
-        ]);
+        return redirect()->route('entregas.docente', ['leccion_id' => $leccion->id]);
     }
 }

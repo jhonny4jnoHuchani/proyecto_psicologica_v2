@@ -110,8 +110,9 @@ class TemaSeeder extends Seeder
         foreach ($temarios as $codigo => $temas) {
             $materia = Materia::where('codigo', $codigo)->first();
 
-            if (!$materia) {
+            if (! $materia) {
                 $this->command->warn("⚠ Materia $codigo no encontrada, se omite.");
+
                 continue;
             }
 
@@ -127,7 +128,7 @@ class TemaSeeder extends Seeder
                 );
             }
 
-            $this->command->info("✔ Temario listo: {$materia->nombre} (" . count($temas) . " temas)");
+            $this->command->info("✔ Temario listo: {$materia->nombre} (".count($temas).' temas)');
         }
     }
 }

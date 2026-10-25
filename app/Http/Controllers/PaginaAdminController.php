@@ -63,7 +63,9 @@ class PaginaAdminController extends Controller
         $data = $request->only(['titulo', 'orden', 'activo']);
 
         if ($request->hasFile('imagen')) {
-            if ($portada->imagen) Storage::disk('public')->delete($portada->imagen);
+            if ($portada->imagen) {
+                Storage::disk('public')->delete($portada->imagen);
+            }
             $data['imagen'] = $request->file('imagen')->store('portadas', 'public');
         }
 
@@ -74,7 +76,9 @@ class PaginaAdminController extends Controller
 
     public function destroyPortada(Portada $portada): RedirectResponse
     {
-        if ($portada->imagen) Storage::disk('public')->delete($portada->imagen);
+        if ($portada->imagen) {
+            Storage::disk('public')->delete($portada->imagen);
+        }
         $portada->delete();
 
         return back()->with('success', 'Portada eliminada.');
@@ -117,7 +121,9 @@ class PaginaAdminController extends Controller
         $data = $request->only(['nombre', 'cargo', 'mensaje', 'orden']);
 
         if ($request->hasFile('foto')) {
-            if ($autoridad->foto) Storage::disk('public')->delete($autoridad->foto);
+            if ($autoridad->foto) {
+                Storage::disk('public')->delete($autoridad->foto);
+            }
             $data['foto'] = $request->file('foto')->store('autoridades', 'public');
         }
 
@@ -128,7 +134,9 @@ class PaginaAdminController extends Controller
 
     public function destroyAutoridad(Autoridad $autoridad): RedirectResponse
     {
-        if ($autoridad->foto) Storage::disk('public')->delete($autoridad->foto);
+        if ($autoridad->foto) {
+            Storage::disk('public')->delete($autoridad->foto);
+        }
         $autoridad->delete();
 
         return back()->with('success', 'Autoridad eliminada.');
@@ -159,8 +167,7 @@ class PaginaAdminController extends Controller
 
         return back()->with('success', 'Convocatoria publicada.');
     }
-    
-    
+
     public function updateConvocatoria(Request $request, Convocatoria $convocatoria): RedirectResponse
     {
         $request->validate([
@@ -176,7 +183,9 @@ class PaginaAdminController extends Controller
         $data = $request->only(['titulo', 'descripcion', 'link_video', 'fecha_inicio', 'fecha_fin', 'activo']);
 
         if ($request->hasFile('archivo')) {
-            if ($convocatoria->archivo) Storage::disk('public')->delete($convocatoria->archivo);
+            if ($convocatoria->archivo) {
+                Storage::disk('public')->delete($convocatoria->archivo);
+            }
             $data['archivo'] = $request->file('archivo')->store('convocatorias', 'public');
         }
 

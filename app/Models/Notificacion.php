@@ -61,7 +61,7 @@ class Notificacion extends Model
 
     public function marcarComoLeida(): void
     {
-        if (!$this->leida) {
+        if (! $this->leida) {
             $this->update([
                 'leida' => true,
                 'leida_at' => now(),

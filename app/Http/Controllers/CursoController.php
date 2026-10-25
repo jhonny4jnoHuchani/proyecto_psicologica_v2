@@ -24,7 +24,7 @@ class CursoController extends Controller
         $gestions = Gestion::where('estado', 'activo')->orderBy('año', 'desc')->get();
         $materias = Materia::orderBy('nombre')->get();
         $docentes = Docente::with('user')->orderBy('created_at', 'desc')->get();
-        
+
         $docentesOcupados = DB::table('curso_materia')
             ->join('cursos', 'curso_materia.curso_id', '=', 'cursos.id')
             ->join('materias', 'curso_materia.materia_id', '=', 'materias.id')
@@ -40,6 +40,7 @@ class CursoController extends Controller
             'docentesOcupados' => $docentesOcupados,
         ]);
     }
+
     /**
      * Mostrar formulario de creación.
      */
@@ -48,7 +49,7 @@ class CursoController extends Controller
         $gestions = Gestion::where('estado', 'activo')->orderBy('año', 'desc')->get();
         $materias = Materia::orderBy('nombre')->get();
         $docentes = Docente::with('user')->orderBy('created_at', 'desc')->get();
-        
+
         $docentesOcupados = DB::table('curso_materia')
             ->join('cursos', 'curso_materia.curso_id', '=', 'cursos.id')
             ->join('materias', 'curso_materia.materia_id', '=', 'materias.id')
@@ -186,9 +187,6 @@ class CursoController extends Controller
             ->with('success', 'Curso desactivado exitosamente.');
     }
 
-
-
-    
     /**
      * Mostrar cursos eliminados.
      */

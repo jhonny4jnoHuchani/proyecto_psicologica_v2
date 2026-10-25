@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\RedirectResponse;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -17,37 +17,34 @@ class RoleController extends Controller
     public function index(Request $request): Response
     {
         $roles = Role::with('permissions')->paginate(15);
-        
+
         $roles->getCollection()->transform(function ($role) {
             $role->is_protected = in_array($role->name, $this->protectedRoles);
+
             return $role;
         });
 
         return Inertia::render('roles/index', [
             'roles' => $roles,
-            'permissions' => Permission::all()
+            'permissions' => Permission::all(),
         ]);
     }
-
-
 
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
-            'permissions' => ['nullable', 'array']
+            'permissions' => ['nullable', 'array'],
         ]);
 
         $role = Role::create(['name' => $request->name]);
-        
+
         if ($request->has('permissions')) {
             $role->syncPermissions($request->permissions);
         }
 
         return redirect()->route('roles.index')->with('success', 'Rol creado exitosamente.');
     }
-
-
 
     public function update(Request $request, Role $role): RedirectResponse
     {
@@ -56,8 +53,8 @@ class RoleController extends Controller
         }
 
         $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:roles,name,' . $role->id],
-            'permissions' => ['nullable', 'array']
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name,'.$role->id],
+            'permissions' => ['nullable', 'array'],
         ]);
 
         $role->update(['name' => $request->name]);

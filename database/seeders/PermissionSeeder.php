@@ -5,13 +5,14 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
         // Reset cached roles and permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         // ========================
         // PERMISOS
@@ -19,50 +20,50 @@ class PermissionSeeder extends Seeder
         $permisos = [
             // Dashboard
             'ver-dashboard',
-            
+
             // Gestiones
             'gestionar-gestiones',
-            
+
             // Materias
             'ver-materias',
             'crear-materia',
             'editar-materia',
             'eliminar-materia',
-            
+
             // Docentes
             'ver-docentes',
             'crear-docente',
             'editar-docente',
             'eliminar-docente',
             'reset-password-docente',
-            
+
             // Estudiantes
             'ver-estudiantes',
             'crear-estudiante',
             'editar-estudiante',
             'eliminar-estudiante',
             'reset-password-estudiante',
-            
+
             // Cursos
             'ver-cursos',
             'crear-curso',
             'editar-curso',
             'eliminar-curso',
-            
+
             // Lecciones
             'ver-lecciones',
             'crear-leccion',
             'editar-leccion',
             'eliminar-leccion',
-            
+
             // Entregas
             'ver-entregas',
             'subir-entrega',
-            
+
             // Calificaciones
             'ver-calificaciones',
             'calificar-entrega',
-            
+
             // Libros
             'gestionar-libros',
             'ver-libro',
@@ -73,19 +74,18 @@ class PermissionSeeder extends Seeder
             'editar-temas',
             'eliminar-temas',
         ];
-  foreach ($permisos as $permiso) {
+        foreach ($permisos as $permiso) {
             Permission::firstOrCreate(['name' => $permiso, 'guard_name' => 'web']);
         }
 
         // ========================
         // ASIGNAR PERMISOS A ROLES
         // ========================
-        
+
         // Admin: TODOS los permisos
         $admin = Role::findByName('admin');
         $admin->givePermissionTo(Permission::all());
 
-        
         // Docente
         $docente = Role::findByName('docente');
         $docente->givePermissionTo([

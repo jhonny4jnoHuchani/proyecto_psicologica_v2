@@ -1,30 +1,42 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
+    AlertCircle,
     AlertTriangle,
+    ArrowRight,
     Award,
     BarChart3,
     BookOpen,
+    Calendar,
     CheckCircle2,
     ChevronDown,
+    ChevronRight,
     ChevronUp,
     Clock,
     FileCheck,
     FileSpreadsheet,
+    FileText,
     Filter,
     GraduationCap,
     ImagePlus,
+    Inbox,
     LayoutGrid,
+    Plus,
     School,
+    Send,
     Sparkles,
     TrendingUp,
+    UserCheck,
     Users,
+    Wand2,
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
+import { formatoFechaHora, obtenerEstadoVencimiento } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -101,6 +113,102 @@ export interface SemaforoData {
     estudiantes_riesgo: EstudianteRiesgo[];
 }
 
+interface DocenteStats {
+    entregas_pendientes: number;
+    total_lecciones: number;
+    total_refuerzos: number;
+}
+
+interface UltimaEntregaPendiente {
+    id: number;
+    created_at: string;
+    estudiante: {
+        user: {
+            nombre: string;
+            apellido_paterno: string;
+            apellido_materno: string;
+        };
+    };
+    leccion: {
+        id: number;
+        titulo: string;
+        materia: {
+            id: number;
+            nombre: string;
+            codigo: string;
+        };
+    };
+}
+
+interface TareaPendiente {
+    id: number;
+    hash_id?: string;
+    titulo: string;
+    descripcion?: string | null;
+    fecha_entrega: string | null;
+    materia: {
+        id: number;
+        nombre: string;
+        codigo: string;
+    };
+    docente?: {
+        user: {
+            nombre: string;
+            apellido_paterno: string;
+        };
+    };
+    curso?: {
+        paralelo: string;
+        gestion: {
+            año: number;
+            etapa: string;
+        };
+    };
+}
+
+interface RefuerzoPendiente {
+    id: number;
+    hash_id?: string;
+    completado: boolean;
+    created_at: string;
+    entrega?: {
+        leccion?: {
+            titulo?: string;
+            materia?: {
+                id: number;
+                nombre: string;
+                codigo: string;
+            };
+        };
+        calificacion?: {
+            nota: number;
+        };
+    };
+}
+
+interface UltimaCalificacion {
+    id: number;
+    fecha_entrega: string;
+    leccion: {
+        titulo: string;
+        materia: {
+            nombre: string;
+        };
+    };
+    calificacion: {
+        nota: number;
+        comentarios: string | null;
+        fecha_calificacion: string | null;
+    };
+}
+
+interface ResumenEstudiante {
+    total_materias: number;
+    tareas_pendientes_count: number;
+    refuerzos_pendientes_count: number;
+    promedio_general: number | null;
+}
+
 interface Props {
     rol?: string;
     stats?: Stats;
@@ -108,9 +216,30 @@ interface Props {
     gestiones?: GestionItem[];
     filtro_gestion_id?: string;
     semaforo?: SemaforoData;
+    // Docente
+    docente_stats?: DocenteStats;
+    ultimas_entregas_pendientes?: UltimaEntregaPendiente[];
+    // Estudiante
+    tareas_pendientes?: TareaPendiente[];
+    refuerzos_pendientes?: RefuerzoPendiente[];
+    ultimas_calificaciones?: UltimaCalificacion[];
+    resumen?: ResumenEstudiante;
 }
 
-export default function Dashboard({ rol, stats, cursos, gestiones, filtro_gestion_id, semaforo }: Props) {
+export default function Dashboard({
+    rol,
+    stats,
+    cursos,
+    gestiones,
+    filtro_gestion_id,
+    semaforo,
+    docente_stats,
+    ultimas_entregas_pendientes,
+    tareas_pendientes,
+    refuerzos_pendientes,
+    ultimas_calificaciones,
+    resumen,
+}: Props) {
     const totalCalificaciones = stats?.total_calificaciones || 0;
     const tasaAprobacion = stats?.tasa_aprobacion || 0;
     const aprobados = stats?.aprobados || 0;
@@ -193,6 +322,45 @@ export default function Dashboard({ rol, stats, cursos, gestiones, filtro_gestio
                 {/* ======================== ADMIN: MÉTRICAS Y CUADROS ESTADÍSTICOS ======================== */}
                 {rol === 'admin' && stats && (
                     <div className="space-y-6">
+                        {/* Atajos y Acciones Rápidas del Administrador */}
+                        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-primary/[0.02] to-transparent shadow-xs">
+                            <CardContent className="p-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                            <Sparkles className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-semibold text-foreground">Atajos y Acciones Rápidas</p>
+                                            <p className="text-[11px] text-muted-foreground">Acceso directo a las tareas frecuentes del sistema</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Link href="/estudiantes" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs">
+                                            <Plus className="h-3.5 w-3.5 text-blue-500" />
+                                            <span>Estudiante</span>
+                                        </Link>
+                                        <Link href="/estudiantes/importar/plantilla" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs">
+                                            <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
+                                            <span>Importar Excel</span>
+                                        </Link>
+                                        <Link href="/cursos" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs">
+                                            <Plus className="h-3.5 w-3.5 text-indigo-500" />
+                                            <span>Nuevo Curso</span>
+                                        </Link>
+                                        <Link href="/gestiones" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs">
+                                            <Calendar className="h-3.5 w-3.5 text-purple-500" />
+                                            <span>Gestiones</span>
+                                        </Link>
+                                        <Link href="/reportes" className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs">
+                                            <BarChart3 className="h-3.5 w-3.5 text-amber-500" />
+                                            <span>Reportes</span>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         {/* 1. KPIs Superiores */}
                         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                             <Card className="shadow-xs hover:border-primary/40 transition-colors">
@@ -432,6 +600,169 @@ export default function Dashboard({ rol, stats, cursos, gestiones, filtro_gestio
                 {/* ======================== DOCENTE ======================== */}
                 {rol === 'docente' && (
                     <div className="space-y-6">
+                        {/* Barra de Acciones Rápidas del Docente */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-blue-200/60 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-transparent dark:from-blue-950/20 dark:via-indigo-950/10 dark:border-blue-900/40">
+                            <div>
+                                <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                                    <GraduationCap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    Panel Pedagógico del Docente
+                                </h2>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Gestiona lecciones, revisa tareas pendientes y apoya a estudiantes en riesgo con IA.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Link
+                                    href="/lecciones"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition-colors"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Nueva Lección / Tarea
+                                </Link>
+                                <Link
+                                    href="/entregas/docente"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
+                                >
+                                    <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
+                                    Revisar Entregas
+                                    {(docente_stats?.entregas_pendientes || 0) > 0 && (
+                                        <Badge variant="warning" className="ml-1 h-4 px-1.5 text-[10px]">
+                                            {docente_stats?.entregas_pendientes}
+                                        </Badge>
+                                    )}
+                                </Link>
+                                <Link
+                                    href="/refuerzos/docente"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+                                    Refuerzos IA
+                                </Link>
+                                <Link
+                                    href="/reportes"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
+                                >
+                                    <BarChart3 className="h-3.5 w-3.5 text-neutral-600" />
+                                    Reportes
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* 4 KPIs Clave del Docente */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Entregas por Calificar</CardTitle>
+                                    <Inbox className="h-4 w-4 text-amber-500" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <div className="flex items-baseline justify-between">
+                                        <p className="text-2xl font-bold">{docente_stats?.entregas_pendientes ?? 0}</p>
+                                        {(docente_stats?.entregas_pendientes || 0) > 0 && (
+                                            <Link href="/entregas/docente" className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5">
+                                                Calificar &rarr;
+                                            </Link>
+                                        )}
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        {(docente_stats?.entregas_pendientes ?? 0) === 0 ? 'Al día con tus revisiones' : 'Requieren tu retroalimentación'}
+                                    </span>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Lecciones Asignadas</CardTitle>
+                                    <BookOpen className="h-4 w-4 text-blue-500" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <p className="text-2xl font-bold">{docente_stats?.total_lecciones ?? 0}</p>
+                                    <span className="text-[11px] text-muted-foreground">En tus cursos activos</span>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Refuerzos Generados</CardTitle>
+                                    <Sparkles className="h-4 w-4 text-purple-500" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <p className="text-2xl font-bold">{docente_stats?.total_refuerzos ?? 0}</p>
+                                    <span className="text-[11px] text-muted-foreground">Con asistencia de IA</span>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Alerta de Rezago</CardTitle>
+                                    <AlertTriangle className="h-4 w-4 text-rose-500" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <div className="flex items-baseline justify-between">
+                                        <p className="text-2xl font-bold">
+                                            {(semaforo?.resumen.alto || 0) + (semaforo?.resumen.medio || 0)}
+                                        </p>
+                                        <span className="text-[11px] text-rose-600 font-medium">
+                                            {semaforo?.resumen.alto || 0} críticos
+                                        </span>
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground">Estudiantes a monitorear</span>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Bandeja de Entregas Recientes por Calificar */}
+                        {ultimas_entregas_pendientes && ultimas_entregas_pendientes.length > 0 && (
+                            <Card className="border-amber-200/80 bg-amber-50/20 dark:bg-amber-950/10 dark:border-amber-900/40 shadow-xs">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                            <CardTitle className="text-sm font-semibold">Entregas Pendientes de Revisión</CardTitle>
+                                        </div>
+                                        <Link href="/entregas/docente" className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
+                                            Ver todas &rarr;
+                                        </Link>
+                                    </div>
+                                    <CardDescription className="text-xs">
+                                        Estudiantes que enviaron su tarea recientemente y están esperando tu calificación
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <div className="divide-y divide-border">
+                                        {ultimas_entregas_pendientes.map((ent) => (
+                                            <div key={ent.id} className="p-3.5 px-6 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                                                <div className="min-w-0 flex-1 pr-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-xs text-foreground truncate">
+                                                            {ent.estudiante?.user?.apellido_paterno} {ent.estudiante?.user?.apellido_materno}, {ent.estudiante?.user?.nombre}
+                                                        </span>
+                                                        <Badge variant="outline" className="text-[10px]">
+                                                            {ent.leccion?.materia?.codigo}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                                        Lección: <span className="text-foreground font-medium">{ent.leccion?.titulo}</span>
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                                                        {formatoFechaHora(ent.created_at)}
+                                                    </span>
+                                                    <Link
+                                                        href={`/entregas/docente?leccion_id=${ent.leccion?.id}`}
+                                                        className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-2xs"
+                                                    >
+                                                        Calificar
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         {/* Semáforo de Rezago Estudiantil (Alerta Temprana para el Docente) */}
                         <SemaforoRezagoWidget semaforo={semaforo} rol={rol} />
 
@@ -565,68 +896,344 @@ export default function Dashboard({ rol, stats, cursos, gestiones, filtro_gestio
 
                 {/* ======================== ESTUDIANTE ======================== */}
                 {rol === 'estudiante' && (
-                    <div className="space-y-4">
-                        {(!cursos || cursos.length === 0) && (
-                            <Card>
-                                <CardContent className="py-8 text-center text-neutral-500">
-                                    No estás inscrito en ningún curso.
+                    <div className="space-y-6">
+                        {/* Banner de Bienvenida y Estado Rápido */}
+                        <div className="p-5 rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-transparent dark:from-emerald-950/20 dark:via-teal-950/10 dark:border-emerald-900/40">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                        <GraduationCap className="h-3.5 w-3.5" />
+                                        Espacio del Estudiante
+                                    </span>
+                                    <h2 className="text-xl font-bold tracking-tight text-foreground">
+                                        ¡Bienvenido a tu Aula Virtual!
+                                    </h2>
+                                    <p className="text-xs text-muted-foreground max-w-xl">
+                                        Revisa tus tareas pendientes de entrega, resuelve tus actividades de refuerzo con IA y consulta tus notas y comentarios pedagógicos.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Link
+                                        href="/entregas"
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors"
+                                    >
+                                        <FileCheck className="h-4 w-4" />
+                                        Mis Tareas y Entregas
+                                    </Link>
+                                    <Link
+                                        href="/refuerzos"
+                                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-700 shadow-xs transition-colors"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        Mis Refuerzos
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 3 KPIs Directos del Estudiante */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Tareas Pendientes</CardTitle>
+                                    <Clock className={`h-4 w-4 ${(resumen?.tareas_pendientes_count || 0) > 0 ? 'text-amber-500' : 'text-emerald-500'}`} />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <div className="flex items-baseline justify-between">
+                                        <p className="text-2xl font-bold">{resumen?.tareas_pendientes_count || 0}</p>
+                                        {(resumen?.tareas_pendientes_count || 0) > 0 && (
+                                            <Badge variant="warning" className="text-[10px]">Por presentar</Badge>
+                                        )}
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        {(resumen?.tareas_pendientes_count || 0) === 0 ? '¡Estás al día con tus tareas!' : 'Lecciones que requieren tu entrega'}
+                                    </span>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Refuerzos con IA</CardTitle>
+                                    <Sparkles className="h-4 w-4 text-purple-500" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <div className="flex items-baseline justify-between">
+                                        <p className="text-2xl font-bold">{resumen?.refuerzos_pendientes_count || 0}</p>
+                                        {(resumen?.refuerzos_pendientes_count || 0) > 0 && (
+                                            <Badge variant="purple" className="text-[10px]">Pendientes</Badge>
+                                        )}
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        {(resumen?.refuerzos_pendientes_count || 0) === 0 ? 'Sin refuerzos pendientes' : 'Actividades para afianzar temas'}
+                                    </span>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="hover:border-primary/40 transition-colors shadow-xs">
+                                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
+                                    <CardTitle className="text-xs font-medium text-muted-foreground">Rendimiento Académico</CardTitle>
+                                    <Award className="h-4 w-4 text-blue-500" />
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <div className="flex items-baseline justify-between">
+                                        <p className="text-2xl font-bold">
+                                            {resumen?.promedio_general !== null && resumen?.promedio_general !== undefined ? `${resumen.promedio_general}/100` : '--'}
+                                        </p>
+                                        <span className="text-[11px] text-muted-foreground">
+                                            {resumen?.total_materias || 0} materias inscritas
+                                        </span>
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground">
+                                        {resumen?.promedio_general !== null && resumen?.promedio_general !== undefined && resumen.promedio_general >= 70
+                                            ? 'Buen desempeño general'
+                                            : (resumen?.promedio_general !== null ? 'Requiere seguimiento' : 'Aún sin calificaciones')}
+                                    </span>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* 1. SECCIÓN DE TAREAS PENDIENTES (AL TOQUE) */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-amber-500" />
+                                    Tareas Pendientes por Entregar ({tareas_pendientes?.length || 0})
+                                </h3>
+                                <Link href="/entregas" className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
+                                    Ver todas mis tareas &rarr;
+                                </Link>
+                            </div>
+
+                            {(!tareas_pendientes || tareas_pendientes.length === 0) ? (
+                                <Card className="border-dashed bg-muted/20">
+                                    <CardContent className="py-8 text-center">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
+                                                <CheckCircle2 className="h-5 w-5" />
+                                            </div>
+                                            <p className="text-sm font-medium text-foreground">¡Estás al día!</p>
+                                            <p className="text-xs text-muted-foreground max-w-sm">
+                                                No tienes tareas pendientes por entregar en este momento. Revisa tus materias para consultar contenidos o materiales.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {tareas_pendientes.map((tarea) => {
+                                        const estadoVenc = obtenerEstadoVencimiento(tarea.fecha_entrega);
+                                        return (
+                                            <Card key={tarea.id} className="hover:border-primary/50 transition-all hover:shadow-sm flex flex-col justify-between">
+                                                <CardHeader className="p-4 pb-2">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <Badge variant="outline" className="text-[10px] font-medium shrink-0">
+                                                            {tarea.materia?.codigo} · {tarea.materia?.nombre}
+                                                        </Badge>
+                                                        {estadoVenc && (
+                                                            <Badge
+                                                                variant={estadoVenc.vencido ? 'destructive' : estadoVenc.esHoy ? 'warning' : 'info'}
+                                                                className="text-[10px] shrink-0"
+                                                            >
+                                                                {estadoVenc.textoBadge}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <CardTitle className="text-sm font-semibold leading-snug line-clamp-2 mt-2">
+                                                        {tarea.titulo}
+                                                    </CardTitle>
+                                                    {tarea.descripcion && (
+                                                        <CardDescription className="text-xs line-clamp-2 mt-1">
+                                                            {tarea.descripcion}
+                                                        </CardDescription>
+                                                    )}
+                                                </CardHeader>
+                                                <CardContent className="p-4 pt-2">
+                                                    <div className="text-[11px] text-muted-foreground mb-3 flex items-center gap-1">
+                                                        <Clock className="h-3 w-3" />
+                                                        <span>Fecha límite: {formatoFechaHora(tarea.fecha_entrega)}</span>
+                                                    </div>
+                                                    <Link
+                                                        href={`/lecciones/${tarea.hash_id || tarea.id}`}
+                                                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-2xs"
+                                                    >
+                                                        <Send className="h-3.5 w-3.5" />
+                                                        Entregar Tarea
+                                                    </Link>
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 2. SECCIÓN DE REFUERZOS PENDIENTES CON IA */}
+                        {refuerzos_pendientes && refuerzos_pendientes.length > 0 && (
+                            <Card className="border-purple-200 bg-purple-50/20 dark:bg-purple-950/10 dark:border-purple-900/40 shadow-xs">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                            <CardTitle className="text-sm font-semibold">Refuerzos Pedagógicos con IA Asignados</CardTitle>
+                                        </div>
+                                        <Link href="/refuerzos" className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1">
+                                            Ver todos &rarr;
+                                        </Link>
+                                    </div>
+                                    <CardDescription className="text-xs">
+                                        Tu docente te asignó preguntas de práctica asistidas por inteligencia artificial para fortalecer temas clave.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <div className="divide-y divide-border">
+                                        {refuerzos_pendientes.map((refuerzo) => (
+                                            <div key={refuerzo.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-muted/40 transition-colors">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="purple" className="text-[10px]">
+                                                            {refuerzo.entrega?.leccion?.materia?.codigo || 'Refuerzo'}
+                                                        </Badge>
+                                                        <span className="text-xs font-semibold text-foreground">
+                                                            {refuerzo.entrega?.leccion?.materia?.nombre || 'Materia'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Tarea: <span className="text-foreground font-medium">{refuerzo.entrega?.leccion?.titulo || 'Lección'}</span>
+                                                        {refuerzo.entrega?.calificacion?.nota !== undefined && (
+                                                            <span className="ml-2 text-rose-600 font-medium">(Nota: {refuerzo.entrega.calificacion.nota}/100)</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                                <Link
+                                                    href={`/refuerzos/${refuerzo.hash_id || refuerzo.id}`}
+                                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-2xs shrink-0"
+                                                >
+                                                    <Sparkles className="h-3.5 w-3.5" />
+                                                    Resolver Refuerzo &rarr;
+                                                </Link>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </CardContent>
                             </Card>
                         )}
-                        {cursos?.map((curso) => (
-                            <Card key={curso.id}>
-                                <CardContent className="pt-6">
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <School className="h-5 w-5 text-green-500" />
-                                            <h2 className="text-lg font-bold">
-                                                {curso.gestion?.año} - {curso.gestion?.etapa}
-                                            </h2>
-                                            <span className="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded">
-                                                Paralelo {curso.paralelo}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-neutral-500 mt-1 capitalize">
-                                            Turno: {curso.turno}
-                                        </p>
-                                    </div>
-                                    <div className="mt-4">
-                                        <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
-                                            <BookOpen className="h-4 w-4" />
-                                            Mis Materias ({curso.materias?.length || 0})
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {curso.materias?.map((m) => (
-                                                <a
-                                                    key={m.id}
-                                                    href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
-                                                    className="border rounded-lg overflow-hidden hover:border-green-300 hover:shadow-md transition-all group"
-                                                >
-                                                    {m.pivot?.imagen ? (
-                                                        <div className="h-28 w-full overflow-hidden bg-neutral-100">
-                                                            <img
-                                                                src={`/storage/${m.pivot.imagen}`}
-                                                                alt={m.nombre}
-                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                            />
+
+                        {/* 3. CALIFICACIONES Y RETROALIMENTACIÓN RECIENTE */}
+                        {ultimas_calificaciones && ultimas_calificaciones.length > 0 && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                                        <Award className="h-4 w-4 text-blue-500" />
+                                        Últimas Calificaciones y Retroalimentación
+                                    </h3>
+                                    <Link href="/entregas" className="text-xs font-medium text-primary hover:underline flex items-center gap-1">
+                                        Ver historial completo &rarr;
+                                    </Link>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {ultimas_calificaciones.map((cal) => {
+                                        const esAprobado = cal.calificacion.nota >= 70;
+                                        return (
+                                            <Card key={cal.id} className="shadow-xs hover:border-primary/40 transition-colors">
+                                                <CardContent className="p-4">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0 flex-1">
+                                                            <span className="text-[11px] font-medium text-muted-foreground block truncate">
+                                                                {cal.leccion?.materia?.nombre}
+                                                            </span>
+                                                            <h4 className="text-sm font-semibold text-foreground truncate mt-0.5">
+                                                                {cal.leccion?.titulo}
+                                                            </h4>
+                                                        </div>
+                                                        <Badge variant={esAprobado ? 'success' : 'warning'} className="text-xs font-bold shrink-0">
+                                                            {cal.calificacion.nota}/100
+                                                        </Badge>
+                                                    </div>
+                                                    {cal.calificacion.comentarios ? (
+                                                        <div className="mt-3 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-xs text-muted-foreground italic">
+                                                            &ldquo;{cal.calificacion.comentarios}&rdquo;
                                                         </div>
                                                     ) : (
-                                                        <div className="h-28 w-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                                                            <BookOpen className="h-10 w-10 text-green-400" />
-                                                        </div>
+                                                        <p className="mt-2 text-[11px] text-muted-foreground">Sin comentarios adicionales</p>
                                                     )}
-
-                                                    <div className="p-3">
-                                                        <span className="font-medium text-sm">{m.codigo}</span>
-                                                        <span className="text-xs text-neutral-500 block truncate">{m.nombre}</span>
+                                                    <div className="mt-2 text-[10px] text-muted-foreground text-right">
+                                                        Revisado: {formatoFechaHora(cal.calificacion.fecha_calificacion || cal.fecha_entrega)}
                                                     </div>
-                                                </a>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. MIS MATERIAS E INSCRIPCIONES */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-semibold flex items-center gap-2">
+                                <BookOpen className="h-4 w-4 text-emerald-500" />
+                                Mis Materias y Aulas
+                            </h3>
+                            {(!cursos || cursos.length === 0) ? (
+                                <Card>
+                                    <CardContent className="py-8 text-center text-neutral-500">
+                                        No estás inscrito en ningún curso.
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                cursos.map((curso) => (
+                                    <Card key={curso.id} className="shadow-xs">
+                                        <CardContent className="pt-5">
+                                            <div className="flex items-center justify-between pb-3 border-b border-border">
+                                                <div className="flex items-center gap-2">
+                                                    <School className="h-5 w-5 text-emerald-500" />
+                                                    <h2 className="text-base font-bold">
+                                                        {curso.gestion?.año} - {curso.gestion?.etapa}
+                                                    </h2>
+                                                    <Badge variant="outline" className="text-xs">
+                                                        Paralelo {curso.paralelo}
+                                                    </Badge>
+                                                </div>
+                                                <span className="text-xs text-muted-foreground capitalize">
+                                                    Turno: {curso.turno}
+                                                </span>
+                                            </div>
+                                            <div className="mt-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                    {curso.materias?.map((m) => (
+                                                        <Link
+                                                            key={m.id}
+                                                            href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
+                                                            className="border rounded-lg overflow-hidden hover:border-emerald-400 hover:shadow-md transition-all group bg-card flex flex-col justify-between"
+                                                        >
+                                                            {m.pivot?.imagen ? (
+                                                                <div className="h-24 w-full overflow-hidden bg-neutral-100">
+                                                                    <img
+                                                                        src={`/storage/${m.pivot.imagen}`}
+                                                                        alt={m.nombre}
+                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                    />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="h-24 w-full bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-950/40 dark:to-teal-950/40 flex items-center justify-center">
+                                                                    <BookOpen className="h-8 w-8 text-emerald-500/70" />
+                                                                </div>
+                                                            )}
+                                                            <div className="p-3">
+                                                                <span className="font-semibold text-xs text-emerald-700 dark:text-emerald-400">{m.codigo}</span>
+                                                                <span className="text-xs text-foreground font-medium block truncate mt-0.5">{m.nombre}</span>
+                                                                <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2 group-hover:text-primary transition-colors">
+                                                                    Ver lecciones y tareas &rarr;
+                                                                </span>
+                                                            </div>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                        </div>
                     </div>
                 )}
             </div>

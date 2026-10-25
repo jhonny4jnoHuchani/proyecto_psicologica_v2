@@ -8,7 +8,7 @@ import { type NavItem } from '@/types';
 
 import { Link, usePage } from '@inertiajs/react';
 
-import { BookOpen, Calendar, FileText, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout, Sparkles, ShieldCheck, UserCog } from 'lucide-react';
+import { BookOpen, Calendar, GraduationCap, LayoutGrid, Library, School, Users, Palette, Layout, Sparkles, ShieldCheck, UserCog, BarChart3, ClipboardCheck, Wand2, CheckCircle2 } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -24,31 +24,31 @@ export function AppSidebar() {
             label: "Principal",
             items: [
                 { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
-                { title: 'Página Principal', url: '/pagina-admin', icon: Layout },
+                { title: 'Página Web Pública', url: '/pagina-admin', icon: Layout },
             ]
         },
         {
             label: "Gestión Académica",
             items: [
                 { title: 'Gestiones', url: '/gestiones', icon: Calendar },
-                { title: 'Cursos', url: '/cursos', icon: School },
+                { title: 'Cursos y Paralelos', url: '/cursos', icon: School },
                 { title: 'Materias', url: '/materias', icon: BookOpen },
-                { title: 'Libros', url: '/libros', icon: Library },
-                { title: 'Lecciones', url: '/lecciones', icon: FileText },
+                { title: 'Biblioteca de Libros', url: '/libros', icon: Library },
+                { title: 'Lecciones Asignadas', url: '/lecciones', icon: ClipboardCheck },
             ]
         },
         {
-            label: "Registros (Usuarios)",
+            label: "Comunidad Educativa",
             items: [
                 { title: 'Estudiantes', url: '/estudiantes', icon: Users },
                 { title: 'Docentes', url: '/docentes', icon: GraduationCap },
-                { title: 'Personal Admin', url: '/administrativos', icon: UserCog },
+                { title: 'Personal Administrativo', url: '/administrativos', icon: UserCog },
             ]
         },
         {
-            label: "Administración del Sistema",
+            label: "Control y Sistema",
             items: [
-                { title: 'Reportes', url: '/reportes', icon: FileText },
+                { title: 'Reportes y Métricas', url: '/reportes', icon: BarChart3 },
                 { title: 'Roles y Permisos', url: '/roles', icon: ShieldCheck },
             ]
         }
@@ -57,18 +57,18 @@ export function AppSidebar() {
     // Menu para DOCENTE
     const docenteGroups = [
         {
-            label: "Principal",
+            label: "Panel Principal",
             items: [
                 { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
             ]
         },
         {
-            label: "Académico",
+            label: "Gestión de Aula",
             items: [
-                { title: 'Lecciones', url: '/lecciones', icon: FileText },
-                { title: 'Entregas', url: '/entregas/docente', icon: FileText },
-                { title: 'Refuerzos', url: '/refuerzos/docente', icon: Sparkles },
-                { title: 'Reportes', url: '/reportes', icon: FileText },
+                { title: 'Lecciones y Tareas', url: '/lecciones', icon: BookOpen },
+                { title: 'Revisión de Entregas', url: '/entregas/docente', icon: ClipboardCheck },
+                { title: 'Refuerzos con IA', url: '/refuerzos/docente', icon: Sparkles },
+                { title: 'Reportes y Calificaciones', url: '/reportes', icon: BarChart3 },
             ]
         }
     ];
@@ -76,17 +76,18 @@ export function AppSidebar() {
     // Menu para ESTUDIANTE
     const estudianteGroups = [
         {
-            label: "Principal",
+            label: "Mi Espacio",
             items: [
-                { title: 'Dashboard', url: '/dashboard', icon: LayoutGrid },
+                { title: 'Inicio / Mi Dashboard', url: '/dashboard', icon: LayoutGrid },
             ]
         },
         {
             label: "Mis Actividades",
             items: [
-                { title: 'Lecciones', url: '/lecciones', icon: FileText },
-                { title: 'Mis Entregas', url: '/entregas', icon: FileText },
-                { title: 'Mis Refuerzos', url: '/refuerzos', icon: Sparkles },
+                { title: 'Mis Clases y Lecciones', url: '/lecciones', icon: BookOpen },
+                { title: 'Mis Tareas y Entregas', url: '/entregas', icon: CheckCircle2 },
+                { title: 'Refuerzos Pedagógicos (IA)', url: '/refuerzos', icon: Sparkles },
+                { title: 'Recomendaciones de Estudio', url: '/estudiante/recomendaciones', icon: Wand2 },
             ]
         }
     ];

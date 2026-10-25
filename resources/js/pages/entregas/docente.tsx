@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import { AlertCircle, Eye, LoaderCircle, RefreshCw, Search, Sparkles, Star, Wand2 } from 'lucide-react';
-import { FormEventHandler, useState } from 'react';
+import { AlertCircle, CheckCircle2, Clock, Eye, Filter, LoaderCircle, RefreshCw, Search, Sparkles, Star, UserX, Wand2 } from 'lucide-react';
+import { FormEventHandler, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 
@@ -30,16 +30,27 @@ interface Entrega {
 
 interface LeccionFiltro { id: number; titulo: string; materia: MateriaData; }
 
+interface EstudianteSinEntregar {
+    id: number;
+    user: {
+        nombre: string;
+        apellido_paterno: string;
+        apellido_materno: string;
+    };
+}
+
 interface Props {
     entregas: Entrega[];
     lecciones: LeccionFiltro[];
     filtroLeccionId: number | null;
+    estudiantesSinEntregar?: EstudianteSinEntregar[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Entregas', href: '/entregas/docente' }];
 
-export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }: Props) {
+export default function EntregasDocente({ entregas, lecciones, filtroLeccionId, estudiantesSinEntregar }: Props) {
     const [leccionId, setLeccionId] = useState(filtroLeccionId ? String(filtroLeccionId) : '');
+    const [tabEstado, setTabEstado] = useState<'todos' | 'pendientes' | 'calificados' | 'sin_entregar'>('todos');
 
     // Modal Calificar
     const [modalCalificar, setModalCalificar] = useState(false);
@@ -258,24 +269,48 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
         setEntregaRefuerzoId(null);
     };
 
+    const pendientesCount = useMemo(() => (entregas || []).filter(e => !e.calificacion).length, [entregas]);
+    const calificadasCount = useMemo(() => (entregas || []).filter(e => !!e.calificacion).length, [entregas]);
+    const sinEntregarCount = estudiantesSinEntregar?.length || 0;
+
+    const entregasFiltradas = useMemo(() => {
+        if (!entregas) return [];
+        if (tabEstado === 'pendientes') {
+            return entregas.filter(e => !e.calificacion);
+        }
+        if (tabEstado === 'calificados') {
+            return entregas.filter(e => !!e.calificacion);
+        }
+        return entregas;
+    }, [entregas, tabEstado]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Entregas de Estudiantes" />
             <div className="p-6 space-y-6">
-                <h1 className="text-2xl font-bold">Entregas de Estudiantes</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Revisión y Calificación de Entregas</h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Evalúa tareas, asigna retroalimentación y genera refuerzos pedagógicos asistidos por IA.
+                        </p>
+                    </div>
+                </div>
 
-                {/* Filtro */}
+                {/* Filtro por lección */}
                 <Card>
                     <CardContent className="pt-6">
-                        <div className="flex items-end gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                             <div className="space-y-1 flex-1">
-                                <Label>Filtrar por Lección</Label>
+                                <Label>Filtrar por Lección o Tarea</Label>
                                 <Select value={leccionId} onValueChange={setLeccionId}>
                                     <SelectTrigger><SelectValue placeholder="Todas las lecciones" /></SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="none">Todas</SelectItem>
+                                        <SelectItem value="none">Todas las lecciones</SelectItem>
                                         {lecciones.map(l => (
-                                            <SelectItem key={l.id} value={String(l.id)}>{l.materia?.codigo} - {l.titulo}</SelectItem>
+                                             <SelectItem key={l.id} value={String(l.id)}>
+                                                {l.materia?.codigo} - {l.titulo}
+                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -285,28 +320,132 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                     </CardContent>
                 </Card>
 
-                {/* Tabla */}
-                <Card>
-                    <CardHeader><CardTitle>Entregas ({entregas?.length || 0})</CardTitle></CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead><tr className="border-b text-left">
-                                    <th className="py-3 px-4">Estudiante</th>
-                                    <th className="py-3 px-4">Lección</th>
-                                    <th className="py-3 px-4">Materia</th>
-                                    <th className="py-3 px-4">Estado</th>
-                                    <th className="py-3 px-4">Calificación</th>
-                                    <th className="py-3 px-4 text-right">Acciones</th>
-                                </tr></thead>
-                                <tbody>
-                                    {(!entregas || entregas.length === 0) && (
-                                        <tr><td colSpan={6} className="py-12 text-center text-muted-foreground">No hay entregas</td></tr>
-                                    )}
-                                    {entregas?.map((e) => (
-                                        <tr key={e.id} className="border-b hover:bg-muted/50 transition-colors">
-                                            <td className="py-3 px-4 text-xs">{nombreCompleto(e.estudiante.user)}</td>
-                                            <td className="py-3 px-4 text-xs">{e.leccion?.titulo}</td>
+                {/* Selector de Pestañas / Estados */}
+                <div className="flex flex-wrap items-center gap-2 border-b pb-2">
+                    <Button
+                        type="button"
+                        variant={tabEstado === 'todos' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setTabEstado('todos')}
+                        className="rounded-full"
+                    >
+                        Todas las Entregas ({entregas?.length || 0})
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={tabEstado === 'pendientes' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setTabEstado('pendientes')}
+                        className={`rounded-full ${pendientesCount > 0 && tabEstado !== 'pendientes' ? 'text-amber-600 font-semibold' : ''}`}
+                    >
+                        <Clock className="h-3.5 w-3.5 mr-1.5" />
+                        Por Calificar ({pendientesCount})
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={tabEstado === 'calificados' ? 'default' : 'ghost'}
+                        size="sm"
+                        onClick={() => setTabEstado('calificados')}
+                        className="rounded-full"
+                    >
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                        Calificadas ({calificadasCount})
+                    </Button>
+                    {filtroLeccionId && (
+                        <Button
+                            type="button"
+                            variant={tabEstado === 'sin_entregar' ? 'destructive' : 'ghost'}
+                            size="sm"
+                            onClick={() => setTabEstado('sin_entregar')}
+                            className={`rounded-full ${sinEntregarCount > 0 && tabEstado !== 'sin_entregar' ? 'text-rose-600 font-semibold' : ''}`}
+                        >
+                            <UserX className="h-3.5 w-3.5 mr-1.5" />
+                            Sin Entregar ({sinEntregarCount})
+                        </Button>
+                    )}
+                </div>
+
+                {/* Vista Sin Entregar */}
+                {tabEstado === 'sin_entregar' && filtroLeccionId ? (
+                    <Card>
+                        <CardHeader className="border-b bg-rose-50/40 dark:bg-rose-950/20">
+                            <CardTitle className="text-base font-semibold flex items-center text-rose-700 dark:text-rose-400">
+                                <UserX className="h-4 w-4 mr-2" />
+                                Estudiantes que aún no han entregado ({sinEntregarCount})
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            {sinEntregarCount === 0 ? (
+                                <div className="text-center py-10 text-muted-foreground">
+                                    <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-2 opacity-80" />
+                                    <p className="font-medium text-emerald-700 dark:text-emerald-400">¡Excelente!</p>
+                                    <p className="text-sm">Todos los estudiantes inscritos han presentado su entrega para esta lección.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b text-left text-muted-foreground">
+                                                <th className="py-3 px-4 font-medium">Estudiante</th>
+                                                <th className="py-3 px-4 font-medium">Estado</th>
+                                                <th className="py-3 px-4 font-medium">Observación</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {estudiantesSinEntregar?.map(est => (
+                                                <tr key={est.id} className="border-b hover:bg-muted/40 transition-colors">
+                                                    <td className="py-3 px-4 font-medium text-foreground">
+                                                        {nombreCompleto(est.user)}
+                                                    </td>
+                                                    <td className="py-3 px-4">
+                                                        <Badge variant="destructive" className="font-normal text-xs">
+                                                            Sin entrega
+                                                        </Badge>
+                                                    </td>
+                                                    <td className="py-3 px-4 text-xs text-muted-foreground">
+                                                        Pendiente de envío por el estudiante
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                ) : (
+                    /* Tabla de entregas enviadas */
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base font-semibold">
+                                {tabEstado === 'pendientes' && `Entregas pendientes de calificar (${entregasFiltradas.length})`}
+                                {tabEstado === 'calificados' && `Entregas ya calificadas (${entregasFiltradas.length})`}
+                                {tabEstado === 'todos' && `Listado de entregas (${entregasFiltradas.length})`}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead><tr className="border-b text-left text-muted-foreground">
+                                        <th className="py-3 px-4 font-medium">Estudiante</th>
+                                        <th className="py-3 px-4 font-medium">Lección</th>
+                                        <th className="py-3 px-4 font-medium">Materia</th>
+                                        <th className="py-3 px-4 font-medium">Estado Entrega</th>
+                                        <th className="py-3 px-4 font-medium">Calificación</th>
+                                        <th className="py-3 px-4 text-right font-medium">Acciones</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {entregasFiltradas.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                                                    No se encontraron entregas en esta sección.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            entregasFiltradas.map((e) => (
+                                                <tr key={e.id} className="border-b hover:bg-muted/50 transition-colors">
+                                                    <td className="py-3 px-4 text-xs font-medium">{nombreCompleto(e.estudiante.user)}</td>
+                                                    <td className="py-3 px-4 text-xs">{e.leccion?.titulo}</td>
                                             <td className="py-3 px-4 text-xs">{e.leccion?.materia?.codigo}</td>
                                             <td className="py-3 px-4">
                                                 <Badge variant={e.estado_entrega === 'entregado' ? 'default' : 'destructive'}>{e.estado_entrega}</Badge>
@@ -358,12 +497,14 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                    ))
+                                )}
                                 </tbody>
                             </table>
                         </div>
                     </CardContent>
                 </Card>
+                )}
 
                 {/* Modal Calificar */}
                 <Dialog open={modalCalificar} onOpenChange={setModalCalificar}>

@@ -19,10 +19,8 @@ class EstudianteSeeder extends Seeder
                     'ci' => '8377246 LP',
                     'celular' => '76543300',
 
-
                     'email' => 'juan.perez@email.com',
                     'password' => bcrypt('password'),
-
 
                     'genero' => 'M',
                     'fecha_nacimiento' => '2005-03-15',
@@ -39,11 +37,9 @@ class EstudianteSeeder extends Seeder
                     'ci' => '9378246 LP',
                     'celular' => '76543301',
 
-
                     'email' => 'maria.quispe@email.com',
                     'password' => bcrypt('password'),
 
-                    
                     'genero' => 'F',
                     'fecha_nacimiento' => '2004-07-22',
                     'direccion' => 'Calle 5, Zona 16 de Julio',
@@ -344,7 +340,7 @@ class EstudianteSeeder extends Seeder
 
         foreach ($estudiantes as $estudiante) {
             $user = User::create($estudiante['user']);
-            $user->assignRole('estudiante'); 
+            $user->assignRole('estudiante');
             Estudiante::create([
                 'user_id' => $user->id,
                 'colegio_procedencia' => $estudiante['colegio_procedencia'],

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\PlantillaEstudiantesExport;
 use App\Imports\EstudiantesImport;
+use App\Models\CredencialTemporal;
 use App\Models\Curso;
 use App\Models\Estudiante;
 use App\Models\User;
@@ -20,7 +21,7 @@ class ImportController extends Controller
     public function plantilla(): BinaryFileResponse
     {
         return Excel::download(
-            new PlantillaEstudiantesExport(),
+            new PlantillaEstudiantesExport,
             'plantilla_estudiantes.xlsx'
         );
     }
@@ -35,7 +36,7 @@ class ImportController extends Controller
         try {
             $curso = Curso::with('gestion')->findOrFail($request->curso_id);
 
-            $import = new EstudiantesImport();
+            $import = new EstudiantesImport;
             Excel::import($import, $request->file('archivo'));
 
             $filas = $import->filas;
@@ -72,20 +73,32 @@ class ImportController extends Controller
                 $colegio = trim((string) ($fila['colegio_procedencia'] ?? ''));
                 $tipoInscripcion = trim((string) ($fila['tipo_inscripcion'] ?? ''));
 
-                if ($nombre === '') $erroresFila[] = 'nombre vacío';
-                if ($apellidoPaterno === '') $erroresFila[] = 'apellido paterno vacío';
-                if ($apellidoMaterno === '') $erroresFila[] = 'apellido materno vacío';
-                if ($ci === '') $erroresFila[] = 'CI vacío';
-                if ($celular === '') $erroresFila[] = 'celular vacío';
-                if ($email === '') $erroresFila[] = 'email vacío';
+                if ($nombre === '') {
+                    $erroresFila[] = 'nombre vacío';
+                }
+                if ($apellidoPaterno === '') {
+                    $erroresFila[] = 'apellido paterno vacío';
+                }
+                if ($apellidoMaterno === '') {
+                    $erroresFila[] = 'apellido materno vacío';
+                }
+                if ($ci === '') {
+                    $erroresFila[] = 'CI vacío';
+                }
+                if ($celular === '') {
+                    $erroresFila[] = 'celular vacío';
+                }
+                if ($email === '') {
+                    $erroresFila[] = 'email vacío';
+                }
 
-                if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $erroresFila[] = 'email inválido';
                 }
-                if ($genero !== '' && !in_array($genero, ['M', 'F', 'Otro'])) {
+                if ($genero !== '' && ! in_array($genero, ['M', 'F', 'Otro'])) {
                     $erroresFila[] = 'género inválido';
                 }
-                if ($tipoInscripcion !== '' && !in_array($tipoInscripcion, ['regular', 'dispensacion', 'cursillo'])) {
+                if ($tipoInscripcion !== '' && ! in_array($tipoInscripcion, ['regular', 'dispensacion', 'cursillo'])) {
                     $erroresFila[] = 'tipo inscripción inválido';
                 }
 
@@ -143,7 +156,7 @@ class ImportController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'No se pudo leer el archivo: ' . $e->getMessage(),
+                'error' => 'No se pudo leer el archivo: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -206,8 +219,6 @@ class ImportController extends Controller
                     'tipo_inscripcion' => $fila['tipo_inscripcion'] ?? null,
                 ]);
 
-
-                
                 $estudiante->cursos()->attach($curso->id, [
                     'fecha_inscripcion' => today(),
                     'estado' => 'activo',
@@ -216,7 +227,7 @@ class ImportController extends Controller
                 $user->assignRole('estudiante');
 
                 //  Guardar credencial temporal para Telegram
-                \App\Models\CredencialTemporal::create([
+                CredencialTemporal::create([
                     'user_id' => $user->id,
                     'password_temporal' => $password,
                 ]);
@@ -227,11 +238,10 @@ class ImportController extends Controller
                     'password' => $password,
                 ];
 
-
             }
         });
 
         return redirect()->route('estudiantes.index')
-            ->with('success', count($creados) . ' estudiantes importados correctamente.');
+            ->with('success', count($creados).' estudiantes importados correctamente.');
     }
 }

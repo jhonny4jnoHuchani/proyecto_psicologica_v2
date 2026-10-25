@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('fecha_fin');
             $table->enum('estado', ['activo', 'inactivo'])->default('activo');
             $table->timestamps();
-            //creado y actualizadp
+            // creado y actualizadp
         });
     }
 

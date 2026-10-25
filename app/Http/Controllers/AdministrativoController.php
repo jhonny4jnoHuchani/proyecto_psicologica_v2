@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Inertia\Inertia;
+use Inertia\Response;
 use Spatie\Permission\Models\Role;
 
 class AdministrativoController extends Controller
@@ -22,19 +22,17 @@ class AdministrativoController extends Controller
         $users = User::whereDoesntHave('roles', function ($query) {
             $query->whereIn('name', ['docente', 'estudiante']);
         })
-        ->orderBy('created_at', 'desc')
-        ->with('roles') // Traer la info de sus roles
-        ->paginate(15);
+            ->orderBy('created_at', 'desc')
+            ->with('roles') // Traer la info de sus roles
+            ->paginate(15);
 
         $roles_list = Role::whereNotIn('name', ['docente', 'estudiante'])->get();
 
         return Inertia::render('administrativos/index', [
             'users' => $users,
-            'roles_list' => $roles_list
+            'roles_list' => $roles_list,
         ]);
     }
-
-
 
     /**
      * Store a newly created resource in storage.
@@ -70,7 +68,7 @@ class AdministrativoController extends Controller
         $user->assignRole($request->role);
 
         return redirect()->route('administrativos.index')
-                         ->with('success', 'Usuario administrativo creado exitosamente.');
+            ->with('success', 'Usuario administrativo creado exitosamente.');
     }
 
     /**
@@ -81,8 +79,6 @@ class AdministrativoController extends Controller
         // No implementado actualmente
         abort(404);
     }
-
-
 
     /**
      * Update the specified resource in storage.
@@ -97,8 +93,8 @@ class AdministrativoController extends Controller
             'nombre' => 'required|string|max:255',
             'apellido_paterno' => 'required|string|max:255',
             'apellido_materno' => 'nullable|string|max:255',
-            'ci' => 'required|string|max:20|unique:users,ci,' . $administrativo->id,
-            'email' => 'required|string|email|max:255|unique:users,email,' . $administrativo->id,
+            'ci' => 'required|string|max:20|unique:users,ci,'.$administrativo->id,
+            'email' => 'required|string|email|max:255|unique:users,email,'.$administrativo->id,
             'celular' => 'nullable|string|max:20',
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => 'required|string|exists:roles,name',
@@ -126,7 +122,7 @@ class AdministrativoController extends Controller
         $administrativo->syncRoles([$request->role]);
 
         return redirect()->route('administrativos.index')
-                         ->with('success', 'Usuario administrativo actualizado exitosamente.');
+            ->with('success', 'Usuario administrativo actualizado exitosamente.');
     }
 
     /**
@@ -148,6 +144,6 @@ class AdministrativoController extends Controller
         $administrativo->delete();
 
         return redirect()->route('administrativos.index')
-                         ->with('success', 'Usuario eliminado exitosamente.');
+            ->with('success', 'Usuario eliminado exitosamente.');
     }
 }

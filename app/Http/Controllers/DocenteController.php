@@ -155,7 +155,7 @@ class DocenteController extends Controller
         $user = $docente->user;
 
         // Generar contraseña: apellido_paterno_ci
-        $nuevaPassword = strtolower($user->apellido_paterno . '_' . $user->ci);
+        $nuevaPassword = strtolower($user->apellido_paterno.'_'.$user->ci);
 
         $user->update([
             'password' => bcrypt($nuevaPassword),
@@ -191,5 +191,4 @@ class DocenteController extends Controller
         return redirect()->route('docentes.trashed')
             ->with('success', 'Docente restaurado exitosamente.');
     }
-
 }

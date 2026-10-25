@@ -67,10 +67,26 @@ class EntregaController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $estudiantesSinEntregar = collect();
+        if ($leccionId) {
+            $leccionActual = $lecciones->firstWhere('id', (int) $leccionId);
+            if ($leccionActual) {
+                $estudiantesSinEntregar = Estudiante::whereHas('cursos', function ($q) use ($leccionActual) {
+                    $q->where('cursos.id', $leccionActual->curso_id);
+                })
+                    ->whereDoesntHave('entregas', function ($q) use ($leccionActual) {
+                        $q->where('leccion_id', $leccionActual->id);
+                    })
+                    ->with('user')
+                    ->get();
+            }
+        }
+
         return Inertia::render('entregas/docente', [
             'entregas' => $entregas,
             'lecciones' => $lecciones,
             'filtroLeccionId' => $leccionId ? (int) $leccionId : null,
+            'estudiantesSinEntregar' => $estudiantesSinEntregar,
         ]);
     }
 

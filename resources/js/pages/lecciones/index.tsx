@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import {
-    AlertCircle, BookOpen, CalendarClock, CalendarDays, CheckCircle2,
-    ChevronDown, ChevronLeft, ChevronRight, Clock, Eye, FileSpreadsheet, FileText,
+    AlertCircle, Award, BookOpen, CalendarClock, CalendarDays, CheckCircle2,
+    ChevronDown, ChevronLeft, ChevronRight, Clock, Eye, FileCheck, FileSpreadsheet, FileText,
     LoaderCircle, Pencil, Plus, Sparkles, Trash2, Send, Users,
 } from 'lucide-react';
 import { FormEventHandler, useMemo, useState } from 'react';
@@ -37,6 +37,18 @@ interface Tema {
     estado: string;
 }
 
+interface EntregaEstudiante {
+    id: number;
+    estado_calificacion: string;
+    calificacion?: {
+        nota: number;
+    } | null;
+    refuerzo?: {
+        id: number;
+        completado: boolean;
+    } | null;
+}
+
 interface Leccion {
     id: number;
     hash_id?: string;
@@ -50,6 +62,7 @@ interface Leccion {
     materia: MateriaOption;
     curso: CursoOption;
     docente: DocenteData;
+    entregas?: EntregaEstudiante[];
 }
 
 interface Filtros { curso_id: number | null; materia_id: number | null; }
@@ -486,11 +499,16 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                         <div className="space-y-2">
                                                             {leccionesTema.map((l) => {
                                                                 const restantes = diasRestantes(l.fecha_entrega);
+                                                                const miEntrega = l.entregas?.[0];
+                                                                const yaEntregado = !!miEntrega;
+                                                                const estaCalificado = miEntrega?.estado_calificacion === 'calificado' && miEntrega?.calificacion?.nota !== undefined;
+                                                                const tieneRefuerzo = !!miEntrega?.refuerzo && !miEntrega.refuerzo.completado;
+
                                                                 return (
                                                                     <div key={l.id} className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all">
                                                                         <div className="min-w-0 flex-1">
                                                                             {isDocente ? (
-                                                                                <a href={`/lecciones/${l.hash_id || l.id}/entregas`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
+                                                                                <a href={`/entregas/docente?leccion_id=${l.id}`} className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors">
                                                                                     {l.titulo}
                                                                                 </a>
                                                                             ) : (
@@ -498,16 +516,17 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                                                     {l.titulo}
                                                                                 </a>
                                                                             )}
-                                                                            <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-neutral-500">
+                                                                            <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
                                                                                 <span className="flex items-center gap-1">
                                                                                     <Clock className="h-3 w-3" />
-                                                                                    {l.fecha_entrega ? formatoFechaCorta(l.fecha_entrega) : 'Sin fecha'}
+                                                                                    {l.fecha_entrega ? formatoFechaCorta(l.fecha_entrega) : 'Sin fecha límite'}
                                                                                 </span>
 
                                                                                 <span className="flex items-center gap-1">
                                                                                     <Users className="h-3 w-3" />
                                                                                     {l.curso?.gestion?.año} · P.{l.curso?.paralelo}
                                                                                 </span>
+
                                                                                 {l.docente && (
                                                                                     <span className="flex items-center gap-1" title={nombreCompleto(l.docente.user)}>
                                                                                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
@@ -516,41 +535,98 @@ export default function LeccionesIndex({ lecciones, cursos, materias, temas, fil
                                                                                         <span className="truncate max-w-[120px]">{nombreCompleto(l.docente.user)}</span>
                                                                                     </span>
                                                                                 )}
-                                                                                {restantes !== null && restantes >= 0 && restantes <= 3 && (
-                                                                                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
-                                                                                        {restantes === 0 ? 'Hoy' : `${restantes}d`}
-                                                                                    </Badge>
+
+                                                                                {/* Estado de entrega del Estudiante */}
+                                                                                {!isDocente && (
+                                                                                    <>
+                                                                                        {estaCalificado && (
+                                                                                            <Badge variant={miEntrega!.calificacion!.nota >= 70 ? 'success' : 'warning'} className="text-[10px] gap-1 font-bold">
+                                                                                                <Award className="h-3 w-3" />
+                                                                                                Nota: {miEntrega!.calificacion!.nota}/100
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {yaEntregado && !estaCalificado && (
+                                                                                            <Badge variant="info" className="text-[10px] gap-1">
+                                                                                                <CheckCircle2 className="h-3 w-3" />
+                                                                                                Entregado
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {!yaEntregado && (
+                                                                                            <Badge variant={restantes !== null && restantes < 0 ? 'destructive' : 'warning'} className="text-[10px]">
+                                                                                                {restantes !== null && restantes < 0 ? 'Sin entregar (Vencida)' : 'Pendiente de entrega'}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {tieneRefuerzo && (
+                                                                                            <Badge variant="purple" className="text-[10px] gap-1">
+                                                                                                <Sparkles className="h-3 w-3" />
+                                                                                                Refuerzo IA
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                    </>
                                                                                 )}
-                                                                                {restantes !== null && restantes < 0 && l.estado === 'activo' && (
-                                                                                    <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">Vencida</Badge>
+
+                                                                                {isDocente && (
+                                                                                    <>
+                                                                                        {restantes !== null && restantes >= 0 && restantes <= 3 && (
+                                                                                            <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
+                                                                                                {restantes === 0 ? 'Vence Hoy' : `Vence en ${restantes}d`}
+                                                                                            </Badge>
+                                                                                        )}
+                                                                                        {restantes !== null && restantes < 0 && l.estado === 'activo' && (
+                                                                                            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">Vencida</Badge>
+                                                                                        )}
+                                                                                        <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${l.estado === 'activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                                                                                            <span className={`h-1 w-1 rounded-full ${l.estado === 'activo' ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
+                                                                                            {l.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                                                                                        </span>
+                                                                                    </>
                                                                                 )}
-                                                                                <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${l.estado === 'activo' ? 'bg-emerald-50 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
-                                                                                    }`}>
-                                                                                    <span className={`h-1 w-1 rounded-full ${l.estado === 'activo' ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
-                                                                                    {l.estado === 'activo' ? 'Activo' : 'Inactivo'}
-                                                                                </span>
                                                                             </div>
                                                                         </div>
 
-                                                                        <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
+                                                                        <div className="flex shrink-0 items-center gap-1.5 opacity-80 transition-opacity group-hover:opacity-100">
                                                                             {!isDocente ? (
                                                                                 <a href={`/lecciones/${l.hash_id || l.id}`}>
-                                                                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-xs h-7 text-xs">
-                                                                                        <Send className="mr-1 h-3 w-3" />
-                                                                                        Entregar
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        className={`shadow-xs h-7 text-xs font-semibold ${
+                                                                                            estaCalificado
+                                                                                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                                                                                : yaEntregado
+                                                                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                                                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                                                                        }`}
+                                                                                    >
+                                                                                        {estaCalificado ? (
+                                                                                            <>
+                                                                                                <Eye className="mr-1 h-3 w-3" />
+                                                                                                Ver Nota
+                                                                                            </>
+                                                                                        ) : yaEntregado ? (
+                                                                                            <>
+                                                                                                <CheckCircle2 className="mr-1 h-3 w-3" />
+                                                                                                Ver Entrega
+                                                                                            </>
+                                                                                        ) : (
+                                                                                            <>
+                                                                                                <Send className="mr-1 h-3 w-3" />
+                                                                                                Entregar Tarea
+                                                                                            </>
+                                                                                        )}
                                                                                     </Button>
                                                                                 </a>
                                                                             ) : (
                                                                                 <>
-                                                                                    <a href={`/lecciones/${l.hash_id || l.id}/entregas`}>
-                                                                                        <Button variant="outline" size="icon" className="h-7 w-7" title="Ver entregas">
-                                                                                            <Users className="h-3.5 w-3.5 text-blue-500" />
+                                                                                    <a href={`/entregas/docente?leccion_id=${l.id}`}>
+                                                                                        <Button variant="outline" size="sm" className="h-7 text-xs gap-1 border-blue-200 text-blue-700 hover:bg-blue-50" title="Revisar y calificar entregas">
+                                                                                            <FileCheck className="h-3.5 w-3.5 text-blue-600" />
+                                                                                            Entregas
                                                                                         </Button>
                                                                                     </a>
-                                                                                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEdit(l)}>
+                                                                                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openEdit(l)} title="Editar lección">
                                                                                         <Pencil className="h-3.5 w-3.5" />
                                                                                     </Button>
-                                                                                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openDelete(l)}>
+                                                                                    <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openDelete(l)} title="Eliminar lección">
                                                                                         <Trash2 className="h-3.5 w-3.5 text-rose-500" />
                                                                                     </Button>
                                                                                 </>

@@ -22,14 +22,16 @@ class TelegramFlushPendientes extends Command
 
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             $this->error("Usuario {$userId} no encontrado.");
+
             return self::FAILURE;
         }
 
         // Verificar que tenga Telegram vinculado
-        if (!$user->telegramVinculacion) {
+        if (! $user->telegramVinculacion) {
             $this->warn("El usuario {$userId} no tiene Telegram vinculado. Nada que hacer.");
+
             return self::SUCCESS;
         }
 
@@ -38,13 +40,14 @@ class TelegramFlushPendientes extends Command
             ->where('enviada_telegram', false)
             ->where(function ($q) {
                 $q->whereNull('telegram_error')
-                  ->orWhere('telegram_error', '!=', 'Bot de Telegram no configurado.');
+                    ->orWhere('telegram_error', '!=', 'Bot de Telegram no configurado.');
             })
             ->orderBy('created_at', 'asc')
             ->get();
 
         if ($pendientes->isEmpty()) {
             $this->info("El usuario {$userId} no tiene notificaciones pendientes.");
+
             return self::SUCCESS;
         }
 
@@ -56,7 +59,8 @@ class TelegramFlushPendientes extends Command
                 ->delay(now()->addSeconds($index + 1));
         }
 
-        $this->info("✅ Jobs despachados.");
+        $this->info('✅ Jobs despachados.');
+
         return self::SUCCESS;
     }
 }

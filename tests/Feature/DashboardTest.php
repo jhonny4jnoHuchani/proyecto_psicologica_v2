@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Docente;
+use App\Models\Estudiante;
 use App\Models\Notificacion;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -78,5 +79,30 @@ test('docente can visit dashboard and receive cursos data', function () {
         ->where('rol', 'docente')
         ->has('cursos')
         ->has('semaforo.resumen.alto')
+        ->has('docente_stats.entregas_pendientes')
+    );
+});
+
+test('estudiante can visit dashboard and receive tareas and refuerzos data', function () {
+    Role::firstOrCreate(['name' => 'estudiante', 'guard_name' => 'web']);
+    $user = User::factory()->create();
+    $user->assignRole('estudiante');
+    Estudiante::create([
+        'user_id' => $user->id,
+        'nombre_completo' => 'Estudiante Test',
+        'fecha_nacimiento' => '2005-01-01',
+    ]);
+
+    $response = $this->actingAs($user)->get('/dashboard');
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('dashboard')
+        ->where('rol', 'estudiante')
+        ->has('cursos')
+        ->has('tareas_pendientes')
+        ->has('refuerzos_pendientes')
+        ->has('ultimas_calificaciones')
+        ->has('resumen.tareas_pendientes_count')
     );
 });

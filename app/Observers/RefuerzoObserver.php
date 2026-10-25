@@ -21,8 +21,9 @@ class RefuerzoObserver
             $user = $estudiante?->user;
 
             // 2. Validación defensiva
-            if (!$user) {
+            if (! $user) {
                 Log::warning("Refuerzo {$refuerzo->id}: no se encontró user para notificar.");
+
                 return;
             }
 
@@ -40,7 +41,7 @@ class RefuerzoObserver
 
         } catch (\Exception $e) {
             // Nunca romper el flujo del docente por un error de notificación
-            Log::error("Error en RefuerzoObserver: " . $e->getMessage());
+            Log::error('Error en RefuerzoObserver: '.$e->getMessage());
         }
     }
 }

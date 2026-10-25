@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Libro;
 use App\Models\Materia;
+use Illuminate\Database\Seeder;
 
 class LibrosSeeder extends Seeder
 {
@@ -21,7 +21,7 @@ class LibrosSeeder extends Seeder
                 'deleted_at' => null,
             ]);
 
-            $libro->nombre = 'Resumen: ' . $materia->nombre;
+            $libro->nombre = 'Resumen: '.$materia->nombre;
             $libro->autor = 'UPEA Psicología';
             $libro->anio_lanzamiento = 2026;
             $libro->save();

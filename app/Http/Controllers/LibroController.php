@@ -17,7 +17,7 @@ class LibroController extends Controller
         $materiaId = $request->query('materia_id');
 
         $libros = Libro::with('materia')
-            ->when($materiaId, fn($q) => $q->where('materia_id', $materiaId))
+            ->when($materiaId, fn ($q) => $q->where('materia_id', $materiaId))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -91,12 +91,16 @@ class LibroController extends Controller
         $data = $request->only(['materia_id', 'nombre', 'autor', 'anio_lanzamiento']);
 
         if ($request->hasFile('archivo')) {
-            if ($libro->archivo) Storage::disk('public')->delete($libro->archivo);
+            if ($libro->archivo) {
+                Storage::disk('public')->delete($libro->archivo);
+            }
             $data['archivo'] = $request->file('archivo')->store('libros/pdf', 'public');
         }
 
         if ($request->hasFile('portada')) {
-            if ($libro->portada) Storage::disk('public')->delete($libro->portada);
+            if ($libro->portada) {
+                Storage::disk('public')->delete($libro->portada);
+            }
             $data['portada'] = $request->file('portada')->store('libros/portadas', 'public');
         }
 
@@ -108,6 +112,7 @@ class LibroController extends Controller
     public function destroy(Libro $libro): RedirectResponse
     {
         $libro->delete();
+
         return redirect()->route('libros.index')->with('success', 'Libro eliminado exitosamente.');
     }
 
@@ -122,11 +127,15 @@ class LibroController extends Controller
     public function forceDelete(int $id): RedirectResponse
     {
         $libro = Libro::withTrashed()->findOrFail($id);
-        
+
         // Eliminar archivos del storage
-        if ($libro->archivo) Storage::disk('public')->delete($libro->archivo);
-        if ($libro->portada) Storage::disk('public')->delete($libro->portada);
-        
+        if ($libro->archivo) {
+            Storage::disk('public')->delete($libro->archivo);
+        }
+        if ($libro->portada) {
+            Storage::disk('public')->delete($libro->portada);
+        }
+
         $libro->forceDelete();
 
         return redirect()->route('libros.trashed')->with('success', 'Libro eliminado permanentemente.');
