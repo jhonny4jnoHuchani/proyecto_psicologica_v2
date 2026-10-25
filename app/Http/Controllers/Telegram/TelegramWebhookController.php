@@ -18,21 +18,27 @@ class TelegramWebhookController extends Controller
      */
     public function webhook(Request $request)
     {
+        $update = $request->all();
+
+        Log::info('📩 [Telegram Webhook] Payload recibido:', $update);
+
         if (! config('services.telegram.enabled', false)) {
+            Log::warning('⚠️ [Telegram Webhook] Recibido pero TELEGRAM_ENABLED está en false o no configurado en .env');
+
             return response()->json(['ok' => false, 'message' => 'Telegram deshabilitado en configuración']);
         }
 
-        $update = $request->all();
-
-        Log::info('Telegram webhook', $update);
-
         $mensaje = $update['message'] ?? null;
         if (! $mensaje) {
+            Log::info('ℹ️ [Telegram Webhook] Update no contiene "message" (puede ser callback_query, channel_post, etc.)');
+
             return response()->json(['ok' => true]);
         }
 
         $chatId = $mensaje['chat']['id'] ?? null;
         $username = $mensaje['from']['username'] ?? null;
+
+        Log::info("💬 [Telegram Webhook] Mensaje detectado - Chat ID: {$chatId}, Usuario: @{$username}");
 
         if (! $chatId) {
             return response()->json(['ok' => true]);
