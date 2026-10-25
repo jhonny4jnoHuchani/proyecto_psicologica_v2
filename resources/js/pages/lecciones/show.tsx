@@ -3,10 +3,7 @@ import {
     AlertTriangle,
     ArrowLeft,
     Bot,
-<<<<<<< HEAD
-=======
     BookOpen,
->>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
     Calendar,
     CheckCircle2,
     ChevronDown,
@@ -138,11 +135,14 @@ interface Props {
     paginas_siguiente?: string | null;
 }
 
-<<<<<<< HEAD
-export default function LeccionesShow({ leccion, entrega: entregaInicial, rol }: Props) {
-=======
-export default function LeccionesShow({ leccion, entrega: entregaInicial, rol, prediccion_ml, tema_siguiente, paginas_siguiente  }: Props) {
->>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
+export default function LeccionesShow({
+    leccion,
+    entrega: entregaInicial,
+    rol,
+    prediccion_ml,
+    tema_siguiente,
+    paginas_siguiente,
+}: Props) {
     const pageProps = usePage<SharedData>().props;
     const authUser = pageProps.auth?.user;
     const { flash } = pageProps as { flash?: { success?: string; error?: string } };
@@ -202,7 +202,7 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol, p
 
     // Información del refuerzo
     const calificacionNota = entrega?.calificacion ? Number(entrega.calificacion.nota) : null;
-    const esNotaBaja = calificacionNota !== null && calificacionNota < 70;
+    const esNotaBaja = calificacionNota !== null && calificacionNota < 75;
     const tieneRefuerzo = !!entrega?.refuerzo;
     const refuerzoCompletado = entrega?.refuerzo?.completado ?? false;
 
@@ -212,7 +212,8 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol, p
         leccion.temario?.nombre ||
         leccion.tema ||
         `Tema de ${leccion.materia.nombre}`;
-    const paginasLibro = leccion.temario?.paginas_libro || '9-20';
+    const paginasLibroRaw = leccion.temario?.paginas_libro || '9-20';
+    const paginasLibro = paginasLibroRaw.replace(/^p[áa]g(s)?\.?\s*/i, '');
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Mis Entregas', href: '/entregas' },
@@ -660,199 +661,227 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol, p
                         {/* ------------------------------------------------------------ */}
                         {/* CUADRO 1 (IZQUIERDA): MACHINE LEARNING                       */}
                         {/* ------------------------------------------------------------ */}
-<<<<<<< HEAD
-                        <div className="rounded-xl border border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50/60 via-purple-50/30 to-background dark:from-indigo-950/30 dark:via-purple-950/20 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
+                        <div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-background dark:from-indigo-950/40 dark:via-purple-950/30 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
                             <div className="space-y-2.5">
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm tracking-wide">
                                         <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                                        <span>MÓDULO DE MACHINE LEARNING</span>
+                                        <span>PREDICCIÓN DE RENDIMIENTO PARA EL PROXIMO TEMA</span>
                                     </div>
                                     <Badge
                                         variant="outline"
                                         className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 font-medium"
                                     >
-                                        Aquí hay que trabajar
+                                        ML Predictivo
                                     </Badge>
                                 </div>
 
                                 <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                                    Espacio reservado para el modelo predictivo de Machine Learning. Aquí se procesará el historial académico, las calificaciones y patrones de asimilación del estudiante para emitir recomendaciones adaptativas.
+                                    Basado en tu historial académico y el análisis de {temaNombre}, nuestro modelo predice tu rendimiento en el próximo tema.
                                 </p>
                             </div>
 
-                            <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
-                                <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">
-                                    <span>Predicción de Rendimiento:</span>
-                                    <span className="text-indigo-600 dark:text-indigo-400 text-[11px]">
-                                        Integración pendiente
-                                    </span>
+                            {/* Mostrar predicciones si existen */}
+                            {prediccion_ml ? (
+                                <div className="space-y-3">
+                                    {/* Próximo tema */}
+                                    {tema_siguiente && (
+                                        <div className="rounded-lg bg-indigo-100/60 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 p-2.5">
+                                            <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium mb-1">
+                                                Próximo tema:
+                                            </p>
+                                            <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                                                {tema_siguiente}
+                                            </p>
+                                            {paginas_siguiente && (
+                                                <p className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-1">
+                                                    📖 Lectura recomendada: {paginas_siguiente}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Dos predicciones */}
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="rounded-lg bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-2.5">
+                                            <p className="text-[10px] text-rose-700 dark:text-rose-300 font-semibold mb-1">
+                                                ⚠️ Sin prepararte:
+                                            </p>
+                                            <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                                                ~{prediccion_ml.prediccion_sin_leer}/100
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5">
+                                            <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mb-1">
+                                                ✅ Leyendo {paginas_siguiente || 'el material'}:
+                                            </p>
+                                            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                                                ~{prediccion_ml.prediccion_con_leer}/100
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Beneficio */}
+                                    <div className="rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-950/60 dark:to-purple-950/60 border border-indigo-200 dark:border-indigo-800 p-2.5 text-center">
+                                        <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+                                             Beneficio de prepararte:
+                                        </p>
+                                        <p className="text-base font-bold text-indigo-900 dark:text-indigo-100">
+                                            +{prediccion_ml.beneficio} puntos
+                                        </p>
+                                    </div>
+
+                                    {/* Mensaje informativo */}
+                                    {paginas_siguiente && (
+                                        <div className="w-full bg-orange-500 text-white py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2">
+                                            <BookOpen className="h-4 w-4" />
+                                            Leer el texto guía ({paginas_siguiente})
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
-                                    <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
+                            ) : (
+                                <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
+                                    <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">
+                                        <span>Estado del modelo:</span>
+                                        <span className="text-amber-600 dark:text-amber-400 text-[11px]">
+                                            Procesando datos
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        El sistema está analizando tu desempeño para generar predicciones personalizadas.
+                                    </p>
                                 </div>
-                                <p className="text-[11px] text-muted-foreground">
-                                    Datos esperados: Detección temprana de rezago y recomendación preventiva de contenidos.
-                                </p>
-                            </div>
+                            )}
                         </div>
 
-=======
-<div className="rounded-xl border border-indigo-300 bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-background dark:from-indigo-950/40 dark:via-purple-950/30 dark:border-indigo-800 p-5 space-y-3.5 shadow-xs flex flex-col justify-between">
-    <div className="space-y-2.5">
-        <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm tracking-wide">
-                <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                <span>PREDICCIÓN DE RENDIMIENTO PARA EL PROXIMO TEMA</span>
-            </div>
-            <Badge
-                variant="outline"
-                className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 font-medium"
-            >
-                ML Predictivo
-            </Badge>
-        </div>
-
-        <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Basado en tu historial académico y el análisis de {temaNombre}, nuestro modelo predice tu rendimiento en el próximo tema.
-        </p>
-    </div>
-
-    {/* Mostrar predicciones si existen */}
-    {prediccion_ml ? (
-        <div className="space-y-3">
-            {/* Próximo tema */}
-            {tema_siguiente && (
-                <div className="rounded-lg bg-indigo-100/60 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 p-2.5">
-                    <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium mb-1">
-                        Próximo tema:
-                    </p>
-                    <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
-                        {tema_siguiente}
-                    </p>
-                    {paginas_siguiente && (
-                        <p className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-1">
-                            📖 Lectura recomendada: {paginas_siguiente}
-                        </p>
-                    )}
-                </div>
-            )}
-
-            {/* Dos predicciones */}
-            <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-2.5">
-                    <p className="text-[10px] text-rose-700 dark:text-rose-300 font-semibold mb-1">
-                        ⚠️ Sin prepararte:
-                    </p>
-                    <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
-                        ~{prediccion_ml.prediccion_sin_leer}/100
-                    </p>
-                </div>
-                <div className="rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5">
-                    <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mb-1">
-                        ✅ Leyendo {paginas_siguiente || 'el material'}:
-                    </p>
-                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                        ~{prediccion_ml.prediccion_con_leer}/100
-                    </p>
-                </div>
-            </div>
-
-            {/* Beneficio */}
-            <div className="rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-950/60 dark:to-purple-950/60 border border-indigo-200 dark:border-indigo-800 p-2.5 text-center">
-                <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
-                     Beneficio de prepararte:
-                </p>
-                <p className="text-base font-bold text-indigo-900 dark:text-indigo-100">
-                    +{prediccion_ml.beneficio} puntos
-                </p>
-            </div>
-
-            {/* Mensaje informativo (reemplaza al botón) */}
-            {paginas_siguiente && (
-                <div className="w-full bg-orange-500 text-white py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2">
-                    <BookOpen className="h-4 w-4" />
-                    Leer el texto guía ({paginas_siguiente})
-                </div>
-            )}
-        </div>
-    ) : (
-        <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
-            <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">
-                <span>Estado del modelo:</span>
-                <span className="text-amber-600 dark:text-amber-400 text-[11px]">
-                    Procesando datos
-                </span>
-            </div>
-            <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
-                <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-                El sistema está analizando tu desempeño para generar predicciones personalizadas.
-            </p>
-        </div>
-    )}
-</div>
-
->>>>>>> f02ee8f72cd60c3e48d898cbed1151d84ae0f668
                         {/* ------------------------------------------------------------ */}
-                        {/* CUADRO 2 (DERECHA): REFUERZO INMEDIATO (CORRECTIVO) - IMAGEN 3*/}
+                        {/* CUADRO 2 (DERECHA): REFUERZO O DESEMPEÑO APROBADO           */}
                         {/* ------------------------------------------------------------ */}
-                        <div className="rounded-xl border border-sky-300 bg-sky-50/70 dark:bg-sky-950/30 dark:border-sky-800/80 p-5 shadow-xs flex flex-col justify-between space-y-3.5 relative overflow-hidden">
-                            {/* Acento lateral decorativo tipo corchete / wireframe */}
-                            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-sky-500 dark:bg-sky-400" />
+                        {esNotaBaja ? (
+                            <div className="rounded-xl border border-sky-300 bg-sky-50/70 dark:bg-sky-950/30 dark:border-sky-800/80 p-5 shadow-xs flex flex-col justify-between space-y-3.5 relative overflow-hidden">
+                                {/* Acento lateral decorativo tipo corchete / wireframe */}
+                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-sky-500 dark:bg-sky-400" />
 
-                            <div className="space-y-2.5 pl-1">
-                                {/* Cabecera del cuadro idéntica a la Imagen 3 */}
-                                <div className="flex items-center justify-between gap-2">
-                                    <h3 className="font-bold text-sm tracking-wide text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
-                                        <span>🔧</span>
-                                        <span>REFUERZO INMEDIATO (Correctivo)</span>
-                                    </h3>
-                                    {esNotaBaja && (
+                                <div className="space-y-2.5 pl-1">
+                                    {/* Cabecera para nota menor a 75 */}
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="font-bold text-sm tracking-wide text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
+                                            <span>🔧</span>
+                                            <span>REFUERZO INMEDIATO (Correctivo)</span>
+                                        </h3>
                                         <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-[10px]">
                                             Acción requerida
                                         </Badge>
+                                    </div>
+
+                                    {/* Subtítulo dinámico con nombre y nota del estudiante */}
+                                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        {estudianteNombre}, tu nota en {temaNombre} fue{' '}
+                                        <span className="text-amber-600 dark:text-amber-400 font-bold">
+                                            {calificacionNota !== null ? `${Math.round(calificacionNota)}/100` : 'pendiente'}
+                                        </span>{' '}
+                                        ⚠️
+                                    </p>
+
+                                    {/* Sección Recomendación con viñetas para nota baja */}
+                                    <div className="space-y-1.5 pt-1 text-xs text-neutral-700 dark:text-neutral-300">
+                                        <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                                            Recomendación:
+                                        </p>
+                                        <ul className="space-y-1 list-none pl-1">
+                                            <li className="flex items-start gap-1.5">
+                                                <span className="text-neutral-500 shrink-0">•</span>
+                                                <span>
+                                                    Vuelve a leer: <strong>pág. {paginasLibro}</strong> ({temaNombre})
+                                                </span>
+                                            </li>
+                                            <li className="flex items-start gap-1.5">
+                                                <span className="text-neutral-500 shrink-0">•</span>
+                                                <span>Responde estas 10 preguntas de práctica</span>
+                                            </li>
+                                            <li className="flex items-start gap-1.5">
+                                                <span className="text-neutral-500 shrink-0">•</span>
+                                                <span>Esto te ayudará en el examen final</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Botón de acción: [📝 Iniciar práctica] redirigido al refuerzo */}
+                                <div className="pt-2 pl-1">
+                                    {tieneRefuerzo ? (
+                                        refuerzoCompletado ? (
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                variant="outline"
+                                                className="w-full sm:w-auto border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/60 dark:hover:text-emerald-200 text-xs"
+                                            >
+                                                <Link href={`/refuerzos/${entrega?.refuerzo?.hash_id || entrega?.refuerzo?.id}`}>
+                                                    <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
+                                                    ✅ Práctica completada (Ver respuestas)
+                                                </Link>
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-medium shadow-xs text-xs"
+                                            >
+                                                <Link href={`/refuerzos/${entrega?.refuerzo?.hash_id || entrega?.refuerzo?.id}`}>
+                                                    <span className="mr-1.5">📝</span>
+                                                    Iniciar práctica
+                                                    <ExternalLink className="ml-1.5 h-3 w-3" />
+                                                </Link>
+                                            </Button>
+                                        )
+                                    ) : (
+                                        <div className="rounded-md bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-2 text-xs text-amber-800 dark:text-amber-300">
+                                            El docente habilitará las 10 preguntas de práctica con IA en breve.
+                                        </div>
                                     )}
                                 </div>
-
-                                {/* Subtítulo dinámico con nombre y nota del estudiante */}
-                                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                                    {estudianteNombre}, tu nota en {temaNombre} fue{' '}
-                                    <span className={esNotaBaja ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                                        {calificacionNota !== null ? `${Math.round(calificacionNota)}/100` : 'pendiente'}
-                                    </span>{' '}
-                                    {esNotaBaja ? '⚠️' : '✅'}
-                                </p>
-
-                                {/* Sección Recomendación con viñetas idénticas a la Imagen 3 */}
-                                <div className="space-y-1.5 pt-1 text-xs text-neutral-700 dark:text-neutral-300">
-                                    <p className="font-semibold text-neutral-800 dark:text-neutral-200">
-                                        Recomendación:
-                                    </p>
-                                    <ul className="space-y-1 list-none pl-1">
-                                        <li className="flex items-start gap-1.5">
-                                            <span className="text-neutral-500 shrink-0">•</span>
-                                            <span>
-                                                Vuelve a leer: <strong>pág. {paginasLibro}</strong> ({temaNombre})
-                                            </span>
-                                        </li>
-                                        <li className="flex items-start gap-1.5">
-                                            <span className="text-neutral-500 shrink-0">•</span>
-                                            <span>Responde estas 10 preguntas de práctica</span>
-                                        </li>
-                                        <li className="flex items-start gap-1.5">
-                                            <span className="text-neutral-500 shrink-0">•</span>
-                                            <span>Esto te ayudará en el examen final</span>
-                                        </li>
-                                    </ul>
-                                </div>
                             </div>
+                        ) : (
+                            /* Para nota >= 75: Solo su nota y felicitaciones */
+                            <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/30 dark:border-emerald-800/80 p-5 shadow-xs flex flex-col justify-between space-y-3.5 relative overflow-hidden">
+                                {/* Acento lateral decorativo verde */}
+                                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-emerald-500 dark:bg-emerald-400" />
 
-                            {/* Botón de acción: [📝 Iniciar práctica] redirigido al refuerzo */}
-                            <div className="pt-2 pl-1">
-                                {tieneRefuerzo ? (
-                                    refuerzoCompletado ? (
+                                <div className="space-y-3 pl-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <h3 className="font-bold text-sm tracking-wide text-neutral-800 dark:text-neutral-100 flex items-center gap-1.5">
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                            <span>DESEMPEÑO APROBADO</span>
+                                        </h3>
+                                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 text-[10px]">
+                                            Aprobado
+                                        </Badge>
+                                    </div>
+
+                                    {/* Subtítulo dinámico con nota del estudiante */}
+                                    <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                                        {estudianteNombre}, tu nota en {temaNombre} fue{' '}
+                                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                                            {calificacionNota !== null ? `${Math.round(calificacionNota)}/100` : 'pendiente'}
+                                        </span>{' '}
+                                        ✅
+                                    </p>
+
+                                    {/* Mensaje de felicitaciones simple y directo */}
+                                    <div className="pt-1 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                                        <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                        <p className="font-medium">
+                                            ¡Felicidades! Has aprobado este tema exitosamente.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {tieneRefuerzo && refuerzoCompletado && (
+                                    <div className="pt-2 pl-1">
                                         <Button
                                             asChild
                                             size="sm"
@@ -861,35 +890,13 @@ export default function LeccionesShow({ leccion, entrega: entregaInicial, rol, p
                                         >
                                             <Link href={`/refuerzos/${entrega?.refuerzo?.hash_id || entrega?.refuerzo?.id}`}>
                                                 <CheckCircle2 className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
-                                                ✅ Práctica completada (Ver respuestas)
+                                                Ver práctica de refuerzo realizada
                                             </Link>
                                         </Button>
-                                    ) : (
-                                        <Button
-                                            asChild
-                                            size="sm"
-                                            className="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white font-medium shadow-xs text-xs"
-                                        >
-                                            <Link href={`/refuerzos/${entrega?.refuerzo?.hash_id || entrega?.refuerzo?.id}`}>
-                                                <span className="mr-1.5">📝</span>
-                                                Iniciar práctica
-                                                <ExternalLink className="ml-1.5 h-3 w-3" />
-                                            </Link>
-                                        </Button>
-                                    )
-                                ) : esNotaBaja ? (
-                                    <div className="rounded-md bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-2 text-xs text-amber-800 dark:text-amber-300">
-                                        El docente habilitará las 10 preguntas de práctica con IA en breve.
                                     </div>
-                                ) : (
-                                    <p className="text-xs text-muted-foreground italic">
-                                        {calificacionNota !== null
-                                            ? '¡Felicidades! Has aprobado este tema exitosamente.'
-                                            : 'Las preguntas de refuerzo se activarán cuando tu tarea sea calificada.'}
-                                    </p>
                                 )}
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
 

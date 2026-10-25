@@ -80,7 +80,7 @@ export default function Index({
                             <p className="text-gray-700">
                                 En <span className="font-bold text-indigo-600">{materia_nombre}</span>,
                                 terminaste <span className="font-semibold">{tema_actual_nombre}</span> con un promedio de{' '}
-                                <span className={`font-bold ${nota_actual! < 70 ? 'text-red-600' : 'text-green-600'}`}>
+                                <span className={`font-bold ${nota_actual! < 75 ? 'text-red-600' : 'text-green-600'}`}>
                                     {nota_actual}/100
                                 </span>.
                             </p>

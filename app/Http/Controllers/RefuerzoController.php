@@ -60,10 +60,10 @@ class RefuerzoController extends Controller
             ], 422);
         }
 
-        // 2. Validar que la nota sea menor a 70
-        if ($entrega->calificacion->nota >= 70) {
-            $msg = "La nota del estudiante es {$entrega->calificacion->nota}/100 (aprobada). Las preguntas de refuerzo son para notas menores a 70.";
-            Log::info("Refuerzo no requerido para entrega #{$entrega->id}: nota {$entrega->calificacion->nota} >= 70.");
+        // 2. Validar que la nota sea menor a 75
+        if ($entrega->calificacion->nota >= 75) {
+            $msg = "La nota del estudiante es {$entrega->calificacion->nota}/100 (aprobada). Las preguntas de refuerzo son para notas menores a 75.";
+            Log::info("Refuerzo no requerido para entrega #{$entrega->id}: nota {$entrega->calificacion->nota} >= 75.");
 
             return response()->json([
                 'success' => false,

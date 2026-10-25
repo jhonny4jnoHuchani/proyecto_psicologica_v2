@@ -319,7 +319,7 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                                             <td className="py-3 px-4 text-xs">
                                                 {e.calificacion ? (
                                                     <div>
-                                                        <span className={`font-bold ${e.calificacion.nota >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                        <span className={`font-bold ${e.calificacion.nota >= 75 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                                             {e.calificacion.nota}/100
                                                         </span>
                                                         {e.refuerzo && (
@@ -341,7 +341,7 @@ export default function EntregasDocente({ entregas, lecciones, filtroLeccionId }
                                                             <Button variant="outline" size="icon" title="Ver archivo"><Eye className="h-4 w-4" /></Button>
                                                         </a>
                                                     ))}
-                                                    {e.calificacion && e.calificacion.nota < 70 && !e.refuerzo && (
+                                                    {e.calificacion && e.calificacion.nota < 75 && !e.refuerzo && (
                                                         <Button
                                                             variant="outline"
                                                             size="icon"

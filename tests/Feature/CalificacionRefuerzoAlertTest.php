@@ -69,7 +69,7 @@ function crearEntregaTestData(bool $ayudaIaActiva = true): array
     return compact('userDocente', 'docente', 'userEstudiante', 'estudiante', 'curso', 'materia', 'leccion', 'entrega');
 }
 
-test('evaluarSugerirRefuerzo returns false and no reason when grade is >= 70', function () {
+test('evaluarSugerirRefuerzo returns false and no reason when grade is >= 75', function () {
     $data = crearEntregaTestData(true);
     $controller = new CalificacionController;
 
@@ -150,7 +150,7 @@ test('evaluarSugerirRefuerzo returns true when all requirements are met for fail
     expect($motivo)->toBeNull();
 });
 
-test('store endpoint returns motivo_no_refuerzo when IA is disabled for grade < 70', function () {
+test('store endpoint returns motivo_no_refuerzo when IA is disabled for grade < 75', function () {
     $data = crearEntregaTestData(false);
 
     $response = $this->actingAs($data['userDocente'])
@@ -209,7 +209,7 @@ test('refuerzos generar endpoint returns error when entrega has no calificacion 
         ]);
 });
 
-test('refuerzos generar endpoint returns error when nota is >= 70', function () {
+test('refuerzos generar endpoint returns error when nota is >= 75', function () {
     $data = crearEntregaTestData(true);
 
     $data['entrega']->calificacion()->create([
