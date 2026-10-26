@@ -97,7 +97,7 @@
                         @endif
                     </span>
                     #{{ $index + 1 }} &bull; {{ $ref->estudiante->user->apellido_paterno }} {{ $ref->estudiante->user->apellido_materno }}, {{ $ref->estudiante->user->nombre }}
-                    (CI: {{ $ref->estudiante->user->ci }})
+                    (CI: {{ $ref->estudiante->user->ci }}{{ $ref->estudiante->user->expedido ? ' '.$ref->estudiante->user->expedido : '' }})
                 </div>
                 <div class="item-body">
                     <p style="margin: 0 0 6px 0;">

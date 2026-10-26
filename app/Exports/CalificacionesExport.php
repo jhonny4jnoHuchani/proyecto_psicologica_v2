@@ -67,7 +67,7 @@ class CalificacionesExport implements FromCollection, ShouldAutoSize, WithHeadin
             $row = [
                 $index++,
                 $estudiante->user->apellido_paterno.' '.$estudiante->user->apellido_materno.', '.$estudiante->user->nombre,
-                $estudiante->user->ci,
+                $estudiante->user->ci.($estudiante->user->expedido ? ' '.$estudiante->user->expedido : ''),
             ];
             foreach ($lecciones as $leccion) {
                 $entrega = $entregas->where('estudiante_id', $estudiante->id)->where('leccion_id', $leccion->id)->first();

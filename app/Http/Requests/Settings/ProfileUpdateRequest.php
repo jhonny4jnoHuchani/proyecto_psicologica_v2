@@ -26,6 +26,7 @@ class ProfileUpdateRequest extends FormRequest
                 'max:20',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'expedido' => ['nullable', 'string', 'max:10'],
             'celular' => ['required', 'string', 'max:20'],
             'email' => [
                 'required',

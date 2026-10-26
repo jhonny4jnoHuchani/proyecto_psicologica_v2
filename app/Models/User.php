@@ -17,6 +17,22 @@ class User extends Authenticatable
     // use HasRoles; ← Se activa cuando instalemos Spatie
 
     /**
+     * Departamentos de Bolivia para el expedido de Cédula de Identidad (SEGIP)
+     */
+    public const EXPEDIDOS = [
+        'LP' => 'La Paz',
+        'CB' => 'Cochabamba',
+        'SC' => 'Santa Cruz',
+        'CH' => 'Chuquisaca',
+        'OR' => 'Oruro',
+        'PT' => 'Potosí',
+        'TJ' => 'Tarija',
+        'BN' => 'Beni',
+        'PD' => 'Pando',
+        'EXT' => 'Extranjero',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
@@ -26,6 +42,7 @@ class User extends Authenticatable
         'apellido_paterno',
         'apellido_materno',
         'ci',
+        'expedido',
         'celular',
         'email',
         'password',

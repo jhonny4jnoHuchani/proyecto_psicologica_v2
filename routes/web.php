@@ -19,6 +19,7 @@ use App\Http\Controllers\RecomendacionController;
 use App\Http\Controllers\RefuerzoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Settings\TelegramConfigController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
 use App\Models\Autoridad;
 use App\Models\Configuracion;
@@ -106,6 +107,9 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('/apariencia', [ConfiguracionController::class, 'index'])->name('apariencia');
             Route::post('/apariencia', [ConfiguracionController::class, 'update'])->name('apariencia.update');
+            Route::get('/telegram', [TelegramConfigController::class, 'edit'])->name('telegram');
+            Route::post('/telegram', [TelegramConfigController::class, 'update'])->name('telegram.update');
+            Route::post('/telegram/test', [TelegramConfigController::class, 'testMessage'])->name('telegram.test');
         });
 
         // 🛡️ ADMINISTRACIÓN DE ROLES Y CUENTAS PRIVILEGIADAS

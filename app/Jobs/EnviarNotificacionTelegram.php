@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Configuracion;
 use App\Models\Notificacion;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -38,7 +39,7 @@ class EnviarNotificacionTelegram implements ShouldQueue
         }
 
         // Si la palanca de Telegram está apagada (false), no enviar nada ni generar error
-        if (! config('services.telegram.enabled', false)) {
+        if (! Configuracion::isTelegramActivo()) {
             return;
         }
 
@@ -53,8 +54,8 @@ class EnviarNotificacionTelegram implements ShouldQueue
         }
 
         // 2. Sin token configurado → error controlado
-        $token = config('services.telegram.bot_token');
-        if (! $token || $token === 'xxxxx') {
+        $token = Configuracion::getTelegramToken();
+        if (! $token || $token === 'xxxxx' || $token === 'YOUR-BOT-TOKEN') {
             $notificacion->update([
                 'enviada_telegram' => false,
                 'telegram_error' => 'Bot de Telegram no configurado.',

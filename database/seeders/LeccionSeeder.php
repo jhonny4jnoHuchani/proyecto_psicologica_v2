@@ -74,8 +74,19 @@ class LeccionSeeder extends Seeder
             ],
         ];
 
+        if (! $curso || $materias->isEmpty() || $docentes->isEmpty()) {
+            return;
+        }
+
         foreach ($lecciones as $leccion) {
-            Leccion::create($leccion);
+            Leccion::firstOrCreate(
+                [
+                    'curso_id' => $leccion['curso_id'],
+                    'materia_id' => $leccion['materia_id'],
+                    'titulo' => $leccion['titulo'],
+                ],
+                $leccion
+            );
         }
     }
 }

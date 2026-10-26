@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Telegram;
 
 use App\Http\Controllers\Controller;
+use App\Models\Configuracion;
 use App\Models\CredencialTemporal;
 use App\Models\TelegramVinculacion;
 use App\Models\User;
@@ -25,8 +26,8 @@ class TelegramWebhookController extends Controller
 
         Log::info('📩 [Telegram Webhook] Payload recibido:', $update);
 
-        if (! config('services.telegram.enabled', false)) {
-            Log::warning('⚠️ [Telegram Webhook] Recibido pero TELEGRAM_ENABLED está en false o no configurado en .env');
+        if (! Configuracion::isTelegramActivo()) {
+            Log::warning('⚠️ [Telegram Webhook] Recibido pero Telegram está deshabilitado en configuración');
 
             return response()->json(['ok' => false, 'message' => 'Telegram deshabilitado en configuración']);
         }
@@ -269,9 +270,9 @@ class TelegramWebhookController extends Controller
      */
     private function enviarMensaje(int $chatId, string $texto): void
     {
-        $token = config('services.telegram.bot_token');
+        $token = Configuracion::getTelegramToken();
 
-        if (! $token || $token === 'xxxxx') {
+        if (! $token || $token === 'xxxxx' || $token === 'YOUR-BOT-TOKEN') {
             Log::warning('Telegram: token no configurado.');
 
             return;
@@ -292,9 +293,9 @@ class TelegramWebhookController extends Controller
      */
     private function enviarMensajeConBotonContacto(int $chatId, string $texto): void
     {
-        $token = config('services.telegram.bot_token');
+        $token = Configuracion::getTelegramToken();
 
-        if (! $token || $token === 'xxxxx') {
+        if (! $token || $token === 'xxxxx' || $token === 'YOUR-BOT-TOKEN') {
             Log::warning('Telegram: token no configurado.');
 
             return;

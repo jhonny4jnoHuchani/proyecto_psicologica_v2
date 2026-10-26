@@ -1,74 +1,88 @@
-import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import Heading from "@/components/heading";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { type NavItem } from "@/types";
+import { Link, usePage } from "@inertiajs/react";
 
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Perfil Del usuario',
-        url: '/settings/profile',
-        icon: null,
-    },
-    {
-        title: 'Contraseña',
-        url: '/settings/password',
-        icon: null,
-    },
-    {
-        title: 'Tema y Apariencia',
-        url: '/settings/appearance',
-        icon: null,
-    },
+  {
+    title: "Perfil Del usuario",
+    url: "/settings/profile",
+    icon: null,
+  },
+  {
+    title: "Contraseña",
+    url: "/settings/password",
+    icon: null,
+  },
+  {
+    title: "Tema y Apariencia",
+    url: "/settings/appearance",
+    icon: null,
+  },
 ];
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-    const currentPath = window.location.pathname;
-    const { auth } = usePage().props as { auth?: { user?: { roles?: { name: string }[] } } };
-    const isAdmin = auth?.user?.roles?.some(r => r.name === 'admin');
+export default function SettingsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const currentPath = window.location.pathname;
+  const { auth } = usePage().props as {
+    auth?: { user?: { roles?: { name: string }[] } };
+  };
+  const isAdmin = auth?.user?.roles?.some((r) => r.name === "admin");
 
-    const menuItems = [...sidebarNavItems];
-    
-    if (isAdmin) {
-        menuItems.push({
-            title: 'Diseño Institucional',
-            url: '/settings/apariencia',
-            icon: null,
-        });
-    }
+  const menuItems = [...sidebarNavItems];
 
-    return (
-        <div className="px-4 py-6">
-            <Heading title="Configuracion usuario" description="Gestiona tu perfil y la configuración de tu cuenta." />
+  if (isAdmin) {
+    menuItems.push({
+      title: "Diseño Institucional",
+      url: "/settings/apariencia",
+      icon: null,
+    });
+    menuItems.push({
+      title: "Bot de Telegram",
+      url: "/settings/telegram",
+      icon: null,
+    });
+  }
 
-            <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav className="flex flex-col space-y-1 space-x-0">
-                        {menuItems.map((item) => (
-                            <Button
-                                key={item.url}
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': currentPath === item.url,
-                                })}
-                            >
-                                <Link href={item.url} prefetch>
-                                    {item.title}
-                                </Link>
-                            </Button>
-                        ))}
-                    </nav>
-                </aside>
+  return (
+    <div className="px-4 py-6">
+      <Heading
+        title="Configuracion usuario"
+        description="Gestiona tu perfil y la configuración de tu cuenta."
+      />
 
-                <Separator className="my-6 md:hidden" />
+      <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
+        <aside className="w-full max-w-xl lg:w-48">
+          <nav className="flex flex-col space-y-1 space-x-0">
+            {menuItems.map((item) => (
+              <Button
+                key={item.url}
+                size="sm"
+                variant="ghost"
+                asChild
+                className={cn("w-full justify-start", {
+                  "bg-muted": currentPath === item.url,
+                })}
+              >
+                <Link href={item.url} prefetch>
+                  {item.title}
+                </Link>
+              </Button>
+            ))}
+          </nav>
+        </aside>
 
-                <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">{children}</section>
-                </div>
-            </div>
+        <Separator className="my-6 md:hidden" />
+
+        <div className="flex-1 md:max-w-2xl">
+          <section className="max-w-xl space-y-12">{children}</section>
         </div>
-    );
+      </div>
+    </div>
+  );
 }

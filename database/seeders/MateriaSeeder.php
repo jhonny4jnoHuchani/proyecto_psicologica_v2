@@ -19,7 +19,7 @@ class MateriaSeeder extends Seeder
         ];
 
         foreach ($materias as $materia) {
-            Materia::create($materia);
+            Materia::firstOrCreate(['codigo' => $materia['codigo']], $materia);
         }
     }
 }

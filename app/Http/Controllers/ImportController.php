@@ -65,6 +65,10 @@ class ImportController extends Controller
                 $apellidoPaterno = trim((string) ($fila['apellido_paterno'] ?? ''));
                 $apellidoMaterno = trim((string) ($fila['apellido_materno'] ?? ''));
                 $ci = trim((string) ($fila['ci'] ?? ''));
+                $expedido = strtoupper(trim((string) ($fila['expedido'] ?? '')));
+                if ($expedido === 'CBBA') $expedido = 'CB';
+                if ($expedido === 'SCZ') $expedido = 'SC';
+                if ($expedido === 'BENI') $expedido = 'BN';
                 $celular = trim((string) ($fila['celular'] ?? ''));
                 $email = trim((string) ($fila['email'] ?? ''));
                 $genero = trim((string) ($fila['genero'] ?? ''));
@@ -131,6 +135,7 @@ class ImportController extends Controller
                     'apellido_paterno' => $apellidoPaterno,
                     'apellido_materno' => $apellidoMaterno,
                     'ci' => $ci,
+                    'expedido' => $expedido ?: null,
                     'celular' => $celular,
                     'email' => $email,
                     'genero' => $genero ?: null,
@@ -170,6 +175,7 @@ class ImportController extends Controller
             'filas.*.apellido_paterno' => 'required|string|max:100',
             'filas.*.apellido_materno' => 'required|string|max:100',
             'filas.*.ci' => 'required|string|max:20|unique:users,ci',
+            'filas.*.expedido' => 'nullable|string|max:10',
             'filas.*.celular' => 'required|string|max:20',
             'filas.*.email' => 'required|email|max:255|unique:users,email',
             'filas.*.genero' => 'nullable|in:M,F,Otro',
@@ -205,6 +211,7 @@ class ImportController extends Controller
                     'apellido_paterno' => $fila['apellido_paterno'],
                     'apellido_materno' => $fila['apellido_materno'],
                     'ci' => $fila['ci'],
+                    'expedido' => ! empty($fila['expedido']) ? strtoupper(trim($fila['expedido'])) : null,
                     'celular' => $fila['celular'],
                     'email' => $fila['email'],
                     'password' => bcrypt($password),

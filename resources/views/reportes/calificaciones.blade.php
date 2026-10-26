@@ -50,7 +50,7 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td class="nombre">{{ $estudiante->user->apellido_paterno }} {{ $estudiante->user->apellido_materno }}, {{ $estudiante->user->nombre }}</td>
-                    <td class="ci">{{ $estudiante->user->ci }}</td>
+                    <td class="ci">{{ $estudiante->user->ci }}{{ $estudiante->user->expedido ? ' '.$estudiante->user->expedido : '' }}</td>
                     @foreach($lecciones as $leccion)
                         @php
                             $entrega = $entregas->where('estudiante_id', $estudiante->id)->where('leccion_id', $leccion->id)->first();

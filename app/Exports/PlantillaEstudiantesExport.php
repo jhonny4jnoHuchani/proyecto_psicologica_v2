@@ -31,6 +31,7 @@ class PlantillaEstudiantesExport implements FromArray, WithColumnWidths, WithEve
             'apellido_paterno',
             'apellido_materno',
             'ci',
+            'expedido',
             'celular',
             'email',
             'genero',
@@ -48,17 +49,17 @@ class PlantillaEstudiantesExport implements FromArray, WithColumnWidths, WithEve
     {
         return [
             [
-                'Juan', 'Pérez', 'Gómez', '12345678', '71234567',
+                'Juan', 'Pérez', 'Gómez', '12345678', 'LP', '71234567',
                 'juan.perez@mail.com', 'M', '2000-05-15',
                 'Av. Sucre 123', 'U.E. San Andrés', 'regular',
             ],
             [
-                'María', 'López', 'Rojas', '87654321', '76543210',
+                'María', 'López', 'Rojas', '87654321', 'CB', '76543210',
                 'maria.lopez@mail.com', 'F', '1999-11-02',
                 'Calle Bolívar 45', 'U.E. San Simón', 'dispensacion',
             ],
             [
-                'Carlos', 'Mamani', 'Quispe', '11223344', '70000000',
+                'Carlos', 'Mamani', 'Quispe', '11223344', 'EXT', '70000000',
                 'carlos.mamani@mail.com', 'M', '2001-03-20',
                 'Av. América 78', 'U.E. Bolívar', 'cursillo',
             ],
@@ -68,8 +69,8 @@ class PlantillaEstudiantesExport implements FromArray, WithColumnWidths, WithEve
     public function columnWidths(): array
     {
         return [
-            'A' => 15, 'B' => 18, 'C' => 18, 'D' => 14, 'E' => 14,
-            'F' => 28, 'G' => 10, 'H' => 18, 'I' => 30, 'J' => 25, 'K' => 18,
+            'A' => 15, 'B' => 18, 'C' => 18, 'D' => 14, 'E' => 12, 'F' => 14,
+            'G' => 28, 'H' => 10, 'I' => 18, 'J' => 30, 'K' => 25, 'L' => 18,
         ];
     }
 
@@ -95,18 +96,27 @@ class PlantillaEstudiantesExport implements FromArray, WithColumnWidths, WithEve
                 $sheet = $event->sheet->getDelegate();
                 $highestRow = 500; // permitir hasta 500 filas
 
-                // 🔹 Dropdown de género (columna G)
+                // 🔹 Dropdown de expedido (columna E)
                 for ($row = 2; $row <= $highestRow; $row++) {
-                    $validation = $sheet->getCell("G{$row}")->getDataValidation();
+                    $validation = $sheet->getCell("E{$row}")->getDataValidation();
+                    $validation->setType(DataValidation::TYPE_LIST);
+                    $validation->setFormula1('"LP,CB,SC,CH,OR,PT,TJ,BN,PD,EXT"');
+                    $validation->setAllowBlank(true);
+                    $validation->setShowDropDown(true);
+                }
+
+                // 🔹 Dropdown de género (columna H)
+                for ($row = 2; $row <= $highestRow; $row++) {
+                    $validation = $sheet->getCell("H{$row}")->getDataValidation();
                     $validation->setType(DataValidation::TYPE_LIST);
                     $validation->setFormula1('"M,F,Otro"');
                     $validation->setAllowBlank(true);
                     $validation->setShowDropDown(true);
                 }
 
-                // 🔹 Dropdown de tipo_inscripcion (columna K)
+                // 🔹 Dropdown de tipo_inscripcion (columna L)
                 for ($row = 2; $row <= $highestRow; $row++) {
-                    $validation = $sheet->getCell("K{$row}")->getDataValidation();
+                    $validation = $sheet->getCell("L{$row}")->getDataValidation();
                     $validation->setType(DataValidation::TYPE_LIST);
                     $validation->setFormula1('"regular,dispensacion,cursillo"');
                     $validation->setAllowBlank(true);

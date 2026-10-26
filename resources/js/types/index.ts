@@ -59,6 +59,7 @@ export interface User {
     apellido_paterno: string;
     apellido_materno: string;
     ci: string;
+    expedido?: string | null;
     celular: string;
     email: string;
     avatar?: string;
