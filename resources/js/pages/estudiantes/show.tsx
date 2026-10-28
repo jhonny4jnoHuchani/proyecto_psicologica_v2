@@ -53,6 +53,7 @@ export default function EstudiantesShow({ estudiante }: Props) {
   const nombreCompleto = `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
 
   const tipoMap: Record<string, string> = {
+    preuniversitario: "Preuniversitario",
     regular: "Regular",
     dispensacion: "Dispensación",
     cursillo: "Cursillo",

@@ -21,6 +21,7 @@ use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Settings\TelegramConfigController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
+use App\Http\Controllers\TemaController;
 use App\Models\Autoridad;
 use App\Models\Configuracion;
 use App\Models\Convocatoria;
@@ -159,6 +160,15 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role:admin|docente');
 
     // ========================
+    // TEMAS (Admin y Docente)
+    // ========================
+    Route::middleware(['role:admin|docente'])->prefix('temas')->name('temas.')->controller(TemaController::class)->group(function () {
+        Route::post('/', 'store')->name('store');
+        Route::put('/{tema}', 'update')->name('update');
+        Route::delete('/{tema}', 'destroy')->name('destroy');
+    });
+
+    // ========================
     // LECCIONES (Admin, Docente, Estudiante)
     // ========================
     Route::prefix('lecciones')->name('lecciones.')->controller(LeccionController::class)->group(function () {
@@ -167,6 +177,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{leccion}/entregas', 'entregas')->name('entregas')->middleware('role:admin|docente');
         Route::post('/', 'store')->name('store')->middleware('role:admin|docente');
         Route::put('/{leccion}', 'update')->name('update')->middleware('role:admin|docente');
+        Route::post('/{leccion}', 'update')->name('update.post')->middleware('role:admin|docente');
         Route::delete('/{leccion}', 'destroy')->name('destroy')->middleware('role:admin|docente');
     });
 

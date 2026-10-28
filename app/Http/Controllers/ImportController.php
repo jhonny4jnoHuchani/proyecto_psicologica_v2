@@ -102,7 +102,7 @@ class ImportController extends Controller
                 if ($genero !== '' && ! in_array($genero, ['M', 'F', 'Otro'])) {
                     $erroresFila[] = 'género inválido';
                 }
-                if ($tipoInscripcion !== '' && ! in_array($tipoInscripcion, ['regular', 'dispensacion', 'cursillo'])) {
+                if ($tipoInscripcion !== '' && ! in_array($tipoInscripcion, ['preuniversitario', 'regular', 'dispensacion', 'cursillo'])) {
                     $erroresFila[] = 'tipo inscripción inválido';
                 }
 
@@ -182,7 +182,7 @@ class ImportController extends Controller
             'filas.*.fecha_nacimiento' => 'nullable|date',
             'filas.*.direccion' => 'nullable|string|max:255',
             'filas.*.colegio_procedencia' => 'nullable|string|max:150',
-            'filas.*.tipo_inscripcion' => 'nullable|in:regular,dispensacion,cursillo',
+            'filas.*.tipo_inscripcion' => 'nullable|in:preuniversitario,regular,dispensacion,cursillo',
         ]);
 
         $creados = [];
@@ -223,7 +223,7 @@ class ImportController extends Controller
                 $estudiante = Estudiante::create([
                     'user_id' => $user->id,
                     'colegio_procedencia' => $fila['colegio_procedencia'] ?? null,
-                    'tipo_inscripcion' => $fila['tipo_inscripcion'] ?? null,
+                    'tipo_inscripcion' => ! empty($fila['tipo_inscripcion']) ? $fila['tipo_inscripcion'] : 'preuniversitario',
                 ]);
 
                 $estudiante->cursos()->attach($curso->id, [

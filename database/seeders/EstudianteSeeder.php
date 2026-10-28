@@ -27,7 +27,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. Sucre B, Zona Villa Esperanza',
                 ],
                 'colegio_procedencia' => 'U.E. San Andrés',
-                'tipo_inscripcion' => 'regular',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -45,7 +45,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle 5, Zona 16 de Julio',
                 ],
                 'colegio_procedencia' => 'U.E. Bolivia',
-                'tipo_inscripcion' => 'regular',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -61,7 +61,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. Tiahuanaco, Zona Norte',
                 ],
                 'colegio_procedencia' => 'U.E. Franz Tamayo',
-                'tipo_inscripcion' => 'dispensacion',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -77,7 +77,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle 3, Zona Villa Adela',
                 ],
                 'colegio_procedencia' => 'U.E. San Andrés',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -93,7 +93,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle 8, Zona El Alto',
                 ],
                 'colegio_procedencia' => 'U.E. Bolívar',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -109,7 +109,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. América, Zona Central',
                 ],
                 'colegio_procedencia' => 'U.E. Ayacucho',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -125,7 +125,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle 12, Zona Sur',
                 ],
                 'colegio_procedencia' => 'U.E. San Martín',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -141,7 +141,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. 6 de Agosto',
                 ],
                 'colegio_procedencia' => 'U.E. Simón Bolívar',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -157,7 +157,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Zona Chuquiaguillo',
                 ],
                 'colegio_procedencia' => 'U.E. Don Bosco',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -173,7 +173,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. Busch, Miraflores',
                 ],
                 'colegio_procedencia' => 'U.E. Alemán',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -189,7 +189,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle Loayza',
                 ],
                 'colegio_procedencia' => 'U.E. La Salle',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -205,7 +205,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Zona Obrajes',
                 ],
                 'colegio_procedencia' => 'U.E. Franco Boliviano',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -221,7 +221,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. Arce',
                 ],
                 'colegio_procedencia' => 'U.E. San Calixto',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -237,7 +237,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle Jaén',
                 ],
                 'colegio_procedencia' => 'U.E. San Ignacio',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -253,7 +253,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Zona Alto Lima',
                 ],
                 'colegio_procedencia' => 'U.E. Hugo Dávalos',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -269,7 +269,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. Camacho',
                 ],
                 'colegio_procedencia' => 'U.E. María Auxiliadora',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -285,7 +285,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Zona Ciudad Satélite',
                 ],
                 'colegio_procedencia' => 'U.E. San José',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -301,7 +301,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Calle Comercio',
                 ],
                 'colegio_procedencia' => 'U.E. Santo Tomás',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -317,7 +317,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Av. Montes',
                 ],
                 'colegio_procedencia' => 'U.E. Adventista',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
             [
                 'user' => [
@@ -333,7 +333,7 @@ class EstudianteSeeder extends Seeder
                     'direccion' => 'Zona Achachicala',
                 ],
                 'colegio_procedencia' => 'U.E. Luperón',
-                'tipo_inscripcion' => 'cursillo',
+                'tipo_inscripcion' => 'preuniversitario',
             ],
 
         ];

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Materia extends Model
@@ -22,6 +23,11 @@ class Materia extends Model
         return $this->belongsToMany(Curso::class, 'curso_materia')
             ->withPivot('docente_id')
             ->withTimestamps();
+    }
+
+    public function temas(): HasMany
+    {
+        return $this->hasMany(Tema::class)->orderBy('orden');
     }
 
     public function lecciones(): HasMany

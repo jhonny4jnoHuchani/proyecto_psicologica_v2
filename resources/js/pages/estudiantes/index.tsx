@@ -135,7 +135,7 @@ const initialForm: EstudianteForm = {
   email: "",
   password: "",
   colegio_procedencia: "",
-  tipo_inscripcion: "",
+  tipo_inscripcion: "preuniversitario",
   genero: "",
   fecha_nacimiento: "",
   direccion: "",
@@ -177,7 +177,7 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
       email: estudiante.user.email,
       password: "",
       colegio_procedencia: estudiante.colegio_procedencia || "",
-      tipo_inscripcion: estudiante.tipo_inscripcion || "",
+      tipo_inscripcion: estudiante.tipo_inscripcion || "preuniversitario",
       genero: estudiante.user.genero || "",
       fecha_nacimiento: estudiante.user.fecha_nacimiento || "",
       direccion: estudiante.user.direccion || "",
@@ -381,11 +381,12 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
 
   const tipoBadge = (tipo: string | null) => {
     const map: Record<string, string> = {
+      preuniversitario: "Preuniversitario",
       regular: "Regular",
       dispensacion: "Dispensación",
       cursillo: "Cursillo",
     };
-    return tipo ? map[tipo] || tipo : "No definido";
+    return tipo ? map[tipo] || tipo : "Preuniversitario";
   };
 
   return (
@@ -716,16 +717,11 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
                   <Label htmlFor="tipo_inscripcion">Tipo Inscripción</Label>
                   <select
                     id="tipo_inscripcion"
-                    value={form.tipo_inscripcion}
-                    onChange={(e) =>
-                      setForm({ ...form, tipo_inscripcion: e.target.value })
-                    }
-                    className="bg-background w-full rounded border p-2 text-sm"
+                    value="preuniversitario"
+                    disabled
+                    className="bg-muted text-muted-foreground w-full rounded border p-2 text-sm cursor-not-allowed opacity-80"
                   >
-                    <option value="">Seleccionar...</option>
-                    <option value="regular">Regular</option>
-                    <option value="dispensacion">Dispensación</option>
-                    <option value="cursillo">Cursillo</option>
+                    <option value="preuniversitario">Preuniversitario</option>
                   </select>
                 </div>
                 {/* CURSO */}
@@ -933,16 +929,11 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
                   <Label htmlFor="edit-tipo">Tipo</Label>
                   <select
                     id="edit-tipo"
-                    value={form.tipo_inscripcion}
-                    onChange={(e) =>
-                      setForm({ ...form, tipo_inscripcion: e.target.value })
-                    }
-                    className="bg-background w-full rounded border p-2 text-sm"
+                    value="preuniversitario"
+                    disabled
+                    className="bg-muted text-muted-foreground w-full rounded border p-2 text-sm cursor-not-allowed opacity-80"
                   >
-                    <option value="">Seleccionar...</option>
-                    <option value="regular">Regular</option>
-                    <option value="dispensacion">Dispensación</option>
-                    <option value="cursillo">Cursillo</option>
+                    <option value="preuniversitario">Preuniversitario</option>
                   </select>
                 </div>
                 {/* CURSO */}

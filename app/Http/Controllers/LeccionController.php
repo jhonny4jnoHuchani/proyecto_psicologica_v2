@@ -13,6 +13,7 @@ use App\Services\MachineLearningService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -98,25 +99,30 @@ class LeccionController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
-            'imagen' => 'nullable|string|max:255',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:20480',
         ]);
 
         $docente = Docente::where('user_id', Auth::id())->first();
 
+        $archivoPath = null;
+        if ($request->hasFile('archivo')) {
+            $archivoPath = $request->file('archivo')->store('lecciones/materiales', 'public');
+        }
+
         Leccion::create([
             'curso_id' => $request->curso_id,
             'materia_id' => $request->materia_id,
-            'tema_id' => $request->tema_id,
-            'docente_id' => $docente->id,
+            'tema_id' => $request->tema_id ?: null,
+            'docente_id' => $docente ? $docente->id : null,
             'titulo' => $request->titulo,
             'descripcion' => $request->descripcion,
             'fecha_programada' => $request->fecha_programada,
             'fecha_entrega' => $request->fecha_entrega,
-            'imagen' => $request->imagen,
+            'imagen' => $archivoPath,
             'estado' => 'activo',
         ]);
 
-        return back()->with('success', 'Lección creada exitosamente.');
+        return back()->with('success', 'Lección creada exitosamente con su material.');
     }
 
     public function update(Request $request, Leccion $leccion): RedirectResponse
@@ -127,17 +133,43 @@ class LeccionController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
-            'imagen' => 'nullable|string|max:255',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:20480',
+            'eliminar_archivo' => 'nullable',
             'estado' => ['required', Rule::in(['activo', 'inactivo'])],
         ]);
 
-        $leccion->update($request->all());
+        $data = [
+            'titulo' => $request->titulo,
+            'tema_id' => $request->tema_id ?: null,
+            'descripcion' => $request->descripcion,
+            'fecha_programada' => $request->fecha_programada,
+            'fecha_entrega' => $request->fecha_entrega,
+            'estado' => $request->estado,
+        ];
 
-        return back()->with('success', 'Lección actualizada.');
+        if ($request->hasFile('archivo')) {
+            if ($leccion->imagen && Storage::disk('public')->exists($leccion->imagen)) {
+                Storage::disk('public')->delete($leccion->imagen);
+            }
+            $data['imagen'] = $request->file('archivo')->store('lecciones/materiales', 'public');
+        } elseif ($request->boolean('eliminar_archivo')) {
+            if ($leccion->imagen && Storage::disk('public')->exists($leccion->imagen)) {
+                Storage::disk('public')->delete($leccion->imagen);
+            }
+            $data['imagen'] = null;
+        }
+
+        $leccion->update($data);
+
+        return back()->with('success', 'Lección actualizada exitosamente.');
     }
 
     public function destroy(Leccion $leccion): RedirectResponse
     {
+        if ($leccion->imagen && Storage::disk('public')->exists($leccion->imagen)) {
+            Storage::disk('public')->delete($leccion->imagen);
+        }
+
         $leccion->delete();
 
         return back()->with('success', 'Lección eliminada.');

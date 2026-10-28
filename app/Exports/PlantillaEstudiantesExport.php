@@ -118,7 +118,7 @@ class PlantillaEstudiantesExport implements FromArray, WithColumnWidths, WithEve
                 for ($row = 2; $row <= $highestRow; $row++) {
                     $validation = $sheet->getCell("L{$row}")->getDataValidation();
                     $validation->setType(DataValidation::TYPE_LIST);
-                    $validation->setFormula1('"regular,dispensacion,cursillo"');
+                    $validation->setFormula1('"preuniversitario,regular,dispensacion,cursillo"');
                     $validation->setAllowBlank(true);
                     $validation->setShowDropDown(true);
                 }

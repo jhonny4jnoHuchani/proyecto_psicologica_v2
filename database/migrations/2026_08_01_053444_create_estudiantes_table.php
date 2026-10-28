@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
             $table->string('colegio_procedencia', 150)->nullable();
-            $table->enum('tipo_inscripcion', ['regular', 'dispensacion', 'cursillo'])->nullable();
+            $table->enum('tipo_inscripcion', ['preuniversitario', 'regular', 'dispensacion', 'cursillo'])->default('preuniversitario');
             $table->timestamps();
             $table->softDeletes();
         });

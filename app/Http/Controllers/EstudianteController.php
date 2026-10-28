@@ -63,7 +63,7 @@ class EstudianteController extends Controller
             'celular' => 'required|string|max:20',
             'email' => 'required|string|email|max:255|unique:users,email',
             'colegio_procedencia' => 'nullable|string|max:150',
-            'tipo_inscripcion' => 'nullable|in:regular,dispensacion,cursillo',
+            'tipo_inscripcion' => 'nullable|in:preuniversitario,regular,dispensacion,cursillo',
             'genero' => 'nullable|in:M,F,Otro',
             'fecha_nacimiento' => 'nullable|date',
             'direccion' => 'nullable|string|max:255',
@@ -89,7 +89,7 @@ class EstudianteController extends Controller
         $estudiante = Estudiante::create([
             'user_id' => $user->id,
             'colegio_procedencia' => $request->colegio_procedencia,
-            'tipo_inscripcion' => $request->tipo_inscripcion,
+            'tipo_inscripcion' => 'preuniversitario',
         ]);
 
         // Inscribir al curso
@@ -124,7 +124,7 @@ class EstudianteController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($estudiante->user_id)],
             'password' => 'nullable|string|min:8',
             'colegio_procedencia' => 'nullable|string|max:150',
-            'tipo_inscripcion' => 'nullable|in:regular,dispensacion,cursillo',
+            'tipo_inscripcion' => 'nullable|in:preuniversitario,regular,dispensacion,cursillo',
             'genero' => 'nullable|in:M,F,Otro',
             'fecha_nacimiento' => 'nullable|date',
             'direccion' => 'nullable|string|max:255',
@@ -151,7 +151,7 @@ class EstudianteController extends Controller
         $estudiante->user->update($userData);
         $estudiante->update([
             'colegio_procedencia' => $request->colegio_procedencia,
-            'tipo_inscripcion' => $request->tipo_inscripcion,
+            'tipo_inscripcion' => 'preuniversitario',
         ]);
 
         // Sincronizar curso (reemplaza el anterior)

@@ -13,7 +13,7 @@ class MateriaController extends Controller
 {
     public function index(): Response
     {
-        $materias = Materia::orderBy('nombre')->get();
+        $materias = Materia::with('temas')->orderBy('nombre')->get();
 
         return Inertia::render('materias/index', [
             'materias' => $materias,
