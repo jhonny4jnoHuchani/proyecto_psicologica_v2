@@ -570,7 +570,7 @@ export default function LeccionesIndex({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <BookOpen className="h-4.5 w-4.5" />
               </div>
               <h1 className="text-2xl font-bold tracking-tight">Lecciones</h1>
@@ -586,7 +586,7 @@ export default function LeccionesIndex({
               <Button
                 variant="outline"
                 onClick={() => openModalCreateTema()}
-                className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300"
+                className="border-primary-border text-primary hover:bg-primary-light"
               >
                 <Plus className="mr-1.5 h-4 w-4" />
                 Nuevo Tema
@@ -605,7 +605,6 @@ export default function LeccionesIndex({
                   });
                   setModalCreate(true);
                 }}
-                className="bg-indigo-600 hover:bg-indigo-700"
               >
                 <Plus className="mr-1.5 h-4 w-4" />
                 Nueva Lección
@@ -615,16 +614,16 @@ export default function LeccionesIndex({
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card className="border-none bg-gradient-to-br from-indigo-600 to-indigo-500 text-white shadow-sm">
+          <Card className="border-none bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-sm">
             <CardContent className="flex items-center justify-between py-5">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-indigo-100">
+                <p className="text-xs font-medium uppercase tracking-wide opacity-90">
                   Total
                 </p>
                 <p className="mt-1 text-3xl font-bold">{stats.total}</p>
-                <p className="text-xs text-indigo-100">lecciones registradas</p>
+                <p className="text-xs opacity-90">lecciones registradas</p>
               </div>
-              <BookOpen className="h-9 w-9 text-indigo-200/70" />
+              <BookOpen className="h-9 w-9 opacity-80" />
             </CardContent>
           </Card>
           <Card className="shadow-sm">
@@ -743,7 +742,7 @@ export default function LeccionesIndex({
                 {!isDocente && (
                   <Badge
                     variant="outline"
-                    className="text-[10px] text-indigo-600 border-indigo-200 dark:text-indigo-400 dark:border-indigo-800"
+                    className="text-[10px] text-primary border-primary-border"
                   >
                     {temasFiltrados.length} tema
                     {temasFiltrados.length !== 1 ? "s" : ""} con tareas
@@ -810,7 +809,7 @@ export default function LeccionesIndex({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-200"
+                            className="text-primary border-primary-border hover:bg-primary-light"
                             onClick={() =>
                               openCreateInTema(tema.materia_id, tema.id)
                             }
@@ -855,14 +854,14 @@ export default function LeccionesIndex({
                                       {isDocente ? (
                                         <a
                                           href={`/entregas/docente?leccion_id=${l.id}`}
-                                          className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors"
+                                          className="text-sm font-medium leading-tight hover:text-primary transition-colors"
                                         >
                                           {l.titulo}
                                         </a>
                                       ) : (
                                         <a
                                           href={`/lecciones/${l.hash_id || l.id}`}
-                                          className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors"
+                                          className="text-sm font-medium leading-tight hover:text-primary transition-colors"
                                         >
                                           {l.titulo}
                                         </a>
@@ -898,7 +897,7 @@ export default function LeccionesIndex({
                                         )}
 
                                         {l.imagen && (
-                                          <span className="flex items-center gap-1 font-medium text-indigo-600 dark:text-indigo-400">
+                                          <span className="flex items-center gap-1 font-medium text-primary">
                                             <Paperclip className="h-3 w-3" />
                                             PDF adjunto
                                           </span>
@@ -1004,8 +1003,8 @@ export default function LeccionesIndex({
                                               estaCalificado
                                                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                                                 : yaEntregado
-                                                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                                                  : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                                  ? "bg-secondary text-secondary-foreground hover:bg-secondary-hover"
+                                                  : "bg-primary hover:bg-primary-hover text-primary-foreground"
                                             }`}
                                           >
                                             {estaCalificado ? (
@@ -1108,14 +1107,14 @@ export default function LeccionesIndex({
                                   {isDocente ? (
                                     <a
                                       href={`/lecciones/${l.hash_id || l.id}/entregas`}
-                                      className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors"
+                                      className="text-sm font-medium leading-tight hover:text-primary transition-colors"
                                     >
                                       {l.titulo}
                                     </a>
                                   ) : (
                                     <a
                                       href={`/lecciones/${l.hash_id || l.id}`}
-                                      className="text-sm font-medium leading-tight hover:text-indigo-600 transition-colors"
+                                      className="text-sm font-medium leading-tight hover:text-primary transition-colors"
                                     >
                                       {l.titulo}
                                     </a>
@@ -1146,7 +1145,7 @@ export default function LeccionesIndex({
                                       </span>
                                     )}
                                     {l.imagen && (
-                                      <span className="flex items-center gap-1 font-medium text-indigo-600 dark:text-indigo-400">
+                                      <span className="flex items-center gap-1 font-medium text-primary">
                                         <Paperclip className="h-3 w-3" />
                                         PDF adjunto
                                       </span>
@@ -1233,7 +1232,7 @@ export default function LeccionesIndex({
               <CardContent className="pt-5">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-sm font-semibold">
-                    <CalendarDays className="h-4 w-4 text-indigo-600" />
+                    <CalendarDays className="h-4 w-4 text-primary" />
                     {meses[mes]} {año}
                   </div>
                   <div className="flex items-center gap-1">
@@ -1268,7 +1267,7 @@ export default function LeccionesIndex({
                       {dia && (
                         <div
                           className={`flex h-7 w-7 flex-col items-center justify-center rounded-full text-xs transition-colors
-                                                    ${esHoy(dia) ? "bg-indigo-600 font-semibold text-white" : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}
+                                                    ${esHoy(dia) ? "bg-primary font-semibold text-primary-foreground" : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}
                         >
                           {dia}
                           {esFechaEntrega(dia) && !esHoy(dia) && (
@@ -1294,7 +1293,7 @@ export default function LeccionesIndex({
                     Entrega
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-indigo-600" /> Hoy
+                    <span className="h-2 w-2 rounded-full bg-primary" /> Hoy
                   </span>
                 </div>
               </CardContent>
@@ -1458,7 +1457,7 @@ export default function LeccionesIndex({
                             fecha_entrega: `${fechaBase}T23:59`,
                           });
                         }}
-                        className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                        className="text-[10px] text-primary hover:underline cursor-pointer"
                         title="Fijar a las 23:59 hrs de ese día"
                       >
                         Fijar 23:59
@@ -1500,11 +1499,7 @@ export default function LeccionesIndex({
                 >
                   Cancelar
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={processing}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
+                <Button type="submit" disabled={processing}>
                   {processing && (
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                   )}
@@ -1592,7 +1587,7 @@ export default function LeccionesIndex({
                             fecha_entrega: `${fechaBase}T23:59`,
                           });
                         }}
-                        className="text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                        className="text-[10px] text-primary hover:underline cursor-pointer"
                         title="Fijar a las 23:59 hrs de ese día"
                       >
                         Fijar 23:59
@@ -1633,7 +1628,7 @@ export default function LeccionesIndex({
                         href={`/storage/${leccionSelect.imagen}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5"
+                        className="text-primary hover:underline flex items-center gap-1.5"
                       >
                         <FileText className="h-4 w-4" />
                         <span>Ver PDF adjunto actual</span>
@@ -1690,11 +1685,7 @@ export default function LeccionesIndex({
                 >
                   Cancelar
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={processing}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
+                <Button type="submit" disabled={processing}>
                   {processing && (
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                   )}
@@ -1731,7 +1722,7 @@ export default function LeccionesIndex({
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <BookOpen className="h-4 w-4 text-primary" />
                 Nuevo Tema para el Temario
               </DialogTitle>
               <DialogDescription>
@@ -1848,12 +1839,7 @@ export default function LeccionesIndex({
                 >
                   Cancelar
                 </Button>
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={processingTema}
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                >
+                <Button type="submit" size="sm" disabled={processingTema}>
                   {processingTema && (
                     <LoaderCircle className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   )}

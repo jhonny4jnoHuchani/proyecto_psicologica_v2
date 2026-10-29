@@ -665,7 +665,7 @@ export default function Dashboard({
                     <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
                       <div
                         style={{ width: `${tasaRefuerzosCompletados}%` }}
-                        className="h-full bg-purple-600 dark:bg-purple-500 transition-all duration-500"
+                        className="h-full bg-primary transition-all duration-500"
                       />
                     </div>
                     <div className="flex justify-between text-xs pt-1 text-muted-foreground">
@@ -682,7 +682,7 @@ export default function Dashboard({
                   <div className="pt-3 border-t border-border">
                     <Link
                       href="/refuerzos/docente"
-                      className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-lg text-purple-700 bg-purple-100/70 hover:bg-purple-200/70 dark:text-purple-300 dark:bg-purple-950/50 dark:hover:bg-purple-900/50 transition-colors"
+                      className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-lg text-primary bg-primary-light hover:bg-primary/20 transition-colors"
                     >
                       <Sparkles className="h-3.5 w-3.5" />
                       Monitorear Actividades de Refuerzo &rarr;
@@ -712,7 +712,7 @@ export default function Dashboard({
               <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href="/lecciones"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Nueva Lección / Tarea
@@ -1074,7 +1074,7 @@ export default function Dashboard({
                   </Link>
                   <Link
                     href="/refuerzos"
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-700 shadow-xs transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors"
                   >
                     <Sparkles className="h-4 w-4" />
                     Mis Refuerzos
@@ -1327,7 +1327,7 @@ export default function Dashboard({
                         </div>
                         <Link
                           href={`/refuerzos/${refuerzo.hash_id || refuerzo.id}`}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-2xs shrink-0"
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors shadow-2xs shrink-0"
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                           Resolver Refuerzo &rarr;

@@ -330,7 +330,7 @@ export default function MateriasIndex({ materias }: Props) {
                             variant="outline"
                             size="sm"
                             onClick={() => openTemasModal(materia)}
-                            className="h-8 gap-1.5 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950/50"
+                            className="h-8 gap-1.5 text-xs text-primary border-primary-border hover:bg-primary-light"
                           >
                             <BookOpen className="h-3.5 w-3.5" />
                             <span>Temario</span>
@@ -508,7 +508,7 @@ export default function MateriasIndex({ materias }: Props) {
                       type="submit"
                       size="sm"
                       disabled={processingTema}
-                      className="bg-indigo-600 hover:bg-indigo-700 h-8 text-xs"
+                      className="h-8 text-xs"
                     >
                       {processingTema && (
                         <LoaderCircle className="h-3.5 w-3.5 animate-spin mr-1.5" />

@@ -291,7 +291,7 @@ export default function LeccionesShow({
               size="sm"
               asChild
               variant="outline"
-              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-200"
+              className="border-primary-border text-primary hover:bg-primary-light"
             >
               <Link
                 href={`/lecciones/${leccion.hash_id || leccion.id}/entregas`}
@@ -400,18 +400,18 @@ export default function LeccionesShow({
               variant="outline"
               size="sm"
               onClick={() => setMostrarResumen(!mostrarResumen)}
-              className="h-8 gap-1.5 text-xs border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-200"
+              className="h-8 gap-1.5 text-xs border-primary-border text-primary hover:bg-primary-light"
             >
-              <Sparkles className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
+              <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
               {mostrarResumen ? "Ocultar Resumen" : "Resumir"}
             </Button>
           </div>
 
           {/* Panel desplegable con resumen inteligente */}
           {mostrarResumen && (
-            <div className="rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 p-4 text-xs space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-              <div className="flex items-center gap-1.5 font-semibold text-indigo-900 dark:text-indigo-200">
-                <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <div className="rounded-lg bg-primary-light border border-primary-border p-4 text-xs space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div className="flex items-center gap-1.5 font-semibold text-primary">
+                <Sparkles className="h-4 w-4 text-primary" />
                 <span>Resumen de Instrucciones de la Lección</span>
               </div>
               <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
@@ -593,7 +593,7 @@ export default function LeccionesShow({
               {puedeEntregar && (
                 <Button
                   onClick={() => setModalSubir(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium"
                 >
                   {entrega ? (
                     <>
@@ -707,13 +707,10 @@ export default function LeccionesShow({
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 font-bold text-sm tracking-wide">
-                    <Bot className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                    <Bot className="h-5 w-5 text-primary" />
                     <span>PREDICCIÓN DE RENDIMIENTO PARA EL PROXIMO TEMA</span>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 font-medium"
-                  >
+                  <Badge variant="info" className="text-[10px]">
                     ML Predictivo
                   </Badge>
                 </div>
@@ -729,15 +726,15 @@ export default function LeccionesShow({
                 <div className="space-y-3">
                   {/* Próximo tema */}
                   {tema_siguiente && (
-                    <div className="rounded-lg bg-indigo-100/60 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 p-2.5">
-                      <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium mb-1">
+                    <div className="rounded-lg bg-primary-light border border-primary-border p-2.5">
+                      <p className="text-[11px] text-primary font-medium mb-1">
                         Próximo tema:
                       </p>
-                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                      <p className="text-xs font-semibold text-foreground">
                         {tema_siguiente}
                       </p>
                       {paginas_siguiente && (
-                        <p className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-1">
+                        <p className="text-[11px] text-primary mt-1">
                           📖 Lectura recomendada: {paginas_siguiente}
                         </p>
                       )}
@@ -765,18 +762,18 @@ export default function LeccionesShow({
                   </div>
 
                   {/* Beneficio */}
-                  <div className="rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-950/60 dark:to-purple-950/60 border border-indigo-200 dark:border-indigo-800 p-2.5 text-center">
-                    <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+                  <div className="rounded-lg bg-primary-light border border-primary-border p-2.5 text-center">
+                    <p className="text-[11px] text-primary font-medium">
                       Beneficio de prepararte:
                     </p>
-                    <p className="text-base font-bold text-indigo-900 dark:text-indigo-100">
+                    <p className="text-base font-bold text-foreground">
                       +{prediccion_ml.beneficio} puntos
                     </p>
                   </div>
 
                   {/* Mensaje informativo */}
                   {paginas_siguiente && (
-                    <div className="w-full bg-orange-500 text-white py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2">
+                    <div className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2 transition-colors">
                       <BookOpen className="h-4 w-4" />
                       Leer el texto guía ({paginas_siguiente})
                     </div>
@@ -791,7 +788,7 @@ export default function LeccionesShow({
                     </span>
                   </div>
                   <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-2 rounded-full overflow-hidden">
-                    <div className="bg-indigo-500 h-full w-2/3 rounded-full animate-pulse" />
+                    <div className="bg-primary h-full w-2/3 rounded-full animate-pulse" />
                   </div>
                   <p className="text-[11px] text-muted-foreground">
                     El sistema está analizando tu desempeño para generar
@@ -1030,7 +1027,7 @@ export default function LeccionesShow({
                 <Button
                   type="submit"
                   disabled={processing}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground"
                 >
                   {processing && (
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

@@ -1,366 +1,391 @@
-import { Head } from '@inertiajs/react';
-import { AlertTriangle, Award, BookOpen, CheckCircle, CheckCircle2, Clock, FileText, MessageSquare, Sparkles, User } from 'lucide-react';
-import { useState } from 'react';
-
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Head } from "@inertiajs/react";
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import AppLayout from '@/layouts/app-layout';
-import { formatoFechaHora } from '@/lib/formatters';
-import { type BreadcrumbItem } from '@/types';
+  AlertTriangle,
+  Award,
+  BookOpen,
+  CheckCircle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  MessageSquare,
+  Sparkles,
+  User,
+} from "lucide-react";
+import { useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import AppLayout from "@/layouts/app-layout";
+import { formatoFechaHora } from "@/lib/formatters";
+import { type BreadcrumbItem } from "@/types";
 
 interface UserData {
-    nombre: string;
-    apellido_paterno: string;
-    apellido_materno: string;
+  nombre: string;
+  apellido_paterno: string;
+  apellido_materno: string;
 }
 
 interface EvaluacionIA {
-    nota: number;
-    conceptos_dominados: string[];
-    que_mejorar: string[];
-    recomendacion: string;
+  nota: number;
+  conceptos_dominados: string[];
+  que_mejorar: string[];
+  recomendacion: string;
 }
 
 interface Refuerzo {
+  id: number;
+  completado: boolean;
+  nota?: number | null;
+  evaluacion_ia?: EvaluacionIA | null;
+  fecha_evaluacion?: string | null;
+  created_at: string;
+  preguntas: string[];
+  respuestas: (string | null)[] | null;
+  recomendacion: string | null;
+  estudiante: {
     id: number;
-    completado: boolean;
-    nota?: number | null;
-    evaluacion_ia?: EvaluacionIA | null;
-    fecha_evaluacion?: string | null;
-    created_at: string;
-    preguntas: string[];
-    respuestas: (string | null)[] | null;
-    recomendacion: string | null;
-    estudiante: {
-        id: number;
-        user: UserData;
+    user: UserData;
+  };
+  leccion: {
+    id: number;
+    titulo: string;
+    materia: {
+      nombre: string;
+      codigo: string;
     };
-    leccion: {
-        id: number;
-        titulo: string;
-        materia: {
-            nombre: string;
-            codigo: string;
-        };
-    };
+  };
 }
 
 interface Props {
-    refuerzos: Refuerzo[];
-    filtroLeccionId: number | null;
+  refuerzos: Refuerzo[];
+  filtroLeccionId: number | null;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Refuerzos', href: '/refuerzos/docente' },
+  { title: "Refuerzos", href: "/refuerzos/docente" },
 ];
 
 function formatoFecha(fecha: string) {
-    return formatoFechaHora(fecha);
+  return formatoFechaHora(fecha);
 }
 
-export default function RefuerzoDocente({ refuerzos,  }: Props) {
-    const [abiertos, setAbiertos] = useState<Record<number, boolean>>({});
+export default function RefuerzoDocente({ refuerzos }: Props) {
+  const [abiertos, setAbiertos] = useState<Record<number, boolean>>({});
 
-    const toggleRefuerzo = (id: number) => {
-        setAbiertos((prev) => ({ ...prev, [id]: !prev[id] }));
-    };
+  const toggleRefuerzo = (id: number) => {
+    setAbiertos((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
-    const nombreCompleto = (u: UserData) =>
-        `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
+  const nombreCompleto = (u: UserData) =>
+    `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
 
-    const total = refuerzos.length;
-    const completados = refuerzos.filter((r) => r.completado).length;
-    const pendientes = total - completados;
+  const total = refuerzos.length;
+  const completados = refuerzos.filter((r) => r.completado).length;
+  const pendientes = total - completados;
 
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Refuerzos de mis estudiantes" />
+  return (
+    <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title="Refuerzos de mis estudiantes" />
 
-            <div className="mx-auto max-w-5xl space-y-6 p-6">
-                {/* HEADER */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-600 text-white shadow-xs">
-                                <Sparkles className="h-5 w-5" />
+      <div className="mx-auto max-w-5xl space-y-6 p-6">
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Refuerzos de mis estudiantes
+              </h1>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Preguntas generadas por la IA después de calificaciones menores a
+              70.
+            </p>
+          </div>
+
+          <a
+            href="/reportes"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border border-primary-border text-primary bg-primary-light hover:bg-primary/20 transition-colors shadow-xs"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            <span>Generar Reporte PDF</span>
+          </a>
+        </div>
+
+        {/* STATS */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card className="border-none bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-sm">
+            <CardContent className="flex items-center justify-between py-5">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide opacity-90">
+                  Total
+                </p>
+                <p className="mt-1 text-3xl font-bold">{total}</p>
+                <p className="text-xs opacity-90">refuerzos generados</p>
+              </div>
+              <Sparkles className="h-9 w-9 opacity-80" />
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm">
+            <CardContent className="flex items-center justify-between py-5">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                  Completados
+                </p>
+                <p className="mt-1 text-3xl font-bold text-emerald-600">
+                  {completados}
+                </p>
+                <p className="text-xs text-neutral-500">ya respondidos</p>
+              </div>
+              <CheckCircle2 className="h-9 w-9 text-emerald-200" />
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm">
+            <CardContent className="flex items-center justify-between py-5">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                  Pendientes
+                </p>
+                <p className="mt-1 text-3xl font-bold text-amber-600">
+                  {pendientes}
+                </p>
+                <p className="text-xs text-neutral-500">sin responder</p>
+              </div>
+              <Clock className="h-9 w-9 text-amber-200" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* LISTA DE REFUERZOS */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Refuerzos ({total})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {total === 0 && (
+              <div className="py-12 text-center">
+                <Sparkles className="h-10 w-10 mx-auto text-neutral-300 mb-2" />
+                <p className="text-sm font-medium text-neutral-600">
+                  No hay refuerzos generados todavía
+                </p>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Cuando califiques una entrega con nota menor a 70, aparecerá
+                  aquí.
+                </p>
+              </div>
+            )}
+
+            {refuerzos.map((r) => {
+              const abierto = !!abiertos[r.id];
+
+              return (
+                <Collapsible
+                  key={r.id}
+                  open={abierto}
+                  onOpenChange={() => toggleRefuerzo(r.id)}
+                >
+                  <div className="rounded-lg border overflow-hidden">
+                    <CollapsibleTrigger asChild>
+                      <button
+                        type="button"
+                        className="flex w-full items-start justify-between gap-3 p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
+                      >
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                          <div
+                            className={`rounded-lg p-2 shrink-0 ${
+                              r.completado
+                                ? "bg-emerald-100 dark:bg-emerald-950/60 dark:border dark:border-emerald-800/60"
+                                : "bg-amber-100 dark:bg-amber-950/60 dark:border dark:border-amber-800/60"
+                            }`}
+                          >
+                            {r.completado ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                              <User className="h-3.5 w-3.5" />
+                              <span className="font-medium text-neutral-700 dark:text-neutral-200">
+                                {nombreCompleto(r.estudiante.user)}
+                              </span>
                             </div>
-                            <h1 className="text-2xl font-bold tracking-tight">
-                                Refuerzos de mis estudiantes
-                            </h1>
+                            <div className="mt-1 flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
+                              <BookOpen className="h-3.5 w-3.5" />
+                              {r.leccion.materia.codigo} ·{" "}
+                              {r.leccion.materia.nombre}
+                            </div>
+                            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300 truncate">
+                              {r.leccion.titulo}
+                            </p>
+                            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                              Generado el {formatoFecha(r.created_at)}
+                            </p>
+                          </div>
                         </div>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Preguntas generadas por la IA después de calificaciones menores a 70.
-                        </p>
-                    </div>
 
-                    <a
-                        href="/reportes"
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold border border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100 dark:border-purple-800 dark:text-purple-300 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 transition-colors shadow-xs"
-                    >
-                        <FileText className="h-3.5 w-3.5" />
-                        <span>Generar Reporte PDF</span>
-                    </a>
-                </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge
+                            variant="outline"
+                            className={
+                              r.completado
+                                ? r.nota !== null && r.nota !== undefined
+                                  ? r.nota >= 70
+                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 font-semibold"
+                                    : r.nota >= 51
+                                      ? "bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 font-semibold"
+                                      : "bg-red-100 text-red-800 hover:bg-red-100 border-red-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 font-semibold"
+                                  : "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                : "border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/40"
+                            }
+                          >
+                            {r.completado ? (
+                              <>
+                                <CheckCircle2 className="mr-1 h-3 w-3" />
+                                {r.nota !== null && r.nota !== undefined
+                                  ? `Evaluado: ${r.nota}/100`
+                                  : "Completado"}
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="mr-1 h-3 w-3" />
+                                Pendiente
+                              </>
+                            )}
+                          </Badge>
+                        </div>
+                      </button>
+                    </CollapsibleTrigger>
 
-                {/* STATS */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <Card className="border-none bg-gradient-to-br from-purple-600 to-purple-500 text-white shadow-sm">
-                        <CardContent className="flex items-center justify-between py-5">
-                            <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-purple-100">
-                                    Total
-                                </p>
-                                <p className="mt-1 text-3xl font-bold">{total}</p>
-                                <p className="text-xs text-purple-100">refuerzos generados</p>
+                    <CollapsibleContent>
+                      <div className="border-t bg-neutral-50/50 p-4 space-y-4">
+                        {/* Diagnóstico de Evaluación IA del Refuerzo */}
+                        {r.completado && r.evaluacion_ia && (
+                          <div className="rounded-xl border border-purple-200 bg-white p-4 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between pb-2 border-b">
+                              <div className="flex items-center gap-2">
+                                <Award className="h-4 w-4 text-purple-600" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
+                                  Diagnóstico del Refuerzo Evaluado
+                                </span>
+                              </div>
+                              <span className="text-sm font-extrabold text-neutral-900">
+                                Nota:{" "}
+                                <span
+                                  className={
+                                    r.nota && r.nota >= 70
+                                      ? "text-emerald-600"
+                                      : r.nota && r.nota >= 51
+                                        ? "text-amber-600"
+                                        : "text-red-600"
+                                  }
+                                >
+                                  {r.nota}
+                                </span>{" "}
+                                / 100
+                              </span>
                             </div>
-                            <Sparkles className="h-9 w-9 text-purple-200/70" />
-                        </CardContent>
-                    </Card>
 
-                    <Card className="shadow-sm">
-                        <CardContent className="flex items-center justify-between py-5">
-                            <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                                    Completados
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                              <div className="rounded-lg bg-emerald-50/80 p-3 border border-emerald-200/80 space-y-1">
+                                <p className="font-semibold text-emerald-800 flex items-center gap-1.5">
+                                  <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+                                  Conceptos dominados
                                 </p>
-                                <p className="mt-1 text-3xl font-bold text-emerald-600">
-                                    {completados}
-                                </p>
-                                <p className="text-xs text-neutral-500">ya respondidos</p>
-                            </div>
-                            <CheckCircle2 className="h-9 w-9 text-emerald-200" />
-                        </CardContent>
-                    </Card>
+                                <ul className="space-y-1 text-emerald-900">
+                                  {r.evaluacion_ia.conceptos_dominados?.map(
+                                    (cd, i) => (
+                                      <li key={i}>• {cd}</li>
+                                    ),
+                                  )}
+                                </ul>
+                              </div>
 
-                    <Card className="shadow-sm">
-                        <CardContent className="flex items-center justify-between py-5">
-                            <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                                    Pendientes
+                              <div className="rounded-lg bg-amber-50/80 p-3 border border-amber-200/80 space-y-1">
+                                <p className="font-semibold text-amber-800 flex items-center gap-1.5">
+                                  <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                                  Puntos que debe reforzar
                                 </p>
-                                <p className="mt-1 text-3xl font-bold text-amber-600">
-                                    {pendientes}
-                                </p>
-                                <p className="text-xs text-neutral-500">sin responder</p>
+                                <ul className="space-y-1 text-amber-900">
+                                  {r.evaluacion_ia.que_mejorar?.map((qm, i) => (
+                                    <li key={i}>• {qm}</li>
+                                  ))}
+                                </ul>
+                              </div>
                             </div>
-                            <Clock className="h-9 w-9 text-amber-200" />
-                        </CardContent>
-                    </Card>
-                </div>
 
-                {/* LISTA DE REFUERZOS */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg">
-                            Refuerzos ({total})
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        {total === 0 && (
-                            <div className="py-12 text-center">
-                                <Sparkles className="h-10 w-10 mx-auto text-neutral-300 mb-2" />
-                                <p className="text-sm font-medium text-neutral-600">
-                                    No hay refuerzos generados todavía
-                                </p>
-                                <p className="text-xs text-neutral-400 mt-1">
-                                    Cuando califiques una entrega con nota menor a 70, aparecerá aquí.
-                                </p>
-                            </div>
+                            {r.evaluacion_ia.recomendacion && (
+                              <p className="text-xs text-foreground bg-primary-light p-2.5 rounded-lg border border-primary-border">
+                                <strong>Recomendación formativa: </strong>{" "}
+                                {r.evaluacion_ia.recomendacion}
+                              </p>
+                            )}
+                          </div>
                         )}
 
-                        {refuerzos.map((r) => {
-                            const abierto = !!abiertos[r.id];
+                        {r.recomendacion && (
+                          <div className="rounded-lg border border-primary-border bg-primary-light p-3">
+                            <p className="text-xs font-medium text-primary">
+                              📝 Recomendación inicial de estudio
+                            </p>
+                            <p className="mt-1 text-sm text-foreground whitespace-pre-line">
+                              {r.recomendacion}
+                            </p>
+                          </div>
+                        )}
 
-                            return (
-                                <Collapsible
-                                    key={r.id}
-                                    open={abierto}
-                                    onOpenChange={() => toggleRefuerzo(r.id)}
-                                >
-                                    <div className="rounded-lg border overflow-hidden">
-                                        <CollapsibleTrigger asChild>
-                                            <button
-                                                type="button"
-                                                className="flex w-full items-start justify-between gap-3 p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
-                                            >
-                                                <div className="flex min-w-0 flex-1 items-start gap-3">
-                                                    <div
-                                                        className={`rounded-lg p-2 shrink-0 ${
-                                                            r.completado
-                                                                ? 'bg-emerald-100 dark:bg-emerald-950/60 dark:border dark:border-emerald-800/60'
-                                                                : 'bg-amber-100 dark:bg-amber-950/60 dark:border dark:border-amber-800/60'
-                                                        }`}
-                                                    >
-                                                        {r.completado ? (
-                                                            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                                        ) : (
-                                                            <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                                        )}
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                                                            <User className="h-3.5 w-3.5" />
-                                                            <span className="font-medium text-neutral-700 dark:text-neutral-200">
-                                                                {nombreCompleto(r.estudiante.user)}
-                                                            </span>
-                                                        </div>
-                                                        <div className="mt-1 flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
-                                                            <BookOpen className="h-3.5 w-3.5" />
-                                                            {r.leccion.materia.codigo} ·{' '}
-                                                            {r.leccion.materia.nombre}
-                                                        </div>
-                                                        <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300 truncate">
-                                                            {r.leccion.titulo}
-                                                        </p>
-                                                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-                                                            Generado el {formatoFecha(r.created_at)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={
-                                                            r.completado
-                                                                ? r.nota !== null && r.nota !== undefined
-                                                                    ? r.nota >= 70
-                                                                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 font-semibold'
-                                                                        : r.nota >= 51
-                                                                        ? 'bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 font-semibold'
-                                                                        : 'bg-red-100 text-red-800 hover:bg-red-100 border-red-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 font-semibold'
-                                                                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800'
-                                                                : 'border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/40'
-                                                        }
-                                                    >
-                                                        {r.completado ? (
-                                                            <>
-                                                                <CheckCircle2 className="mr-1 h-3 w-3" />
-                                                                {r.nota !== null && r.nota !== undefined
-                                                                    ? `Evaluado: ${r.nota}/100`
-                                                                    : 'Completado'}
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Clock className="mr-1 h-3 w-3" />
-                                                                Pendiente
-                                                            </>
-                                                        )}
-                                                    </Badge>
-                                                </div>
-                                            </button>
-                                        </CollapsibleTrigger>
-
-                                        <CollapsibleContent>
-                                            <div className="border-t bg-neutral-50/50 p-4 space-y-4">
-                                                {/* Diagnóstico de Evaluación IA del Refuerzo */}
-                                                {r.completado && r.evaluacion_ia && (
-                                                    <div className="rounded-xl border border-purple-200 bg-white p-4 shadow-xs space-y-3">
-                                                        <div className="flex items-center justify-between pb-2 border-b">
-                                                            <div className="flex items-center gap-2">
-                                                                <Award className="h-4 w-4 text-purple-600" />
-                                                                <span className="text-xs font-bold uppercase tracking-wider text-purple-700">
-                                                                    Diagnóstico del Refuerzo Evaluado
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-sm font-extrabold text-neutral-900">
-                                                                Nota: <span className={r.nota && r.nota >= 70 ? 'text-emerald-600' : r.nota && r.nota >= 51 ? 'text-amber-600' : 'text-red-600'}>{r.nota}</span> / 100
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                                            <div className="rounded-lg bg-emerald-50/80 p-3 border border-emerald-200/80 space-y-1">
-                                                                <p className="font-semibold text-emerald-800 flex items-center gap-1.5">
-                                                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-                                                                    Conceptos dominados
-                                                                </p>
-                                                                <ul className="space-y-1 text-emerald-900">
-                                                                    {r.evaluacion_ia.conceptos_dominados?.map((cd, i) => (
-                                                                        <li key={i}>• {cd}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-
-                                                            <div className="rounded-lg bg-amber-50/80 p-3 border border-amber-200/80 space-y-1">
-                                                                <p className="font-semibold text-amber-800 flex items-center gap-1.5">
-                                                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                                                                    Puntos que debe reforzar
-                                                                </p>
-                                                                <ul className="space-y-1 text-amber-900">
-                                                                    {r.evaluacion_ia.que_mejorar?.map((qm, i) => (
-                                                                        <li key={i}>• {qm}</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        </div>
-
-                                                        {r.evaluacion_ia.recomendacion && (
-                                                            <p className="text-xs text-purple-900 bg-purple-50/60 p-2.5 rounded-lg border border-purple-100">
-                                                                <strong>Recomendación formativa: </strong> {r.evaluacion_ia.recomendacion}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {r.recomendacion && (
-                                                    <div className="rounded-lg border border-purple-200 bg-purple-50 p-3">
-                                                        <p className="text-xs font-medium text-purple-700">
-                                                            📝 Recomendación inicial de estudio
-                                                        </p>
-                                                        <p className="mt-1 text-sm text-purple-900 whitespace-pre-line">
-                                                            {r.recomendacion}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {r.completado ? (
-                                                    <div className="space-y-3">
-                                                        <p className="text-xs font-medium text-neutral-500 flex items-center gap-1.5">
-                                                            <MessageSquare className="h-3.5 w-3.5" />
-                                                            Respuestas del estudiante
-                                                        </p>
-                                                        {r.preguntas.map((pregunta, i) => (
-                                                            <div
-                                                                key={i}
-                                                                className="rounded-lg border bg-white p-3 space-y-2"
-                                                            >
-                                                                <p className="text-sm font-medium text-neutral-700">
-                                                                    {i + 1}. {pregunta}
-                                                                </p>
-                                                                <div className="rounded-md bg-neutral-50 p-2 border-l-2 border-purple-400">
-                                                                    <p className="text-sm text-neutral-600 whitespace-pre-line">
-                                                                        {r.respuestas?.[i] ||
-                                                                            '(sin respuesta)'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="py-6 text-center">
-                                                        <Clock className="h-8 w-8 mx-auto text-amber-400 mb-2" />
-                                                        <p className="text-sm font-medium text-neutral-600">
-                                                            El estudiante aún no ha respondido
-                                                        </p>
-                                                        <p className="text-xs text-neutral-400 mt-1">
-                                                            Podrás ver sus respuestas cuando las envíe.
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </CollapsibleContent>
-                                    </div>
-                                </Collapsible>
-                            );
-                        })}
-                    </CardContent>
-                </Card>
-            </div>
-        </AppLayout>
-    );
+                        {r.completado ? (
+                          <div className="space-y-3">
+                            <p className="text-xs font-medium text-neutral-500 flex items-center gap-1.5">
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Respuestas del estudiante
+                            </p>
+                            {r.preguntas.map((pregunta, i) => (
+                              <div
+                                key={i}
+                                className="rounded-lg border bg-white p-3 space-y-2"
+                              >
+                                <p className="text-sm font-medium text-neutral-700">
+                                  {i + 1}. {pregunta}
+                                </p>
+                                <div className="rounded-md bg-neutral-50 p-2 border-l-2 border-purple-400">
+                                  <p className="text-sm text-neutral-600 whitespace-pre-line">
+                                    {r.respuestas?.[i] || "(sin respuesta)"}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center">
+                            <Clock className="h-8 w-8 mx-auto text-amber-400 mb-2" />
+                            <p className="text-sm font-medium text-neutral-600">
+                              El estudiante aún no ha respondido
+                            </p>
+                            <p className="text-xs text-neutral-400 mt-1">
+                              Podrás ver sus respuestas cuando las envíe.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
+  );
 }

@@ -124,4 +124,79 @@ class Configuracion extends Model
 
         return $brillo >= 128 ? '#000000' : '#ffffff';
     }
+
+    /**
+     * Ajusta el brillo de un color hex (positivo = más claro hacia blanco, negativo = más oscuro hacia negro).
+     * $porcentaje entre -100 y 100.
+     */
+    public static function colorAjustar(?string $hex, int $porcentaje): string
+    {
+        if (! $hex || ! preg_match('/^#?[0-9A-Fa-f]{6}$/', $hex)) {
+            return $hex ?? '#4f46e5';
+        }
+
+        $hex = ltrim($hex, '#');
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        if ($porcentaje > 0) {
+            $factor = $porcentaje / 100;
+            $r = (int) round($r + (255 - $r) * $factor);
+            $g = (int) round($g + (255 - $g) * $factor);
+            $b = (int) round($b + (255 - $b) * $factor);
+        } else {
+            $factor = 1 + ($porcentaje / 100);
+            $r = (int) round($r * $factor);
+            $g = (int) round($g * $factor);
+            $b = (int) round($b * $factor);
+        }
+
+        $r = max(0, min(255, $r));
+        $g = max(0, min(255, $g));
+        $b = max(0, min(255, $b));
+
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    /**
+     * Tono hover para modo claro (12% más oscuro).
+     */
+    public static function colorHover(?string $hex): string
+    {
+        return self::colorAjustar($hex, -12);
+    }
+
+    /**
+     * Tono hover para modo oscuro (15% más claro).
+     */
+    public static function colorHoverDark(?string $hex): string
+    {
+        return self::colorAjustar($hex, 15);
+    }
+
+    /**
+     * Tono suave con opacidad para fondos sutiles, badges o tarjetas (formato rgba).
+     */
+    public static function colorLightRgba(?string $hex, float $alpha = 0.12): string
+    {
+        if (! $hex || ! preg_match('/^#?[0-9A-Fa-f]{6}$/', $hex)) {
+            return "rgba(79, 70, 229, {$alpha})";
+        }
+
+        $hex = ltrim($hex, '#');
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+
+        return sprintf('rgba(%d, %d, %d, %.2f)', $r, $g, $b, $alpha);
+    }
+
+    /**
+     * Tono para bordes sutiles o anillos con transparencia (formato rgba).
+     */
+    public static function colorBorderRgba(?string $hex, float $alpha = 0.28): string
+    {
+        return self::colorLightRgba($hex, $alpha);
+    }
 }

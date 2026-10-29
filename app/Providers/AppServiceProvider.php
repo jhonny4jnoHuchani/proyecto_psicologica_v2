@@ -29,11 +29,21 @@ class AppServiceProvider extends ServiceProvider
         // 🎨 View composer para configuración visual
         View::composer('app', function ($view) {
             $config = Configuracion::first();
+            $primario = $config?->color_primario ?? '#4f46e5';
+            $secundario = $config?->color_secundario ?? '#06b6d4';
 
             $view->with([
                 'config' => $config,
-                'primario_fg' => Configuracion::colorContraste($config?->color_primario),
-                'secundario_fg' => Configuracion::colorContraste($config?->color_secundario),
+                'primario_fg' => Configuracion::colorContraste($primario),
+                'primario_hover' => Configuracion::colorHover($primario),
+                'primario_hover_dark' => Configuracion::colorHoverDark($primario),
+                'primario_light' => Configuracion::colorLightRgba($primario, 0.12),
+                'primario_border' => Configuracion::colorBorderRgba($primario, 0.28),
+                'secundario_fg' => Configuracion::colorContraste($secundario),
+                'secundario_hover' => Configuracion::colorHover($secundario),
+                'secundario_hover_dark' => Configuracion::colorHoverDark($secundario),
+                'secundario_light' => Configuracion::colorLightRgba($secundario, 0.12),
+                'secundario_border' => Configuracion::colorBorderRgba($secundario, 0.28),
             ]);
         });
     }
