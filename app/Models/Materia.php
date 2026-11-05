@@ -35,6 +35,11 @@ class Materia extends Model
         return $this->hasMany(Leccion::class);
     }
 
+    public function recursos(): HasMany
+    {
+        return $this->hasMany(Recurso::class);
+    }
+
     public function libros(): HasMany
     {
         return $this->hasMany(Libro::class);

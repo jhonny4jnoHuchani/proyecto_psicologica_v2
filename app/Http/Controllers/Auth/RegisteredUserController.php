@@ -16,16 +16,14 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Show the registration page.
-     */
+    /** Muestra el formulario de registro de nuevos usuarios en el sistema. */
     public function create(): Response
     {
         return Inertia::render('auth/register');
     }
 
     /**
-     * Handle an incoming registration request.
+     * Valida los datos y registra un nuevo usuario en la base de datos.
      *
      * @throws ValidationException
      */

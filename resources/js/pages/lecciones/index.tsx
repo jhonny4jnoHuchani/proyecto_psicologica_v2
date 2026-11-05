@@ -823,6 +823,42 @@ export default function LeccionesIndex({
                       {/* LECCIONES DEL TEMA */}
                       {abierto && (
                         <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
+                          {/* SINOPSIS / RECURSOS DEL TEMA */}
+                          {(tema.resumen ||
+                            tema.archivo_pdf ||
+                            tema.paginas_libro) && (
+                            <div className="mb-3 rounded-lg border bg-white dark:bg-neutral-900/60 p-3 shadow-xs space-y-1.5">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                                  <BookOpen className="h-3.5 w-3.5 text-primary" />
+                                  Sinopsis del Tema
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {tema.paginas_libro && (
+                                    <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                      📖 {tema.paginas_libro}
+                                    </span>
+                                  )}
+                                  {tema.archivo_pdf && (
+                                    <a
+                                      href={`/storage/${tema.archivo_pdf}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline bg-primary/10 px-2 py-0.5 rounded border border-primary/20"
+                                    >
+                                      <FileText className="h-3 w-3" />
+                                      Ver Recurso PDF
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                              {tema.resumen && (
+                                <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
+                                  {tema.resumen}
+                                </p>
+                              )}
+                            </div>
+                          )}
                           {leccionesTema.length === 0 ? (
                             <div className="py-6 text-center text-xs text-neutral-400">
                               No hay lecciones en este tema todavía.
@@ -1717,19 +1753,163 @@ export default function LeccionesIndex({
           </DialogContent>
         </Dialog>
 
-        {/* MODAL CREAR TEMA RÁPIDO */}
+        {/* MODAL CREAR TEMA RÁPIDO CON ASISTENTE IA */}
         <Dialog open={modalNuevoTema} onOpenChange={setModalNuevoTema}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-primary" />
                 Nuevo Tema para el Temario
               </DialogTitle>
               <DialogDescription>
-                Agrega un nuevo tema a la materia seleccionada para estructurar
-                las lecciones.
+                Estructura las lecciones agregando un tema manual o extrayendo y
+                resumiendo el contenido automáticamente desde un PDF o texto con
+                IA.
               </DialogDescription>
             </DialogHeader>
+
+            {/* SELECTOR DE MODO DE INGESTA */}
+            <div className="flex rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1 text-xs font-medium">
+              <button
+                type="button"
+                className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+                  modoCreacionTema === "pdf"
+                    ? "bg-white dark:bg-neutral-900 shadow-xs text-primary font-semibold"
+                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                }`}
+                onClick={() => setModoCreacionTema("pdf")}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                Cargar PDF
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+                  modoCreacionTema === "texto"
+                    ? "bg-white dark:bg-neutral-900 shadow-xs text-primary font-semibold"
+                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                }`}
+                onClick={() => setModoCreacionTema("texto")}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Pegar Texto
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+                  modoCreacionTema === "manual"
+                    ? "bg-white dark:bg-neutral-900 shadow-xs text-primary font-semibold"
+                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                }`}
+                onClick={() => setModoCreacionTema("manual")}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Manual
+              </button>
+            </div>
+
+            {/* SECCIÓN DE IA CUANDO SE USA PDF O TEXTO */}
+            {modoCreacionTema !== "manual" && (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Asistente de Resumen y Estructuración IA
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {modoCreacionTema === "pdf"
+                      ? "Lector de PDF inteligente"
+                      : "Sintetizador de texto"}
+                  </span>
+                </div>
+
+                {modoCreacionTema === "pdf" && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-700 dark:text-neutral-300">
+                      Archivo PDF del tema o capítulo (máx. 20MB)
+                    </Label>
+                    <Input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setTemaPdfFile(file);
+                        setIaMensajeError(null);
+                      }}
+                      className="h-8 text-xs file:text-xs file:h-6"
+                    />
+                    {temaPdfFile && (
+                      <p className="text-[11px] text-primary flex items-center gap-1">
+                        <Paperclip className="h-3 w-3" />
+                        Archivo seleccionado:{" "}
+                        <strong>{temaPdfFile.name}</strong> (
+                        {(temaPdfFile.size / 1024).toFixed(0)} KB)
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {modoCreacionTema === "texto" && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-neutral-700 dark:text-neutral-300">
+                      Texto base, notas o extracto del tema
+                    </Label>
+                    <textarea
+                      value={temaTextoBruto}
+                      onChange={(e) => {
+                        setTemaTextoBruto(e.target.value);
+                        setIaMensajeError(null);
+                      }}
+                      className="w-full rounded-md border p-2 text-xs bg-white dark:bg-neutral-900"
+                      rows={3}
+                      placeholder="Pega aquí los apuntes, transcripción o fragmento del libro..."
+                    />
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="default"
+                  disabled={
+                    generandoResumenIA ||
+                    (modoCreacionTema === "pdf" && !temaPdfFile) ||
+                    (modoCreacionTema === "texto" && !temaTextoBruto.trim())
+                  }
+                  onClick={handleGenerarResumenIA}
+                  className="w-full h-8 text-xs font-semibold gap-1.5"
+                >
+                  {generandoResumenIA ? (
+                    <>
+                      <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                      Analizando documento y redactando resumen...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5" />
+                      {modoCreacionTema === "pdf"
+                        ? "Extraer y Redactar Resumen con IA"
+                        : "Generar Resumen con IA"}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* ALERTAS DE ESTADO IA */}
+            {iaMensajeError && (
+              <div className="rounded-md border border-red-200 bg-red-50 dark:bg-red-950/40 p-2.5 text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{iaMensajeError}</span>
+              </div>
+            )}
+            {iaMensajeExito && (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 p-2.5 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{iaMensajeExito}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSaveTema} className="space-y-3">
               <div className="space-y-1">
                 <Label className="text-xs">Materia *</Label>
@@ -1815,20 +1995,46 @@ export default function LeccionesIndex({
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="quick_resumen" className="text-xs">
-                  Resumen o sinopsis
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="quick_resumen" className="text-xs">
+                    Resumen o sinopsis (Muestra generada / editable)
+                  </Label>
+                  {temaForm.resumen && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {temaForm.resumen.length} caracteres
+                    </span>
+                  )}
+                </div>
                 <textarea
                   id="quick_resumen"
                   value={temaForm.resumen}
                   onChange={(e) =>
                     setTemaForm({ ...temaForm, resumen: e.target.value })
                   }
-                  className="w-full rounded-md border p-2 text-xs"
-                  rows={2}
-                  placeholder="Breve descripción del tema..."
+                  className="w-full rounded-md border p-2 text-xs leading-relaxed"
+                  rows={4}
+                  placeholder="Breve descripción pedagógica del tema..."
                 />
+                <InputError message={temaErrors.resumen} />
               </div>
+
+              {temaPdfFile && (
+                <div className="rounded-md border border-neutral-200 bg-neutral-50 dark:bg-neutral-800/50 p-2 text-xs text-neutral-600 dark:text-neutral-300 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 truncate">
+                    <FileText className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span>
+                      Se guardará adjunto: <strong>{temaPdfFile.name}</strong>
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setTemaPdfFile(null)}
+                    className="text-neutral-400 hover:text-red-500 text-xs ml-2"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              )}
 
               <DialogFooter className="pt-2">
                 <Button
@@ -1839,7 +2045,11 @@ export default function LeccionesIndex({
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" size="sm" disabled={processingTema}>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={processingTema || generandoResumenIA}
+                >
                   {processingTema && (
                     <LoaderCircle className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   )}

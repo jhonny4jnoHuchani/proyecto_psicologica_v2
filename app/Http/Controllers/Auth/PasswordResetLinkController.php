@@ -12,9 +12,7 @@ use Inertia\Response;
 
 class PasswordResetLinkController extends Controller
 {
-    /**
-     * Show the password reset link request page.
-     */
+    /** Muestra el formulario para solicitar enlace de recuperación de contraseña. */
     public function create(Request $request): Response
     {
         return Inertia::render('auth/forgot-password', [
@@ -23,7 +21,7 @@ class PasswordResetLinkController extends Controller
     }
 
     /**
-     * Handle an incoming password reset link request.
+     * Envía el enlace con token para restablecer contraseña al correo provisto.
      *
      * @throws ValidationException
      */

@@ -491,4 +491,113 @@ class IAService
             'recomendacion' => $recomendacion,
         ];
     }
+
+    /**
+     * Genera automáticamente el nombre, páginas y resumen pedagógico de un tema
+     * a partir de un texto o documento provisto.
+     */
+    public function generarResumenTema(string $texto, string $materiaNombre): array
+    {
+        $textoLimpio = trim($texto);
+        if (mb_strlen($textoLimpio) < 30) {
+            throw new \Exception('El contenido proporcionado es demasiado breve para generar un resumen adecuado (mínimo 30 caracteres).');
+        }
+
+        // Limitar longitud para evitar sobrecargar tokens (máximo aprox. 12,000 caracteres)
+        if (mb_strlen($textoLimpio) > 12000) {
+            $textoLimpio = mb_substr($textoLimpio, 0, 12000)."\n... [texto truncado para análisis]";
+        }
+
+        if (empty($this->apiKey)) {
+            Log::warning('GROQ_API_KEY no configurada. Usando generador de resumen de respaldo.');
+
+            return $this->generarFallbackResumenTema($textoLimpio, $materiaNombre);
+        }
+
+        $systemPrompt = "Eres un pedagogo universitario y docente experto en Psicología. Tu objetivo es estructurar temas académicos claros y atractivos para el plan de estudios, extrayendo los conceptos fundamentales del material provisto.";
+
+        $userPrompt = "Analiza el siguiente material correspondiente a la materia '{$materiaNombre}'.\n\n"
+            ."Genera un objeto JSON con exactamente estas 3 propiedades:\n"
+            ."1. 'nombre': Un título conciso, profesional y académico para el tema (ejemplo: 'Tema 4: Procesos Perceptivos y Atención'). Sin prefijos raros, máximo 80 caracteres.\n"
+            ."2. 'paginas_libro': Si en el material se mencionan páginas de referencia (ejemplo: 'págs. 20-35') o capítulos (ejemplo: 'Capítulo 3'), extráelas en un texto breve (máx 30 caracteres). Si no se mencionan páginas, devuelve null.\n"
+            ."3. 'resumen': Una sinopsis o resumen pedagógico claro, riguroso y sintético (entre 2 y 4 párrafos bien articulados) que sintetice:\n"
+            ."   - Los conceptos y definiciones fundamentales del tema.\n"
+            ."   - Principales autores, escuelas o teorías mencionadas.\n"
+            ."   - Relevancia para el estudiante de psicología.\n\n"
+            ."Material a analizar:\n"
+            ."\"\"\"\n{$textoLimpio}\n\"\"\"\n\n"
+            ."Responde EXCLUSIVAMENTE un JSON válido con la siguiente estructura:\n"
+            ."{\n"
+            ."  \"nombre\": \"...\",\n"
+            ."  \"paginas_libro\": \"...\",\n"
+            ."  \"resumen\": \"...\"\n"
+            ."}";
+
+        try {
+            $response = Http::withToken($this->apiKey)
+                ->timeout(45)
+                ->post($this->apiUrl, [
+                    'model' => $this->model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemPrompt],
+                        ['role' => 'user', 'content' => $userPrompt],
+                    ],
+                    'temperature' => 0.5,
+                    'response_format' => ['type' => 'json_object'],
+                ]);
+
+            if ($response->successful()) {
+                $content = $response->json('choices.0.message.content');
+                $decoded = json_decode((string) $content, true);
+
+                if (is_array($decoded) && ! empty($decoded['resumen'])) {
+                    return [
+                        'nombre' => (string) ($decoded['nombre'] ?? 'Tema del material'),
+                        'paginas_libro' => isset($decoded['paginas_libro']) && is_string($decoded['paginas_libro']) ? $decoded['paginas_libro'] : null,
+                        'resumen' => (string) $decoded['resumen'],
+                    ];
+                }
+            } else {
+                Log::warning("Groq API error al generar resumen de tema (HTTP {$response->status()}): {$response->body()}");
+            }
+        } catch (\Exception $e) {
+            Log::warning("Excepción al conectar con la IA para generar resumen de tema: {$e->getMessage()}");
+        }
+
+        return $this->generarFallbackResumenTema($textoLimpio, $materiaNombre);
+    }
+
+    /**
+     * Fallback cuando la API externa de IA no está disponible.
+     */
+    protected function generarFallbackResumenTema(string $texto, string $materiaNombre): array
+    {
+        $lineas = array_values(array_filter(array_map('trim', explode("\n", $texto))));
+        $primeraLinea = reset($lineas) ?: 'Nuevo Tema';
+
+        // Limpiar título
+        $nombre = mb_substr($primeraLinea, 0, 70);
+        if (! str_starts_with(mb_strtolower($nombre), 'tema')) {
+            $nombre = 'Tema: '.$nombre;
+        }
+
+        // Buscar páginas con regex
+        $paginas = null;
+        if (preg_match('/(?:p[áa]g(?:inas?)?\.?|pp\.?)\s*([0-9]+(?:\s*-\s*[0-9]+)?)/i', $texto, $m)) {
+            $paginas = 'págs. '.$m[1];
+        }
+
+        // Resumen
+        $parrafos = array_slice($lineas, 1, 3);
+        $resumen = implode("\n\n", $parrafos);
+        if (empty($resumen)) {
+            $resumen = mb_substr($texto, 0, 500).'...';
+        }
+
+        return [
+            'nombre' => $nombre,
+            'paginas_libro' => $paginas,
+            'resumen' => $resumen,
+        ];
+    }
 }

@@ -59,4 +59,9 @@ class Curso extends Model
     {
         return $this->hasMany(Leccion::class);
     }
+
+    public function recursos(): HasMany
+    {
+        return $this->hasMany(Recurso::class);
+    }
 }

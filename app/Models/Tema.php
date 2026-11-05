@@ -17,6 +17,7 @@ class Tema extends Model
         'resumen',
         'orden',
         'paginas_libro',
+        'archivo_pdf',
         'estado',
     ];
 
@@ -28,5 +29,10 @@ class Tema extends Model
     public function lecciones(): HasMany
     {
         return $this->hasMany(Leccion::class, 'tema_id');
+    }
+
+    public function recursos(): HasMany
+    {
+        return $this->hasMany(Recurso::class, 'tema_id')->orderBy('orden');
     }
 }

@@ -16,9 +16,7 @@ use Inertia\Response;
 
 class NewPasswordController extends Controller
 {
-    /**
-     * Show the password reset page.
-     */
+    /** Muestra la vista para ingresar una nueva contraseña tras restablecimiento. */
     public function create(Request $request): Response
     {
         return Inertia::render('auth/reset-password', [
@@ -28,7 +26,7 @@ class NewPasswordController extends Controller
     }
 
     /**
-     * Handle an incoming new password request.
+     * Valida el token y actualiza la contraseña del usuario restablecido.
      *
      * @throws ValidationException
      */

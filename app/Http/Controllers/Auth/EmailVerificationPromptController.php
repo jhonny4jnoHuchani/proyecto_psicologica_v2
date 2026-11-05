@@ -10,9 +10,7 @@ use Inertia\Response;
 
 class EmailVerificationPromptController extends Controller
 {
-    /**
-     * Show the email verification prompt page.
-     */
+    /** Muestra el aviso de verificación pendiente de correo electrónico. */
     public function __invoke(Request $request): Response|RedirectResponse
     {
         return $request->user()->hasVerifiedEmail()

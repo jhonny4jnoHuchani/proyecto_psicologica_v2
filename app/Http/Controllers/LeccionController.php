@@ -8,6 +8,7 @@ use App\Models\Entrega;
 use App\Models\Estudiante;
 use App\Models\Leccion;
 use App\Models\Materia;
+use App\Models\Recurso;
 use App\Models\Tema;
 use App\Services\MachineLearningService;
 use Illuminate\Http\RedirectResponse;
@@ -56,6 +57,25 @@ class LeccionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $recursos = Recurso::with(['materia', 'tema', 'docente.user', 'curso'])
+            ->when($cursoId, fn ($q) => $q->where(fn ($sub) => $sub->where('curso_id', $cursoId)->orWhereNull('curso_id')))
+            ->when($materiaId, fn ($q) => $q->where('materia_id', $materiaId))
+            ->when($user->hasRole('docente'), function ($q) use ($user) {
+                $docente = Docente::where('user_id', $user->id)->first();
+                if ($docente) {
+                    $q->where('docente_id', $docente->id);
+                }
+            })
+            ->when($user->hasRole('estudiante'), function ($q) use ($user) {
+                $estudiante = $user->estudiante;
+                $cursoIds = $estudiante?->cursos()->pluck('cursos.id') ?? collect();
+                $q->where(fn ($sub) => $sub->whereIn('curso_id', $cursoIds)->orWhereNull('curso_id'))
+                    ->where('estado', 'activo');
+            })
+            ->orderBy('orden')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         if ($user->hasRole('docente')) {
             $docente = Docente::where('user_id', $user->id)->first();
             $cursos = Curso::whereHas('materias', fn ($q) => $q->where('curso_materia.docente_id', $docente?->id))
@@ -67,8 +87,12 @@ class LeccionController extends Controller
             $cursos = $estudiante?->cursos()->with('gestion')->get() ?? collect();
             $materias = Materia::whereHas('cursos.estudiantes', fn ($q) => $q->where('estudiante_id', $estudiante?->id))->get();
             $cursoIds = $cursos->pluck('id');
-            $temas = Tema::whereHas('lecciones', function ($q) use ($cursoIds) {
-                $q->whereIn('curso_id', $cursoIds)->where('estado', 'activo');
+            $temas = Tema::where(function ($q) use ($cursoIds) {
+                $q->whereHas('lecciones', function ($sq) use ($cursoIds) {
+                    $sq->whereIn('curso_id', $cursoIds)->where('estado', 'activo');
+                })->orWhereHas('recursos', function ($sq) use ($cursoIds) {
+                    $sq->where(fn ($sub) => $sub->whereIn('curso_id', $cursoIds)->orWhereNull('curso_id'))->where('estado', 'activo');
+                });
             })->orderBy('materia_id')->orderBy('orden')->get();
         } else {
             $cursos = Curso::with('gestion')->get();
@@ -78,6 +102,7 @@ class LeccionController extends Controller
 
         return Inertia::render('lecciones/index', [
             'lecciones' => $lecciones,
+            'recursos' => $recursos,
             'cursos' => $cursos,
             'materias' => $materias,
             'temas' => $temas,

@@ -16,6 +16,7 @@ use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\NotificacionController;
 use App\Http\Controllers\PaginaAdminController;
 use App\Http\Controllers\RecomendacionController;
+use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\RefuerzoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\RoleController;
@@ -163,9 +164,19 @@ Route::middleware(['auth'])->group(function () {
     // TEMAS (Admin y Docente)
     // ========================
     Route::middleware(['role:admin|docente'])->prefix('temas')->name('temas.')->controller(TemaController::class)->group(function () {
+        Route::post('/generar-resumen', 'generarResumen')->name('generar-resumen');
         Route::post('/', 'store')->name('store');
         Route::put('/{tema}', 'update')->name('update');
         Route::delete('/{tema}', 'destroy')->name('destroy');
+    });
+
+    // ========================
+    // RECURSOS DE ESTUDIO (Admin y Docente)
+    // ========================
+    Route::middleware(['role:admin|docente'])->prefix('recursos')->name('recursos.')->controller(RecursoController::class)->group(function () {
+        Route::post('/', 'store')->name('store');
+        Route::put('/{recurso}', 'update')->name('update');
+        Route::delete('/{recurso}', 'destroy')->name('destroy');
     });
 
     // ========================
