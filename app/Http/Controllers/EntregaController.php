@@ -47,13 +47,14 @@ class EntregaController extends Controller
     }
 
     /**
-     * Vista Docente: Entregas de mis lecciones
+     * Vista Docente: Entregas de mis lecciones (/entregas/docente)
      */
     public function docente(): Response
     {
         $user = Auth::user();
         $docente = Docente::where('user_id', $user->id)->first();
 
+        //aqui buscamos todas las lecciones del docente que esta logueado?
         $lecciones = Leccion::with('materia', 'curso')
             ->where('docente_id', $docente->id)
             ->orderBy('created_at', 'desc')

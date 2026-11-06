@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  ExternalLink,
   Eye,
   FileCheck,
   FileSpreadsheet,
@@ -23,6 +24,7 @@ import {
   Send,
   Users,
   X,
+  Youtube,
 } from "lucide-react";
 import { FormEventHandler, useMemo, useState } from "react";
 
@@ -103,6 +105,22 @@ interface EntregaEstudiante {
   } | null;
 }
 
+interface Recurso {
+  id: number;
+  materia_id: number;
+  tema_id: number | null;
+  curso_id: number | null;
+  docente_id: number;
+  titulo: string;
+  descripcion?: string | null;
+  tipo: "pdf" | "enlace" | "documento";
+  archivo?: string | null;
+  enlace_url?: string | null;
+  orden: number;
+  estado: string;
+  created_at: string;
+}
+
 interface Leccion {
   id: number;
   hash_id?: string;
@@ -125,8 +143,24 @@ interface Filtros {
   materia_id: number | null;
 }
 
+interface Recurso {
+  id: number;
+  materia_id: number;
+  tema_id: number | null;
+  curso_id: number | null;
+  docente_id?: number | null;
+  titulo: string;
+  descripcion: string | null;
+  tipo: "pdf" | "enlace" | "documento";
+  archivo: string | null;
+  enlace_url: string | null;
+  estado?: string;
+  created_at?: string;
+}
+
 interface Props {
   lecciones: Leccion[];
+  recursos?: Recurso[];
   cursos: CursoOption[];
   materias: MateriaOption[];
   temas: Tema[];
@@ -234,6 +268,7 @@ function diasRestantes(fecha?: string | null) {
 
 export default function LeccionesIndex({
   lecciones,
+  recursos = [],
   cursos,
   materias,
   temas,
@@ -249,6 +284,89 @@ export default function LeccionesIndex({
   const [archivo, setArchivo] = useState<File | null>(null);
   const [eliminarArchivo, setEliminarArchivo] = useState(false);
 
+  // Modal para publicar recurso de estudio
+  const [modalNuevoRecurso, setModalNuevoRecurso] = useState(false);
+  const [recursoForm, setRecursoForm] = useState<{
+    materia_id: number;
+    tema_id: number | null;
+    curso_id: number | null;
+    titulo: string;
+    descripcion: string;
+    tipo: "pdf" | "enlace" | "documento";
+    enlace_url: string;
+    archivo: File | null;
+  }>({
+    materia_id: 0,
+    tema_id: null,
+    curso_id: null,
+    titulo: "",
+    descripcion: "",
+    tipo: "pdf",
+    enlace_url: "",
+    archivo: null,
+  });
+  const [recursoErrors, setRecursoErrors] = useState<Record<string, string>>(
+    {},
+  );
+  const [processingRecurso, setProcessingRecurso] = useState(false);
+
+  const openCreateRecursoInTema = (
+    materiaId: number,
+    temaId: number | null,
+  ) => {
+    const curId =
+      filtroCurso && filtroCurso !== "none" ? Number(filtroCurso) : null;
+    setRecursoForm({
+      materia_id: materiaId,
+      tema_id: temaId,
+      curso_id: curId,
+      titulo: "",
+      descripcion: "",
+      tipo: "pdf",
+      enlace_url: "",
+      archivo: null,
+    });
+    setRecursoErrors({});
+    setModalNuevoRecurso(true);
+  };
+
+  const handleSaveRecurso: FormEventHandler = (e) => {
+    e.preventDefault();
+    setProcessingRecurso(true);
+
+    const payload: Record<string, any> = {
+      materia_id: recursoForm.materia_id,
+      tema_id: recursoForm.tema_id,
+      curso_id: recursoForm.curso_id,
+      titulo: recursoForm.titulo,
+      descripcion: recursoForm.descripcion,
+      tipo: recursoForm.tipo,
+      enlace_url: recursoForm.tipo === "enlace" ? recursoForm.enlace_url : null,
+    };
+
+    if (recursoForm.tipo !== "enlace" && recursoForm.archivo) {
+      payload.archivo = recursoForm.archivo;
+    }
+
+    router.post("/recursos", payload, {
+      forceFormData: true,
+      onSuccess: () => {
+        setModalNuevoRecurso(false);
+        setProcessingRecurso(false);
+        setRecursoErrors({});
+      },
+      onError: (err) => {
+        setRecursoErrors(err);
+        setProcessingRecurso(false);
+      },
+    });
+  };
+
+  const handleDeleteRecurso = (id: number) => {
+    if (!confirm("¿Estás seguro de eliminar este recurso de estudio?")) return;
+    router.delete(`/recursos/${id}`);
+  };
+
   // Modal rápido para crear tema
   const [modalNuevoTema, setModalNuevoTema] = useState(false);
   const [temaForm, setTemaForm] = useState({
@@ -261,6 +379,16 @@ export default function LeccionesIndex({
   });
   const [temaErrors, setTemaErrors] = useState<Record<string, string>>({});
   const [processingTema, setProcessingTema] = useState(false);
+
+  // Asistente IA para creación y resumen de tema
+  const [modoCreacionTema, setModoCreacionTema] = useState<
+    "pdf" | "texto" | "manual"
+  >("pdf");
+  const [temaPdfFile, setTemaPdfFile] = useState<File | null>(null);
+  const [temaTextoBruto, setTemaTextoBruto] = useState<string>("");
+  const [generandoResumenIA, setGenerandoResumenIA] = useState<boolean>(false);
+  const [iaMensajeError, setIaMensajeError] = useState<string | null>(null);
+  const [iaMensajeExito, setIaMensajeExito] = useState<string | null>(null);
 
   const [form, setForm] = useState<LeccionForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -396,14 +524,92 @@ export default function LeccionesIndex({
     });
   };
 
+  const handleGenerarResumenIA = async () => {
+    if (!temaForm.materia_id) {
+      setIaMensajeError("Por favor selecciona una materia primero.");
+      return;
+    }
+    if (modoCreacionTema === "pdf" && !temaPdfFile) {
+      setIaMensajeError("Por favor selecciona un archivo PDF.");
+      return;
+    }
+    if (modoCreacionTema === "texto" && !temaTextoBruto.trim()) {
+      setIaMensajeError("Por favor ingresa un texto para analizar.");
+      return;
+    }
+
+    setGenerandoResumenIA(true);
+    setIaMensajeError(null);
+    setIaMensajeExito(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("materia_id", String(temaForm.materia_id));
+      if (modoCreacionTema === "pdf" && temaPdfFile) {
+        formData.append("archivo_pdf", temaPdfFile);
+      }
+      if (modoCreacionTema === "texto") {
+        formData.append("texto", temaTextoBruto);
+      }
+
+      const res = await (window as any).axios.post(
+        "/temas/generar-resumen",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        },
+      );
+
+      if (res.data && res.data.success) {
+        setTemaForm((prev) => ({
+          ...prev,
+          nombre: res.data.nombre || prev.nombre,
+          paginas_libro: res.data.paginas_libro || prev.paginas_libro,
+          resumen: res.data.resumen || prev.resumen,
+        }));
+        setIaMensajeExito("¡Resumen y título generados exitosamente con IA!");
+      } else {
+        setIaMensajeError(
+          res.data?.message || "No se pudo generar el resumen con IA.",
+        );
+      }
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message ||
+        "Error al procesar con IA. Inténtalo de nuevo.";
+      setIaMensajeError(msg);
+    } finally {
+      setGenerandoResumenIA(false);
+    }
+  };
+
   const handleSaveTema: FormEventHandler = (e) => {
     e.preventDefault();
     setProcessingTema(true);
-    router.post("/temas", temaForm, {
+
+    const payload: Record<string, any> = {
+      materia_id: temaForm.materia_id,
+      nombre: temaForm.nombre,
+      orden: temaForm.orden,
+      paginas_libro: temaForm.paginas_libro,
+      resumen: temaForm.resumen,
+      estado: temaForm.estado,
+    };
+
+    if (temaPdfFile) {
+      payload.archivo_pdf = temaPdfFile;
+    }
+
+    router.post("/temas", payload, {
+      forceFormData: !!temaPdfFile,
       onSuccess: () => {
         setModalNuevoTema(false);
         setProcessingTema(false);
         setTemaErrors({});
+        setTemaPdfFile(null);
+        setTemaTextoBruto("");
+        setIaMensajeError(null);
+        setIaMensajeExito(null);
       },
       onError: (err) => {
         setTemaErrors(err);
@@ -430,6 +636,11 @@ export default function LeccionesIndex({
       estado: "programado",
     });
     setTemaErrors({});
+    setModoCreacionTema("pdf");
+    setTemaPdfFile(null);
+    setTemaTextoBruto("");
+    setIaMensajeError(null);
+    setIaMensajeExito(null);
     setModalNuevoTema(true);
   };
 
@@ -480,14 +691,16 @@ export default function LeccionesIndex({
     if (filtroMateria && filtroMateria !== "none") {
       lista = lista.filter((t) => String(t.materia_id) === filtroMateria);
     }
-    // En la vista de los estudiantes: SOLO mostrar temas que tengan al menos una tarea o lección asignada
+    // En la vista de los estudiantes: mostrar temas que tengan al menos una tarea o un recurso de estudio
     if (!isDocente) {
       lista = lista.filter(
-        (t) => (leccionesPorTema[String(t.id)]?.length ?? 0) > 0,
+        (t) =>
+          (leccionesPorTema[String(t.id)]?.length ?? 0) > 0 ||
+          (recursos || []).some((r) => r.tema_id === t.id),
       );
     }
     return lista;
-  }, [temas, filtroMateria, isDocente, leccionesPorTema]);
+  }, [temas, filtroMateria, isDocente, leccionesPorTema, recursos]);
 
   const hoy = new Date();
   const [mes, setMes] = useState(hoy.getMonth());
@@ -806,17 +1019,35 @@ export default function LeccionesIndex({
                         </button>
 
                         {isDocente && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-primary border-primary-border hover:bg-primary-light"
-                            onClick={() =>
-                              openCreateInTema(tema.materia_id, tema.id)
-                            }
-                          >
-                            <Plus className="mr-1 h-3.5 w-3.5" />
-                            Añadir
-                          </Button>
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                              onClick={() =>
+                                openCreateRecursoInTema(
+                                  tema.materia_id,
+                                  tema.id,
+                                )
+                              }
+                              title="Subir material de estudio (PDF o Enlace web)"
+                            >
+                              <Plus className="mr-1 h-3 w-3" />
+                              Recurso
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-primary border-primary-border hover:bg-primary-light"
+                              onClick={() =>
+                                openCreateInTema(tema.materia_id, tema.id)
+                              }
+                              title="Crear nueva tarea o práctica evaluativa"
+                            >
+                              <Plus className="mr-1 h-3 w-3" />
+                              Tarea
+                            </Button>
+                          </div>
                         )}
                       </div>
 
@@ -859,6 +1090,106 @@ export default function LeccionesIndex({
                               )}
                             </div>
                           )}
+                          {/* 📚 RECURSOS DE ESTUDIO DEL TEMA */}
+                          {(() => {
+                            const recursosTema = (recursos || []).filter(
+                              (r) => r.tema_id === tema.id,
+                            );
+                            if (recursosTema.length === 0) return null;
+                            return (
+                              <div className="mb-3 space-y-1.5">
+                                <div className="flex items-center gap-1.5 px-0.5">
+                                  <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                                    📚 Recursos de Estudio (
+                                    {recursosTema.length})
+                                  </span>
+                                </div>
+                                <div className="space-y-1.5">
+                                  {recursosTema.map((r) => {
+                                    const esYoutube =
+                                      r.enlace_url &&
+                                      (r.enlace_url.includes("youtube.com") ||
+                                        r.enlace_url.includes("youtu.be"));
+                                    const href =
+                                      r.tipo === "enlace"
+                                        ? r.enlace_url
+                                        : `/storage/${r.archivo}`;
+                                    return (
+                                      <div
+                                        key={r.id}
+                                        className="group flex items-center justify-between gap-3 rounded-lg border border-neutral-200/80 bg-white dark:bg-neutral-900/50 p-2.5 hover:border-primary/40 hover:shadow-xs transition-all"
+                                      >
+                                        <a
+                                          href={href || "#"}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="flex items-center gap-2.5 min-w-0 flex-1 hover:text-primary transition-colors"
+                                        >
+                                          <div className="shrink-0 p-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                            {r.tipo === "enlace" ? (
+                                              esYoutube ? (
+                                                <Youtube className="h-4 w-4 text-red-600" />
+                                              ) : (
+                                                <ExternalLink className="h-4 w-4 text-emerald-600" />
+                                              )
+                                            ) : (
+                                              <FileText className="h-4 w-4 text-blue-600" />
+                                            )}
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs font-semibold truncate">
+                                                {r.titulo}
+                                              </span>
+                                              <Badge
+                                                variant="outline"
+                                                className="text-[10px] py-0 px-1.5 capitalize"
+                                              >
+                                                {r.tipo === "enlace"
+                                                  ? esYoutube
+                                                    ? "Video YouTube"
+                                                    : "Enlace Web"
+                                                  : "Documento / PDF"}
+                                              </Badge>
+                                            </div>
+                                            {r.descripcion && (
+                                              <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                                                {r.descripcion}
+                                              </p>
+                                            )}
+                                          </div>
+                                        </a>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                          <a
+                                            href={href || "#"}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-xs font-medium text-primary hover:underline px-2 py-1 rounded bg-primary/5 hover:bg-primary/10"
+                                          >
+                                            Abrir
+                                          </a>
+                                          {isDocente && (
+                                            <Button
+                                              size="icon"
+                                              variant="ghost"
+                                              className="h-7 w-7 text-neutral-400 hover:text-red-500"
+                                              onClick={() =>
+                                                handleDeleteRecurso(r.id)
+                                              }
+                                              title="Eliminar recurso"
+                                            >
+                                              <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
+
                           {leccionesTema.length === 0 ? (
                             <div className="py-6 text-center text-xs text-neutral-400">
                               No hay lecciones en este tema todavía.
@@ -1109,157 +1440,200 @@ export default function LeccionesIndex({
                 })}
 
                 {/* PANEL SIN TEMA */}
-                {(leccionesPorTema["sin-tema"]?.length ?? 0) > 0 && (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => toggleTema("sin-tema")}
-                      className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors"
-                    >
-                      <ChevronDown
-                        className={`h-4 w-4 text-neutral-400 transition-transform ${temasAbiertos["sin-tema"] ? "" : "-rotate-90"}`}
-                      />
-                      <span className="h-2 w-2 rounded-full bg-neutral-300" />
-                      <span className="font-medium text-sm text-neutral-600 dark:text-neutral-300">
-                        Sin tema específico
-                      </span>
-                      <Badge variant="outline" className="ml-2 text-[10px]">
-                        {leccionesPorTema["sin-tema"].length} lección
-                        {leccionesPorTema["sin-tema"].length !== 1 ? "es" : ""}
-                      </Badge>
-                    </button>
+                {(() => {
+                  const recursosSinTema = (recursos || []).filter(
+                    (r) => !r.tema_id,
+                  );
+                  const totalSinTema =
+                    (leccionesPorTema["sin-tema"]?.length ?? 0) +
+                    recursosSinTema.length;
+                  if (totalSinTema === 0) return null;
 
-                    {temasAbiertos["sin-tema"] && (
-                      <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
-                        <div className="space-y-2">
-                          {leccionesPorTema["sin-tema"].map((l) => {
-                            const restantes = diasRestantes(l.fecha_entrega);
-                            return (
-                              <div
-                                key={l.id}
-                                className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all"
-                              >
-                                <div className="min-w-0 flex-1">
-                                  {isDocente ? (
-                                    <a
-                                      href={`/lecciones/${l.hash_id || l.id}/entregas`}
-                                      className="text-sm font-medium leading-tight hover:text-primary transition-colors"
-                                    >
-                                      {l.titulo}
-                                    </a>
-                                  ) : (
-                                    <a
-                                      href={`/lecciones/${l.hash_id || l.id}`}
-                                      className="text-sm font-medium leading-tight hover:text-primary transition-colors"
-                                    >
-                                      {l.titulo}
-                                    </a>
-                                  )}
-                                  <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-neutral-500">
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      {l.fecha_entrega
-                                        ? formatoFechaCorta(l.fecha_entrega)
-                                        : "Sin fecha"}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Users className="h-3 w-3" />
-                                      {l.curso?.gestion?.año} · P.
-                                      {l.curso?.paralelo}
-                                    </span>
-                                    {l.docente && (
-                                      <span
-                                        className="flex items-center gap-1"
-                                        title={nombreCompleto(l.docente.user)}
-                                      >
-                                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
-                                          {iniciales(l.docente.user)}
-                                        </span>
-                                        <span className="truncate max-w-[120px]">
-                                          {nombreCompleto(l.docente.user)}
-                                        </span>
-                                      </span>
-                                    )}
-                                    {l.imagen && (
-                                      <span className="flex items-center gap-1 font-medium text-primary">
-                                        <Paperclip className="h-3 w-3" />
-                                        PDF adjunto
-                                      </span>
-                                    )}
-                                    {restantes !== null &&
-                                      restantes >= 0 &&
-                                      restantes <= 3 && (
-                                        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
-                                          {restantes === 0
-                                            ? "Hoy"
-                                            : `${restantes}d`}
-                                        </Badge>
-                                      )}
-                                    {restantes !== null &&
-                                      restantes < 0 &&
-                                      l.estado === "activo" && (
-                                        <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">
-                                          Vencida
-                                        </Badge>
-                                      )}
-                                    <span
-                                      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                                        l.estado === "activo"
-                                          ? "bg-emerald-50 text-emerald-700"
-                                          : "bg-neutral-100 text-neutral-500"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`h-1 w-1 rounded-full ${l.estado === "activo" ? "bg-emerald-500" : "bg-neutral-400"}`}
-                                      />
-                                      {l.estado === "activo"
-                                        ? "Activo"
-                                        : "Inactivo"}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
-                                  {isDocente && (
-                                    <>
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => toggleTema("sin-tema")}
+                          className="flex flex-1 items-center gap-2 text-left"
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 text-neutral-400 transition-transform ${temasAbiertos["sin-tema"] ? "" : "-rotate-90"}`}
+                          />
+                          <span className="h-2 w-2 rounded-full bg-neutral-300" />
+                          <span className="font-medium text-sm text-neutral-600 dark:text-neutral-300">
+                            Sin tema específico (General)
+                          </span>
+                          <Badge variant="outline" className="ml-2 text-[10px]">
+                            {totalSinTema} elemento
+                            {totalSinTema !== 1 ? "s" : ""}
+                          </Badge>
+                        </button>
+                        {isDocente && (
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                              onClick={() =>
+                                openCreateRecursoInTema(
+                                  materias[0]?.id || 0,
+                                  null,
+                                )
+                              }
+                              title="Subir material de estudio general"
+                            >
+                              <Plus className="mr-1 h-3 w-3" />
+                              Recurso
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs text-primary border-primary-border hover:bg-primary-light"
+                              onClick={() =>
+                                openCreateInTema(materias[0]?.id || 0, 0)
+                              }
+                              title="Crear nueva tarea general"
+                            >
+                              <Plus className="mr-1 h-3 w-3" />
+                              Tarea
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {temasAbiertos["sin-tema"] && (
+                        <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
+                          <div className="space-y-2">
+                            {leccionesPorTema["sin-tema"].map((l) => {
+                              const restantes = diasRestantes(l.fecha_entrega);
+                              return (
+                                <div
+                                  key={l.id}
+                                  className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all"
+                                >
+                                  <div className="min-w-0 flex-1">
+                                    {isDocente ? (
                                       <a
                                         href={`/lecciones/${l.hash_id || l.id}/entregas`}
+                                        className="text-sm font-medium leading-tight hover:text-primary transition-colors"
                                       >
+                                        {l.titulo}
+                                      </a>
+                                    ) : (
+                                      <a
+                                        href={`/lecciones/${l.hash_id || l.id}`}
+                                        className="text-sm font-medium leading-tight hover:text-primary transition-colors"
+                                      >
+                                        {l.titulo}
+                                      </a>
+                                    )}
+                                    <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-neutral-500">
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {l.fecha_entrega
+                                          ? formatoFechaCorta(l.fecha_entrega)
+                                          : "Sin fecha"}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Users className="h-3 w-3" />
+                                        {l.curso?.gestion?.año} · P.
+                                        {l.curso?.paralelo}
+                                      </span>
+                                      {l.docente && (
+                                        <span
+                                          className="flex items-center gap-1"
+                                          title={nombreCompleto(l.docente.user)}
+                                        >
+                                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
+                                            {iniciales(l.docente.user)}
+                                          </span>
+                                          <span className="truncate max-w-[120px]">
+                                            {nombreCompleto(l.docente.user)}
+                                          </span>
+                                        </span>
+                                      )}
+                                      {l.imagen && (
+                                        <span className="flex items-center gap-1 font-medium text-primary">
+                                          <Paperclip className="h-3 w-3" />
+                                          PDF adjunto
+                                        </span>
+                                      )}
+                                      {restantes !== null &&
+                                        restantes >= 0 &&
+                                        restantes <= 3 && (
+                                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
+                                            {restantes === 0
+                                              ? "Hoy"
+                                              : `${restantes}d`}
+                                          </Badge>
+                                        )}
+                                      {restantes !== null &&
+                                        restantes < 0 &&
+                                        l.estado === "activo" && (
+                                          <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">
+                                            Vencida
+                                          </Badge>
+                                        )}
+                                      <span
+                                        className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                                          l.estado === "activo"
+                                            ? "bg-emerald-50 text-emerald-700"
+                                            : "bg-neutral-100 text-neutral-500"
+                                        }`}
+                                      >
+                                        <span
+                                          className={`h-1 w-1 rounded-full ${l.estado === "activo" ? "bg-emerald-500" : "bg-neutral-400"}`}
+                                        />
+                                        {l.estado === "activo"
+                                          ? "Activo"
+                                          : "Inactivo"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
+                                    {isDocente && (
+                                      <>
+                                        <a
+                                          href={`/lecciones/${l.hash_id || l.id}/entregas`}
+                                        >
+                                          <Button
+                                            variant="outline"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            title="Ver entregas"
+                                          >
+                                            <Users className="h-3.5 w-3.5 text-blue-500" />
+                                          </Button>
+                                        </a>
                                         <Button
                                           variant="outline"
                                           size="icon"
                                           className="h-7 w-7"
-                                          title="Ver entregas"
+                                          onClick={() => openEdit(l)}
                                         >
-                                          <Users className="h-3.5 w-3.5 text-blue-500" />
+                                          <Pencil className="h-3.5 w-3.5" />
                                         </Button>
-                                      </a>
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => openEdit(l)}
-                                      >
-                                        <Pencil className="h-3.5 w-3.5" />
-                                      </Button>
-                                      <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-7 w-7"
-                                        onClick={() => openDelete(l)}
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                      </Button>
-                                    </>
-                                  )}
+                                        <Button
+                                          variant="outline"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => openDelete(l)}
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -2054,6 +2428,213 @@ export default function LeccionesIndex({
                     <LoaderCircle className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   )}
                   Guardar tema
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        {/* MODAL PUBLICAR RECURSO DE ESTUDIO */}
+        <Dialog open={modalNuevoRecurso} onOpenChange={setModalNuevoRecurso}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-blue-600" />
+                Nuevo Recurso de Estudio
+              </DialogTitle>
+              <DialogDescription>
+                Publica material didáctico (PDF, diapositivas o enlaces de
+                investigación/YouTube) que los estudiantes podrán consultar
+                directamente.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSaveRecurso} className="space-y-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Materia *</Label>
+                <Select
+                  value={String(recursoForm.materia_id || "")}
+                  onValueChange={(v) =>
+                    setRecursoForm({ ...recursoForm, materia_id: Number(v) })
+                  }
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Seleccionar materia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(materias || []).map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>
+                        {m.codigo} - {m.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <InputError message={recursoErrors.materia_id} />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Tema del Temario</Label>
+                <Select
+                  value={
+                    recursoForm.tema_id ? String(recursoForm.tema_id) : "none"
+                  }
+                  onValueChange={(v) =>
+                    setRecursoForm({
+                      ...recursoForm,
+                      tema_id: v === "none" ? null : Number(v),
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Sin tema específico" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      Sin tema específico (General)
+                    </SelectItem>
+                    {temas
+                      .filter(
+                        (t) =>
+                          !recursoForm.materia_id ||
+                          t.materia_id === recursoForm.materia_id,
+                      )
+                      .map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.orden}. {t.nombre}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <InputError message={recursoErrors.tema_id} />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="rec_titulo" className="text-xs">
+                  Título del Recurso *
+                </Label>
+                <Input
+                  id="rec_titulo"
+                  value={recursoForm.titulo}
+                  onChange={(e) =>
+                    setRecursoForm({ ...recursoForm, titulo: e.target.value })
+                  }
+                  required
+                  className="h-8 text-xs"
+                  placeholder="Ej: Diapositivas Unidad 3 o Video de la Sinapsis"
+                />
+                <InputError message={recursoErrors.titulo} />
+              </div>
+
+              {/* SELECTOR TIPO DE RECURSO */}
+              <div className="space-y-1">
+                <Label className="text-xs">Tipo de Recurso *</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    className={`py-2 px-3 rounded-lg border text-xs flex items-center justify-center gap-1.5 transition-all ${
+                      recursoForm.tipo === "pdf"
+                        ? "border-blue-500 bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/40 dark:text-blue-300"
+                        : "border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
+                    }`}
+                    onClick={() =>
+                      setRecursoForm({ ...recursoForm, tipo: "pdf" })
+                    }
+                  >
+                    <FileText className="h-3.5 w-3.5 text-blue-600" />
+                    Documento / PDF
+                  </button>
+                  <button
+                    type="button"
+                    className={`py-2 px-3 rounded-lg border text-xs flex items-center justify-center gap-1.5 transition-all ${
+                      recursoForm.tipo === "enlace"
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold dark:bg-emerald-950/40 dark:text-emerald-300"
+                        : "border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400"
+                    }`}
+                    onClick={() =>
+                      setRecursoForm({ ...recursoForm, tipo: "enlace" })
+                    }
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 text-emerald-600" />
+                    Enlace Web / YouTube
+                  </button>
+                </div>
+              </div>
+
+              {/* SI ES ARCHIVO */}
+              {recursoForm.tipo !== "enlace" ? (
+                <div className="space-y-1">
+                  <Label htmlFor="rec_archivo" className="text-xs">
+                    Seleccionar Archivo (PDF, Word, PPTX - máx 25MB) *
+                  </Label>
+                  <Input
+                    id="rec_archivo"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.zip"
+                    onChange={(e) =>
+                      setRecursoForm({
+                        ...recursoForm,
+                        archivo: e.target.files?.[0] || null,
+                      })
+                    }
+                    className="h-8 text-xs file:text-xs file:h-6"
+                  />
+                  <InputError message={recursoErrors.archivo} />
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <Label htmlFor="rec_url" className="text-xs">
+                    URL / Enlace externo (YouTube, Google Scholar, Scielo...) *
+                  </Label>
+                  <Input
+                    id="rec_url"
+                    type="url"
+                    value={recursoForm.enlace_url}
+                    onChange={(e) =>
+                      setRecursoForm({
+                        ...recursoForm,
+                        enlace_url: e.target.value,
+                      })
+                    }
+                    placeholder="https://www.youtube.com/watch?v=... o https://..."
+                    className="h-8 text-xs"
+                    required
+                  />
+                  <InputError message={recursoErrors.enlace_url} />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <Label htmlFor="rec_descripcion" className="text-xs">
+                  Orientación o descripción breve (Opcional)
+                </Label>
+                <textarea
+                  id="rec_descripcion"
+                  value={recursoForm.descripcion}
+                  onChange={(e) =>
+                    setRecursoForm({
+                      ...recursoForm,
+                      descripcion: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-md border p-2 text-xs"
+                  rows={2}
+                  placeholder="Nota breve para orientar la lectura o estudio..."
+                />
+              </div>
+
+              <DialogFooter className="pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setModalNuevoRecurso(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" size="sm" disabled={processingRecurso}>
+                  {processingRecurso && (
+                    <LoaderCircle className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  )}
+                  Publicar recurso
                 </Button>
               </DialogFooter>
             </form>

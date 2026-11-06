@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Configuracion;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
@@ -13,10 +14,10 @@ class TelegramSetWebhook extends Command
 
     public function handle(): int
     {
-        $token = config('services.telegram.bot_token');
+        $token = Configuracion::getTelegramToken() ?: config('services.telegram.bot_token');
 
-        if (! $token || $token === 'xxxxx') {
-            $this->error('Error: TELEGRAM_BOT_TOKEN no está configurado en tu archivo .env.');
+        if (! $token || $token === 'xxxxx' || $token === 'YOUR-BOT-TOKEN') {
+            $this->error('Error: No se encontró ningún token de bot en la base de datos ni en TELEGRAM_BOT_TOKEN en tu archivo .env.');
 
             return self::FAILURE;
         }

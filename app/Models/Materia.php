@@ -18,6 +18,7 @@ class Materia extends Model
         'codigo',
     ];
 
+    /** Cursos que tienen esta materia en su plan curricular. */
     public function cursos(): BelongsToMany
     {
         return $this->belongsToMany(Curso::class, 'curso_materia')
@@ -25,21 +26,25 @@ class Materia extends Model
             ->withTimestamps();
     }
 
+    /** Temario oficial de la materia ordenado secuencialmente. */
     public function temas(): HasMany
     {
         return $this->hasMany(Tema::class)->orderBy('orden');
     }
 
+    /** Lecciones y tareas asociadas a esta materia. */
     public function lecciones(): HasMany
     {
         return $this->hasMany(Leccion::class);
     }
 
+    /** Materiales de estudio (PDF, enlaces) asignados a esta materia. */
     public function recursos(): HasMany
     {
         return $this->hasMany(Recurso::class);
     }
 
+    /** Libros de texto y bibliografía digital de la materia. */
     public function libros(): HasMany
     {
         return $this->hasMany(Libro::class);

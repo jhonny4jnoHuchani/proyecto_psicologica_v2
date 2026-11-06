@@ -280,6 +280,9 @@ export default function TelegramSettings({ settings }: Props) {
                       </span>
                     </p>
                   )}
+                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                    💡 Si registras un bot nuevo, los estudiantes y docentes deberán abrir el nuevo bot en Telegram y presionar <code className="text-primary font-semibold">/start</code> para autorizar la recepción de mensajes.
+                  </p>
                   <InputError message={errors.telegram_bot_token} />
                 </div>
 

@@ -39,7 +39,7 @@ class TelegramConfigController extends Controller
                 'token_preview' => $tokenPreview,
                 'chat_id' => $config?->telegram_chat_id ?? '',
                 'bot_username' => $config?->telegram_bot_username ?? '',
-                'activo' => (bool) ($config?->telegram_activo ?? ($hasToken && config('services.telegram.enabled', false))),
+                'activo' => Configuracion::isTelegramActivo(),
                 'webhook_url' => $webhookUrl,
                 'app_url' => config('app.url'),
             ],
@@ -73,7 +73,7 @@ class TelegramConfigController extends Controller
 
         $activo = (bool) $request->telegram_activo;
 
-        // Si el usuario quiere activar Telegram pero no hay ningún token
+        // Si el usuario quiere activar Telegram pero no hay ningún token disponible
         if ($activo && empty($tokenParaUsar)) {
             return back()->withErrors([
                 'telegram_bot_token' => 'Debes ingresar un Token de Bot para activar las notificaciones de Telegram.',
@@ -81,6 +81,8 @@ class TelegramConfigController extends Controller
         }
 
         $botUsername = $config->telegram_bot_username;
+        $webhookRegistrado = false;
+        $advertenciaWebhook = null;
 
         // Si hay token y se está activando (o cambiando de token), validar con Telegram
         if ($activo && ! empty($tokenParaUsar)) {
@@ -106,29 +108,29 @@ class TelegramConfigController extends Controller
 
             $botUsername = $getMeResponse->json('result.username');
 
-            // 2. Registrar Webhook automáticamente en Telegram
+            // 2. Registrar Webhook si la URL cuenta con HTTPS público
             $webhookUrl = rtrim(config('app.url'), '/').'/telegram/webhook';
 
-            try {
-                $webhookResponse = Http::timeout(10)
-                    ->post("https://api.telegram.org/bot{$tokenParaUsar}/setWebhook", [
-                        'url' => $webhookUrl,
-                        'drop_pending_updates' => false,
-                    ]);
-            } catch (\Exception $e) {
-                Log::error('Error registrando Webhook en Telegram: '.$e->getMessage());
+            if (str_starts_with($webhookUrl, 'https://')) {
+                try {
+                    $webhookResponse = Http::timeout(10)
+                        ->post("https://api.telegram.org/bot{$tokenParaUsar}/setWebhook", [
+                            'url' => $webhookUrl,
+                            'drop_pending_updates' => false,
+                        ]);
 
-                return back()->withErrors([
-                    'telegram_bot_token' => 'Error de conexión al registrar el Webhook con Telegram: '.$e->getMessage(),
-                ]);
-            }
-
-            if (! $webhookResponse->successful() || ! $webhookResponse->json('ok')) {
-                $errorWebhook = $webhookResponse->json('description') ?? 'Telegram rechazó el webhook.';
-
-                return back()->withErrors([
-                    'telegram_bot_token' => "El bot @{$botUsername} es válido, pero Telegram rechazó la URL de Webhook ({$webhookUrl}): {$errorWebhook}. Asegúrate de que tu APP_URL sea un dominio público con certificado SSL HTTPS válido.",
-                ]);
+                    if ($webhookResponse->successful() && $webhookResponse->json('ok')) {
+                        $webhookRegistrado = true;
+                    } else {
+                        $advertenciaWebhook = $webhookResponse->json('description') ?? 'Telegram rechazó el webhook.';
+                        Log::warning("Telegram rechazó el webhook ({$webhookUrl}): {$advertenciaWebhook}");
+                    }
+                } catch (\Exception $e) {
+                    $advertenciaWebhook = $e->getMessage();
+                    Log::error('Error registrando Webhook en Telegram: '.$e->getMessage());
+                }
+            } else {
+                $advertenciaWebhook = "La URL del sistema ({$webhookUrl}) no utiliza HTTPS. Telegram requiere HTTPS con certificado SSL válido para recibir eventos de webhook.";
             }
         }
 
@@ -148,17 +150,27 @@ class TelegramConfigController extends Controller
             'telegram_bot_username' => $botUsername,
         ];
 
-        // Solo actualizar el token en BD si se ingresó uno nuevo explícitamente
+        // Guardar el nuevo token si se ingresó, o persistir el de .env si la BD estaba vacía
         if (! empty($nuevoToken)) {
             $datosGuardar['telegram_bot_token'] = $nuevoToken;
+        } elseif (empty($config->telegram_bot_token) && ! empty($tokenParaUsar)) {
+            $datosGuardar['telegram_bot_token'] = $tokenParaUsar;
         }
 
         $config->update($datosGuardar);
         Configuracion::clearTelegramCache();
 
-        $mensajeExito = $activo
-            ? "Bot @{$botUsername} vinculado exitosamente y Webhook registrado en {$webhookUrl}."
-            : 'Integración de Telegram desactivada correctamente.';
+        if (! $activo) {
+            return back()->with('success', 'Integración de Telegram desactivada correctamente.');
+        }
+
+        if ($webhookRegistrado) {
+            $mensajeExito = "Bot @{$botUsername} configurado exitosamente y Webhook registrado en {$webhookUrl}.";
+        } elseif ($advertenciaWebhook) {
+            $mensajeExito = "Bot @{$botUsername} guardado en el sistema. Nota: {$advertenciaWebhook}";
+        } else {
+            $mensajeExito = "Bot @{$botUsername} guardado exitosamente en el sistema.";
+        }
 
         return back()->with('success', $mensajeExito);
     }

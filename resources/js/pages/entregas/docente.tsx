@@ -160,6 +160,8 @@ export default function EntregasDocente({
     setModalCalificar(true);
   };
 
+  //aqui manda lo que es la calificacion (formulario para mandar al controaldor)
+  // calficacion y retroalimentacion se mandan al controlador
   const handleCalificar: FormEventHandler = async (e) => {
     e.preventDefault();
     setProcessing(true);
@@ -661,6 +663,7 @@ export default function EntregasDocente({
                                     <Sparkles className="h-4 w-4" />
                                   </Button>
                                 )}
+
                               <Button
                                 variant="outline"
                                 size="icon"
@@ -733,6 +736,7 @@ export default function EntregasDocente({
                 >
                   Cancelar
                 </Button>
+
                 <Button type="submit" disabled={processing}>
                   {processing && (
                     <LoaderCircle className="h-4 w-4 animate-spin mr-2" />

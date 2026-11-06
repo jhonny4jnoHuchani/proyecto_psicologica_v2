@@ -15,6 +15,7 @@ class IAService
 
     protected string $model;
 
+    /** Inicializa las credenciales, endpoint y modelo de inferencia de IA. */
     public function __construct()
     {
         $this->apiKey = (string) config('services.groq.key', '');
@@ -64,7 +65,10 @@ class IAService
                     'temperature' => 0.7,
                     'response_format' => ['type' => 'json_object'],
                 ]);
-        } catch (\Exception $httpException) {
+        } 
+        
+        
+        catch (\Exception $httpException) {
             Log::error("Fallo de conexión HTTP con el servicio de IA para la entrega #{$entrega->id}: ".$httpException->getMessage(), [
                 'exception' => $httpException,
             ]);
@@ -198,6 +202,7 @@ class IAService
         $prompt .= "Comentarios del docente: {$comentarios}\n\n";
 
         $prompt .= "=== INSTRUCCIONES ===\n";
+
         $prompt .= "1. Genera EXACTAMENTE 10 preguntas abiertas de refuerzo.\n";
         $prompt .= "2. Las preguntas deben estar basadas en el RESUMEN DEL TEMA proporcionado.\n";
         $prompt .= "3. Las preguntas deben ayudar al estudiante a comprender los conceptos que no entendió.\n";

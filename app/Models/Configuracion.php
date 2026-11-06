@@ -86,10 +86,16 @@ class Configuracion extends Model
     public static function isTelegramActivo(): bool
     {
         return \Illuminate\Support\Facades\Cache::remember('telegram_config_activo', now()->addDay(), function () {
-            $config = static::query()->select(['telegram_activo', 'telegram_bot_token'])->first();
-            if ($config && ! is_null($config->telegram_activo)) {
-                return (bool) $config->telegram_activo && ! empty($config->telegram_bot_token);
+            $token = static::getTelegramToken();
+            if (empty($token) || $token === 'YOUR-BOT-TOKEN' || $token === 'xxxxx') {
+                return false;
             }
+
+            $config = static::query()->select(['telegram_activo'])->first();
+            if ($config && ! is_null($config->telegram_activo)) {
+                return (bool) $config->telegram_activo;
+            }
+
             return (bool) config('services.telegram.enabled', false);
         });
     }

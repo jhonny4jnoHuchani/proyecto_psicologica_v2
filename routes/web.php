@@ -41,14 +41,15 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Endpoint público para obtener un token CSRF fresco (evita error 401 en consola al entrar como invitado)
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->name('csrf-token');
+
 // protegemos las rutas o verificamos que tenga alguna identificacion dentro del sistema(middleware)
 Route::middleware(['auth'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    // Endpoint para obtener un token CSRF fresco
-    Route::get('/csrf-token', function () {
-        return response()->json(['token' => csrf_token()]);
-    })->name('csrf-token');
 
     // ========================
     // RUTAS SOLO ADMIN
@@ -206,6 +207,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Calificaciones
     Route::middleware(['role:docente|admin'])->group(function () {
+        //guada la calificacion 
         Route::post('/calificaciones', [CalificacionController::class, 'store'])->name('calificaciones.store');
         Route::post('/calificaciones/sugerir-retroalimentacion', [CalificacionController::class, 'sugerirRetroalimentacion'])->name('calificaciones.sugerir-retroalimentacion');
     });

@@ -21,16 +21,19 @@ class Tema extends Model
         'estado',
     ];
 
+    /** Materia a la que pertenece este tema del temario. */
     public function materia(): BelongsTo
     {
         return $this->belongsTo(Materia::class);
     }
 
+    /** Tareas y lecciones estructuradas dentro de este tema. */
     public function lecciones(): HasMany
     {
         return $this->hasMany(Leccion::class, 'tema_id');
     }
 
+    /** Recursos de estudio (PDFs, enlaces) agrupados en este tema. */
     public function recursos(): HasMany
     {
         return $this->hasMany(Recurso::class, 'tema_id')->orderBy('orden');

@@ -21,6 +21,7 @@ use Inertia\Response;
 
 class LeccionController extends Controller
 {
+    /** Muestra el temario, lecciones, tareas y recursos de estudio del curso seleccionado. */
     public function index(Request $request): Response
     {
         $user = Auth::user();
@@ -114,6 +115,7 @@ class LeccionController extends Controller
         ]);
     }
 
+    /** Crea una nueva lección o tarea académica dentro de un tema. */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -150,6 +152,7 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección creada exitosamente con su material.');
     }
 
+    /** Actualiza el contenido, ponderación o fecha límite de una lección. */
     public function update(Request $request, Leccion $leccion): RedirectResponse
     {
         $request->validate([
@@ -189,6 +192,7 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección actualizada exitosamente.');
     }
 
+    /** Elimina una lección o tarea del temario. */
     public function destroy(Leccion $leccion): RedirectResponse
     {
         if ($leccion->imagen && Storage::disk('public')->exists($leccion->imagen)) {
@@ -200,6 +204,7 @@ class LeccionController extends Controller
         return back()->with('success', 'Lección eliminada.');
     }
 
+    /** Muestra el detalle de una lección para que el estudiante realice su entrega. */
     public function show(Request $request, Leccion $leccion, MachineLearningService $mlService): Response|RedirectResponse
     {
         if (is_numeric($request->route()->originalParameter('leccion'))) {
@@ -265,6 +270,7 @@ class LeccionController extends Controller
         ]);
     }
 
+    /** Lista todas las entregas recibidas para una lección específica. */
     public function entregas(Request $request, Leccion $leccion): RedirectResponse
     {
         return redirect()->route('entregas.docente', ['leccion_id' => $leccion->id]);
