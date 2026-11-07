@@ -531,7 +531,7 @@ export default function Dashboard({
                         );
                       }}
                     >
-                      <SelectTrigger className="h-8.5 w-44 text-xs bg-card border-border shadow-xs">
+                      <SelectTrigger className="h-8.5 w-44 text-xs bg-card/75 backdrop-blur-md border-border/80 shadow-xs">
                         <SelectValue placeholder="Todas las gestiones" />
                       </SelectTrigger>
                       <SelectContent>

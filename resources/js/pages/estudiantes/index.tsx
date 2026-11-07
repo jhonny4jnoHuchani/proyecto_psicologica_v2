@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileUploadDropzone } from "@/components/ui/file-upload-dropzone";
 import AppLayout from "@/layouts/app-layout";
 import { type BreadcrumbItem } from "@/types";
 import { AxiosError } from "axios";
@@ -558,7 +559,7 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
 
         {/* Modal Crear */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+          <DialogContent className="max-h-[90vh] sm:max-w-3xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nuevo Estudiante</DialogTitle>
               <DialogDescription>
@@ -768,7 +769,7 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
 
         {/* Modal Editar */}
         <Dialog open={modalEdit} onOpenChange={setModalEdit}>
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+          <DialogContent className="max-h-[90vh] sm:max-w-3xl overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar Estudiante</DialogTitle>
             </DialogHeader>
@@ -1076,7 +1077,7 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
           </DialogContent>
         </Dialog>
         <Dialog open={modalImport} onOpenChange={setModalImport}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Importar Estudiantes</DialogTitle>
               <DialogDescription>
@@ -1130,14 +1131,15 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
                 <InputError message={errors.curso_id} />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="import-file">3. Archivo Excel *</Label>
-                <Input
+              <div className="space-y-1.5">
+                <Label htmlFor="import-file">3. Archivo Excel con la nómina *</Label>
+                <FileUploadDropzone
                   id="import-file"
-                  type="file"
+                  iconType="excel"
                   accept=".xlsx,.xls"
-                  onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-                  required
+                  onFileChange={(f) => setImportFile(f)}
+                  label="Arrastra aquí el archivo Excel completado"
+                  helperText="Formatos compatibles: .xlsx o .xls"
                 />
                 <InputError message={errors.archivo} />
               </div>

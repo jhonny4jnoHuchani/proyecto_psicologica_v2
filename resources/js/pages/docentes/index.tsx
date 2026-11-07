@@ -383,7 +383,7 @@ export default function DocentesIndex({ docentes }: Props) {
 
         {/* Modal Crear */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nuevo Docente</DialogTitle>
               <DialogDescription>
@@ -569,7 +569,7 @@ export default function DocentesIndex({ docentes }: Props) {
 
         {/* Modal Editar */}
         <Dialog open={modalEdit} onOpenChange={setModalEdit}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar Docente</DialogTitle>
             </DialogHeader>

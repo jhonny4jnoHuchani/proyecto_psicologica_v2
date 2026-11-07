@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileUploadDropzone } from "@/components/ui/file-upload-dropzone";
 import {
   Select,
   SelectContent,
@@ -1752,7 +1753,7 @@ export default function LeccionesIndex({
 
         {/* MODAL CREAR */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nueva lección</DialogTitle>
               <DialogDescription>
@@ -1883,21 +1884,18 @@ export default function LeccionesIndex({
                   />
                   <InputError message={errors.fecha_entrega} />
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="col-span-2 space-y-1.5">
                   <Label htmlFor="create-archivo">
-                    Material / Guía de la lección (PDF)
+                    Material / Guía de la lección (PDF opcional)
                   </Label>
-                  <Input
+                  <FileUploadDropzone
                     id="create-archivo"
-                    type="file"
+                    iconType="pdf"
                     accept=".pdf,application/pdf"
-                    onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                    className="text-xs"
+                    onFileChange={(f) => setArchivo(f)}
+                    label="Arrastra el documento PDF de la lección"
+                    helperText="Instrucciones, lecturas o consigna académica en formato PDF (máx. 20MB)"
                   />
-                  <p className="text-[11px] text-muted-foreground">
-                    Opcional: Adjunta un archivo PDF con las instrucciones,
-                    lecturas o consigna de la lección (máx. 20MB).
-                  </p>
                   <InputError message={errors.archivo} />
                 </div>
               </div>
@@ -1922,7 +1920,7 @@ export default function LeccionesIndex({
 
         {/* MODAL EDITAR */}
         <Dialog open={modalEdit} onOpenChange={setModalEdit}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar lección</DialogTitle>
               <DialogDescription>
@@ -2070,20 +2068,17 @@ export default function LeccionesIndex({
                       </Button>
                     </div>
                   )}
-                  <Input
+                  <FileUploadDropzone
                     id="edit-archivo"
-                    type="file"
+                    iconType="pdf"
                     accept=".pdf,application/pdf"
-                    onChange={(e) => {
-                      setArchivo(e.target.files?.[0] || null);
-                      if (e.target.files?.[0]) setEliminarArchivo(false);
+                    onFileChange={(f) => {
+                      setArchivo(f);
+                      if (f) setEliminarArchivo(false);
                     }}
-                    className="text-xs"
+                    label="Reemplazar archivo PDF de la lección"
+                    helperText="Sube un archivo PDF para actualizar la guía (máx. 20MB)"
                   />
-                  <p className="text-[11px] text-muted-foreground">
-                    Sube un archivo PDF para reemplazar el actual o adjuntar una
-                    nueva guía (máx. 20MB).
-                  </p>
                   <InputError message={errors.archivo} />
                 </div>
               </div>
@@ -2129,7 +2124,7 @@ export default function LeccionesIndex({
 
         {/* MODAL CREAR TEMA RÁPIDO CON ASISTENTE IA */}
         <Dialog open={modalNuevoTema} onOpenChange={setModalNuevoTema}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-primary" />

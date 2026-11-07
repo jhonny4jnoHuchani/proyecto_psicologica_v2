@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileUploadDropzone } from "@/components/ui/file-upload-dropzone";
 import AppLayout from "@/layouts/app-layout";
 import { formatoFechaHora, obtenerEstadoVencimiento } from "@/lib/formatters";
 import { type BreadcrumbItem } from "@/types";
@@ -452,7 +453,7 @@ export default function EntregasEstudiante({
 
         {/* Modal Subir */}
         <Dialog open={modalSubir} onOpenChange={setModalSubir}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Subir Entrega</DialogTitle>
               <DialogDescription asChild>
@@ -470,24 +471,24 @@ export default function EntregasEstudiante({
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubir} className="space-y-4">
-              <div className="space-y-1">
-                <Label>Archivos *</Label>
-                <Input
-                  type="file"
+              <div className="space-y-1.5">
+                <Label>Archivos de la entrega *</Label>
+                <FileUploadDropzone
                   multiple
-                  onChange={(e) => setArchivos(e.target.files)}
+                  onChange={(files) => setArchivos(files)}
+                  error={errors.archivos}
+                  label="Arrastra y suelta aquí tu tarea o archivos"
+                  helperText="Puedes subir documentos PDF, Word, imágenes o comprimidos (máx. 25MB)"
                 />
-                {errors.archivos && (
-                  <p className="text-red-500 text-sm">{errors.archivos}</p>
-                )}
               </div>
-              <div className="space-y-1">
-                <Label>Comentarios</Label>
+              <div className="space-y-1.5">
+                <Label>Comentarios adicionales</Label>
                 <textarea
                   value={comentarios}
                   onChange={(e) => setComentarios(e.target.value)}
-                  className="border rounded p-2 w-full text-sm bg-background"
+                  className="border border-border/80 rounded-2xl p-3 w-full text-sm bg-card/70 backdrop-blur-md focus:border-primary focus:ring-1 focus:ring-primary outline-hidden transition-all"
                   rows={3}
+                  placeholder="Escribe alguna nota u observación opcional para tu docente..."
                 />
               </div>
               <DialogFooter>

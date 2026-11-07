@@ -221,7 +221,7 @@ export default function CursosIndex({ cursos, gestions, materias, docentes, doce
 
                 {/* MODAL CURSO (2 PASOS) */}
                 <Dialog open={modalCurso} onOpenChange={(open) => { if (!open) setModalCurso(false); }}>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+                    <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
                         <DialogHeader>
                             <DialogTitle>{editingCurso ? 'Editar Curso' : 'Nuevo Curso'}</DialogTitle>
                             <DialogDescription>{step === 1 ? 'Datos del curso' : 'Asignar materias y docentes'}</DialogDescription>

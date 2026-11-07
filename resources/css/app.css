@@ -277,3 +277,77 @@
     animation: shimmerSweep 3.5s infinite;
     pointer-events: none;
 }
+
+/* ========================================================================= */
+/* ANIMACIÓN DE VENTANA PANORÁMICA CORREDIZA (DESLIZAMIENTO SUAVE)           */
+/* ========================================================================= */
+@keyframes panWindowHorizontal {
+    0% {
+        transform: scale(1.08) translate3d(0%, 0, 0);
+    }
+    50% {
+        transform: scale(1.12) translate3d(-14%, -2%, 0);
+    }
+    100% {
+        transform: scale(1.08) translate3d(-24%, 0, 0);
+    }
+}
+
+@keyframes panWindowVertical {
+    0% {
+        transform: scale(1.08) translate3d(0%, 0%, 0);
+    }
+    50% {
+        transform: scale(1.12) translate3d(-5%, -14%, 0);
+    }
+    100% {
+        transform: scale(1.08) translate3d(-10%, -24%, 0);
+    }
+}
+
+.animate-pan-window-h {
+    animation: panWindowHorizontal 36s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+.animate-pan-window-v {
+    animation: panWindowVertical 38s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+/* ========================================================================= */
+/* ANIMACIONES PARA CAMPO DE SUBIDA DE ARCHIVOS (DROPZONE CON MOVIMIENTO)    */
+/* ========================================================================= */
+@keyframes uploadFloat {
+    0%, 100% {
+        transform: translateY(0px) scale(1);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.06);
+    }
+}
+
+@keyframes uploadPulseRing {
+    0% {
+        transform: scale(0.92);
+        opacity: 0.65;
+    }
+    50% {
+        transform: scale(1.28);
+        opacity: 0.15;
+    }
+    100% {
+        transform: scale(0.92);
+        opacity: 0.65;
+    }
+}
+
+.animate-upload-float {
+    animation: uploadFloat 2.6s ease-in-out infinite;
+    will-change: transform;
+}
+
+.animate-upload-ring {
+    animation: uploadPulseRing 2.4s ease-in-out infinite;
+    will-change: transform, opacity;
+}

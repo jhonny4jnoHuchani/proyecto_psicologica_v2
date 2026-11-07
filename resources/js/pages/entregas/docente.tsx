@@ -686,7 +686,7 @@ export default function EntregasDocente({
 
         {/* Modal Calificar */}
         <Dialog open={modalCalificar} onOpenChange={setModalCalificar}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Calificar Entrega</DialogTitle>
             </DialogHeader>

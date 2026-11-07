@@ -245,7 +245,7 @@ export default function GestionesIndex({ gestiones }: Props) {
 
                 {/* Modal Crear */}
                 <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>Nueva Gestión</DialogTitle>
                             <DialogDescription>Completa los datos de la gestión académica.</DialogDescription>
@@ -329,7 +329,7 @@ export default function GestionesIndex({ gestiones }: Props) {
 
                 {/* Modal Editar */}
                 <Dialog open={modalEdit} onOpenChange={setModalEdit}>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>Editar Gestión</DialogTitle>
                             <DialogDescription>Modifica los datos de la gestión académica.</DialogDescription>

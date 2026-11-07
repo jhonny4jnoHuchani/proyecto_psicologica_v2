@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileUploadDropzone } from "@/components/ui/file-upload-dropzone";
 import AppLayout from "@/layouts/app-layout";
 import {
   calcularTiempoRestanteMoodle,
@@ -957,7 +958,7 @@ export default function LeccionesShow({
         {/* 6. MODAL PARA SUBIR / EDITAR ENTREGA                           */}
         {/* ============================================================== */}
         <Dialog open={modalSubir} onOpenChange={setModalSubir}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {entrega ? "Editar Entrega" : "Agregar Entrega"}
@@ -981,25 +982,19 @@ export default function LeccionesShow({
                 <Label htmlFor="archivos_entrega">
                   Archivos de la entrega *
                 </Label>
-                <Input
+                <FileUploadDropzone
                   id="archivos_entrega"
-                  type="file"
                   multiple
-                  onChange={(e) => {
-                    setArchivos(e.target.files);
-                    if (e.target.files && e.target.files.length > 0) {
+                  onChange={(files) => {
+                    setArchivos(files);
+                    if (files && files.length > 0) {
                       setErrors({});
                     }
                   }}
+                  error={errors.archivos}
+                  label="Arrastra y suelta aquí los archivos de tu tarea"
+                  helperText="Puedes subir documentos PDF, Word, imágenes o comprimidos (máx. 25MB)"
                 />
-                {archivos && archivos.length > 0 && (
-                  <p className="text-xs text-emerald-600 font-medium">
-                    {archivos.length} archivo(s) seleccionado(s)
-                  </p>
-                )}
-                {errors.archivos && (
-                  <p className="text-xs text-rose-500">{errors.archivos}</p>
-                )}
               </div>
 
               <div className="space-y-1.5">
@@ -1010,7 +1005,7 @@ export default function LeccionesShow({
                   id="comentarios_entrega"
                   value={comentarios}
                   onChange={(e) => setComentarios(e.target.value)}
-                  className="w-full rounded-md border p-2 text-xs sm:text-sm bg-background"
+                  className="w-full rounded-2xl border border-border/80 p-3 text-xs sm:text-sm bg-card/70 backdrop-blur-md focus:border-primary focus:ring-1 focus:ring-primary outline-hidden transition-all"
                   rows={3}
                   placeholder="Puedes escribir alguna observación o nota para tu docente..."
                 />

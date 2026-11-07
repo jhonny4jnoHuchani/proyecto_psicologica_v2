@@ -373,7 +373,7 @@ export default function MateriasIndex({ materias }: Props) {
 
         {/* MODAL GESTIÓN DE TEMARIO */}
         <Dialog open={modalTemas} onOpenChange={setModalTemas}>
-          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-6">
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-6">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-lg">
                 <BookOpen className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
@@ -601,7 +601,7 @@ export default function MateriasIndex({ materias }: Props) {
 
         {/* Modal Crear Materia */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="sm:max-w-xl">
             <DialogHeader>
               <DialogTitle>Nueva Materia</DialogTitle>
               <DialogDescription>

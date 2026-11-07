@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileUploadDropzone } from "@/components/ui/file-upload-dropzone";
 import {
   Select,
   SelectContent,
@@ -451,7 +452,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
 
         {/* Modal Crear */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Nuevo libro</DialogTitle>
               <DialogDescription>
@@ -479,27 +480,29 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                   </Select>
                   <InputError message={errors.materia_id} />
                 </div>
-                <div className="space-y-1">
-                  <Label>Nombre del libro *</Label>
-                  <Input
-                    value={form.nombre}
-                    onChange={(e) =>
-                      setForm({ ...form, nombre: e.target.value })
-                    }
-                    placeholder="Ej: Introducción a la Psicología"
-                    required
-                  />
-                  <InputError message={errors.nombre} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Autor</Label>
-                  <Input
-                    value={form.autor}
-                    onChange={(e) =>
-                      setForm({ ...form, autor: e.target.value })
-                    }
-                    placeholder="Ej: Sigmund Freud"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Nombre del libro *</Label>
+                    <Input
+                      value={form.nombre}
+                      onChange={(e) =>
+                        setForm({ ...form, nombre: e.target.value })
+                      }
+                      placeholder="Ej: Introducción a la Psicología"
+                      required
+                    />
+                    <InputError message={errors.nombre} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Autor</Label>
+                    <Input
+                      value={form.autor}
+                      onChange={(e) =>
+                        setForm({ ...form, autor: e.target.value })
+                      }
+                      placeholder="Ej: Sigmund Freud"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Año de lanzamiento</Label>
@@ -514,21 +517,27 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     max="2100"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label>Archivo PDF</Label>
-                  <Input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Portada (imagen)</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPortada(e.target.files?.[0] || null)}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-1.5">
+                    <Label>Archivo Digital (PDF)</Label>
+                    <FileUploadDropzone
+                      iconType="pdf"
+                      accept="application/pdf"
+                      onFileChange={(f) => setArchivo(f)}
+                      label="Arrastra el documento PDF"
+                      helperText="Libro completo en formato PDF"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Portada del Libro (Imagen)</Label>
+                    <FileUploadDropzone
+                      iconType="image"
+                      accept="image/*"
+                      onFileChange={(f) => setPortada(f)}
+                      label="Arrastra la portada"
+                      helperText="JPG, PNG o WebP de la cubierta"
+                    />
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -552,7 +561,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
 
         {/* Modal Editar */}
         <Dialog open={modalEdit} onOpenChange={setModalEdit}>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar libro</DialogTitle>
               <DialogDescription>
@@ -579,26 +588,28 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label>Nombre del libro *</Label>
-                  <Input
-                    value={form.nombre}
-                    onChange={(e) =>
-                      setForm({ ...form, nombre: e.target.value })
-                    }
-                    placeholder="Ej: Introducción a la Psicología"
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Autor</Label>
-                  <Input
-                    value={form.autor}
-                    onChange={(e) =>
-                      setForm({ ...form, autor: e.target.value })
-                    }
-                    placeholder="Ej: Sigmund Freud"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Nombre del libro *</Label>
+                    <Input
+                      value={form.nombre}
+                      onChange={(e) =>
+                        setForm({ ...form, nombre: e.target.value })
+                      }
+                      placeholder="Ej: Introducción a la Psicología"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Autor</Label>
+                    <Input
+                      value={form.autor}
+                      onChange={(e) =>
+                        setForm({ ...form, autor: e.target.value })
+                      }
+                      placeholder="Ej: Sigmund Freud"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label>Año de lanzamiento</Label>
@@ -613,33 +624,39 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     max="2100"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label>Archivo PDF (opcional)</Label>
-                  <Input
-                    type="file"
-                    accept="application/pdf"
-                    onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-                  />
-                  {libroSelect?.archivo && (
-                    <p className="text-xs text-neutral-500">
-                      PDF actual: {libroSelect.archivo}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <Label>Portada (opcional)</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPortada(e.target.files?.[0] || null)}
-                  />
-                  {libroSelect?.portada && (
-                    <img
-                      src={`/storage/${libroSelect.portada}`}
-                      alt="Portada actual"
-                      className="h-12 rounded mt-1"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-1.5">
+                    <Label>Reemplazar Archivo PDF (opcional)</Label>
+                    <FileUploadDropzone
+                      iconType="pdf"
+                      accept="application/pdf"
+                      onFileChange={(f) => setArchivo(f)}
+                      label="Subir nuevo documento PDF"
+                      helperText="Opcional: Sube un nuevo archivo para sustituir el actual"
                     />
-                  )}
+                    {libroSelect?.archivo && (
+                      <p className="text-xs text-neutral-500">
+                        PDF actual: {libroSelect.archivo}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Reemplazar Portada (opcional)</Label>
+                    <FileUploadDropzone
+                      iconType="image"
+                      accept="image/*"
+                      onFileChange={(f) => setPortada(f)}
+                      label="Subir nueva portada"
+                      helperText="Opcional: Sube una nueva imagen para la cubierta"
+                    />
+                    {libroSelect?.portada && (
+                      <img
+                        src={`/storage/${libroSelect.portada}`}
+                        alt="Portada actual"
+                        className="h-12 rounded mt-1"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
