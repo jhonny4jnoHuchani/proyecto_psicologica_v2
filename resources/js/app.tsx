@@ -33,47 +33,178 @@ function adjustHex(hex: string, percent: number): string {
   return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return { h: 220, s: 50, l: 50 };
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h = Math.round(h * 60);
+  }
+
+  return {
+    h,
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  };
+}
+
+let cachedBrandConfig: any = null;
+
 export function applyBrandTheme(config: any) {
-  if (!config || typeof document === "undefined") return;
+  if (config) {
+    cachedBrandConfig = config;
+  }
+  const activeConfig = config || cachedBrandConfig;
+  if (!activeConfig || typeof document === "undefined") return;
+
   const root = document.documentElement;
   const isDark = root.classList.contains("dark");
 
-  if (config.color_primario) {
-    const prim = config.color_primario;
-    root.style.setProperty("--primary", prim);
-    root.style.setProperty("--ring", prim);
-    root.style.setProperty("--sidebar-primary", prim);
-    root.style.setProperty("--sidebar-ring", prim);
-    root.style.setProperty(
-      "--primary-hover",
-      adjustHex(prim, isDark ? 15 : -14),
-    );
-    root.style.setProperty(
-      "--primary-light",
-      hexToRgba(prim, isDark ? 0.2 : 0.12),
-    );
-    root.style.setProperty(
-      "--primary-border",
-      hexToRgba(prim, isDark ? 0.4 : 0.28),
-    );
-  }
+  const prim = activeConfig.color_primario || "#4f46e5";
+  const sec = activeConfig.color_secundario || "#06b6d4";
 
-  if (config.color_secundario) {
-    const sec = config.color_secundario;
-    root.style.setProperty("--secondary", sec);
+  const hslPrim = hexToHsl(prim);
+  const hslSec = hexToHsl(sec);
+
+  // Colores principales de marca
+  root.style.setProperty("--primary", prim);
+  root.style.setProperty("--ring", prim);
+  root.style.setProperty("--sidebar-primary", prim);
+  root.style.setProperty("--sidebar-ring", prim);
+  root.style.setProperty("--secondary", sec);
+
+  root.style.setProperty(
+    "--primary-hover",
+    adjustHex(prim, isDark ? 15 : -14),
+  );
+  root.style.setProperty(
+    "--primary-light",
+    hexToRgba(prim, isDark ? 0.22 : 0.12),
+  );
+  root.style.setProperty(
+    "--primary-border",
+    hexToRgba(prim, isDark ? 0.45 : 0.28),
+  );
+
+  root.style.setProperty(
+    "--secondary-hover",
+    adjustHex(sec, isDark ? 15 : -14),
+  );
+  root.style.setProperty(
+    "--secondary-light",
+    hexToRgba(sec, isDark ? 0.22 : 0.12),
+  );
+  root.style.setProperty(
+    "--secondary-border",
+    hexToRgba(sec, isDark ? 0.45 : 0.28),
+  );
+
+  // Variables personalizadas de degradado y aura
+  root.style.setProperty("--brand-primario", prim);
+  root.style.setProperty("--brand-secundario", sec);
+  root.style.setProperty(
+    "--brand-gradient",
+    `linear-gradient(135deg, ${prim}, ${sec})`,
+  );
+
+  if (isDark) {
+    // MODO OSCURO DINÁMICO (NO AZUL FIJO): Deriva matices oscuros del color primario configurado
+    const satBg = Math.max(Math.min(hslPrim.s * 0.4, 30), 15);
+    const satCard = Math.max(Math.min(hslPrim.s * 0.3, 22), 12);
+
+    root.style.setProperty("--background", `hsl(${hslPrim.h}, ${satBg}%, 5%)`);
+    root.style.setProperty("--card", `hsl(${hslPrim.h}, ${satCard}%, 8.5%)`);
+    root.style.setProperty("--popover", `hsl(${hslPrim.h}, ${satCard}%, 8%)`);
+    root.style.setProperty("--border", `hsl(${hslPrim.h}, ${satCard}%, 16%)`);
+    root.style.setProperty("--input", `hsl(${hslPrim.h}, ${satCard}%, 16%)`);
     root.style.setProperty(
-      "--secondary-hover",
-      adjustHex(sec, isDark ? 15 : -14),
+      "--sidebar-background",
+      `hsl(${hslPrim.h}, ${satBg * 1.1}%, 6%)`,
     );
     root.style.setProperty(
-      "--secondary-light",
-      hexToRgba(sec, isDark ? 0.2 : 0.12),
+      "--sidebar-border",
+      `hsl(${hslPrim.h}, ${satCard}%, 13%)`,
+    );
+
+    // Fondo del Hero Banner en modo oscuro (matizado con primario y secundario)
+    root.style.setProperty(
+      "--brand-hero-bg",
+      `linear-gradient(135deg, hsl(${hslPrim.h}, 48%, 12%), hsl(${hslSec.h}, 42%, 9%), hsl(${hslPrim.h}, 36%, 6%))`,
+    );
+  } else {
+    // MODO CLARO DINÁMICO (NO BLANCO PLANO): Matiz suave visible y elegante según el color primario
+    const satBg = Math.max(Math.min(hslPrim.s * 0.32, 28), 16);
+    const satCard = Math.max(Math.min(hslPrim.s * 0.12, 12), 6);
+
+    root.style.setProperty(
+      "--background",
+      `hsl(${hslPrim.h}, ${satBg}%, 94.8%)`,
     );
     root.style.setProperty(
-      "--secondary-border",
-      hexToRgba(sec, isDark ? 0.4 : 0.28),
+      "--card",
+      `hsl(${hslPrim.h}, ${satCard}%, 99.2%)`,
+    );
+    root.style.setProperty(
+      "--border",
+      `hsl(${hslPrim.h}, ${Math.round(satBg * 0.65)}%, 86.5%)`,
+    );
+    root.style.setProperty(
+      "--sidebar-background",
+      `hsl(${hslPrim.h}, ${Math.round(satBg * 0.55)}%, 97.2%)`,
+    );
+    root.style.setProperty(
+      "--sidebar-border",
+      `hsl(${hslPrim.h}, ${Math.round(satBg * 0.65)}%, 87.5%)`,
+    );
+
+    // Fondo del Hero Banner en modo claro (vivo, contrastado y elegante)
+    root.style.setProperty(
+      "--brand-hero-bg",
+      `linear-gradient(135deg, hsl(${hslPrim.h}, 60%, 20%), hsl(${hslSec.h}, 55%, 16%), hsl(${hslPrim.h}, 50%, 14%))`,
     );
   }
+}
+
+// Sincronizar dinámicamente si el usuario cambia entre modo claro y oscuro
+if (typeof window !== "undefined" && typeof MutationObserver !== "undefined") {
+  const themeObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (
+        mutation.type === "attributes" &&
+        mutation.attributeName === "class"
+      ) {
+        if (cachedBrandConfig) {
+          applyBrandTheme(cachedBrandConfig);
+        }
+      }
+    }
+  });
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
 }
 
 // ============================================================

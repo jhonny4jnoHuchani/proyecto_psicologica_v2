@@ -48,6 +48,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { GeometricFallingBackground } from "@/components/geometric-background";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -363,104 +364,134 @@ export default function Dashboard({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
 
-      <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+      <div className="relative min-h-[calc(100vh-4rem)]">
         {/* ========================================================================= */}
-        {/* HERO BANNER ATMOSFÉRICO CON GLASSMORPHISM (ADIÓS AL BLANCO Y NEGRO PLANO) */}
+        {/* FONDO GEOMÉTRICO DINÁMICO (FIGURAS FLOTANTES CAYENDO Y AURAS DE COLOR)   */}
         {/* ========================================================================= */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white shadow-2xl p-6 sm:p-8 border border-white/10">
-          {/* Luces y auras de fondo difuminadas */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-br from-pink-500/30 via-purple-500/20 to-transparent blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-tr from-cyan-500/25 via-blue-500/20 to-transparent blur-3xl pointer-events-none" />
+        <GeometricFallingBackground />
 
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-md border border-white/20 text-cyan-300 shadow-sm">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                  Sistema Activo
-                </span>
-                <span className="text-xs text-slate-300 font-medium">
-                  {new Date().toLocaleDateString("es-ES", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
+        <div className="relative z-10 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+          {/* ========================================================================= */}
+          {/* HERO BANNER DINÁMICO (MATICES VIVOS CON COLOR PRIMARIO Y SECUNDARIO)      */}
+          {/* ========================================================================= */}
+          <div
+            className="relative overflow-hidden rounded-3xl text-white shadow-2xl p-6 sm:p-8 border border-white/15 transition-all duration-500"
+            style={{
+              background:
+                "var(--brand-hero-bg, linear-gradient(135deg, hsl(243, 75%, 20%), hsl(220, 60%, 15%)))",
+            }}
+          >
+            {/* Luces y auras de fondo difuminadas según la paleta institucional */}
+            <div
+              className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-40 transition-all duration-700"
+              style={{
+                background:
+                  "radial-gradient(circle, var(--secondary) 0%, transparent 70%)",
+              }}
+            />
+            <div
+              className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-35 transition-all duration-700"
+              style={{
+                background:
+                  "radial-gradient(circle, var(--primary) 0%, transparent 70%)",
+              }}
+            />
 
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-2">
-                  <span>{saludo},</span>
-                  <span className="bg-gradient-to-r from-pink-400 via-rose-300 to-amber-200 bg-clip-text text-transparent">
-                    {user?.nombre || "Bienvenido"}!
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-sm">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                    Sistema Activo
                   </span>
-                </h1>
-                <p className="text-sm text-slate-300/90 max-w-2xl mt-1 leading-relaxed">
-                  {rol === "admin" &&
-                    "Panel ejecutivo de monitoreo integral: indicadores académicos, acompañamiento con IA y alertas preventivas en tiempo real."}
-                  {rol === "docente" &&
-                    "Espacio pedagógico central: supervisa tus materias, atiende revisiones pendientes e impulsa el aprendizaje con IA."}
-                  {rol === "estudiante" &&
-                    "Tu aula virtual activa: entrega tus tareas a tiempo, practica tus refuerzos interactivos y monitorea tu progreso."}
-                </p>
-              </div>
-            </div>
+                  <span className="text-xs text-slate-200 font-medium">
+                    {new Date().toLocaleDateString("es-ES", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
 
-            {/* Widget de Cristal Rápido en el Hero */}
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="bg-white/10 backdrop-blur-md p-3.5 px-5 rounded-2xl border border-white/15 flex items-center gap-4 shadow-inner">
-                <div className="text-center border-r border-white/15 pr-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
-                    Rol Actual
-                  </p>
-                  <p className="text-sm font-black capitalize text-white">
-                    {rol || "Usuario"}
+                <div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-2">
+                    <span>{saludo},</span>
+                    <span
+                      className="bg-clip-text text-transparent font-extrabold"
+                      style={{
+                        backgroundImage:
+                          "var(--brand-gradient, linear-gradient(135deg, #f472b6, #fde047))",
+                      }}
+                    >
+                      {user?.nombre || "Bienvenido"}!
+                    </span>
+                  </h1>
+                  <p className="text-sm text-slate-200/90 max-w-2xl mt-1 leading-relaxed">
+                    {rol === "admin" &&
+                      "Panel ejecutivo de monitoreo integral: indicadores académicos, acompañamiento con IA y alertas preventivas en tiempo real."}
+                    {rol === "docente" &&
+                      "Espacio pedagógico central: supervisa tus materias, atiende revisiones pendientes e impulsa el aprendizaje con IA."}
+                    {rol === "estudiante" &&
+                      "Tu aula virtual activa: entrega tus tareas a tiempo, practica tus refuerzos interactivos y monitorea tu progreso."}
                   </p>
                 </div>
-                {rol === "admin" && (
-                  <div className="text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
-                      Gestión
-                    </p>
-                    <p className="text-sm font-black text-cyan-300">
-                      {stats?.gestiones_activas || 1} Activa
-                    </p>
-                  </div>
-                )}
-                {rol === "docente" && (
-                  <div className="text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
-                      Por Revisar
-                    </p>
-                    <p className="text-sm font-black text-amber-300">
-                      {docente_stats?.entregas_pendientes || 0}
-                    </p>
-                  </div>
-                )}
-                {rol === "estudiante" && (
-                  <div className="text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
-                      Pendientes
-                    </p>
-                    <p className="text-sm font-black text-pink-300">
-                      {resumen?.tareas_pendientes_count || 0}
-                    </p>
-                  </div>
-                )}
               </div>
 
-              <button
-                type="button"
-                onClick={dispararConfeti}
-                className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-md border border-white/15 transition-all shadow-sm flex items-center justify-center cursor-pointer group"
-                title="Celebrar logro del día"
-              >
-                <PartyPopper className="h-5 w-5 text-amber-300 group-hover:rotate-12 transition-transform" />
-              </button>
+              {/* Widget de Cristal Rápido en el Hero */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="bg-white/10 backdrop-blur-md p-3.5 px-5 rounded-2xl border border-white/15 flex items-center gap-4 shadow-inner">
+                  <div className="text-center border-r border-white/15 pr-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                      Rol Actual
+                    </p>
+                    <p className="text-sm font-black capitalize text-white">
+                      {rol || "Usuario"}
+                    </p>
+                  </div>
+                  {rol === "admin" && (
+                    <div className="text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                        Gestión
+                      </p>
+                      <p className="text-sm font-black text-cyan-300">
+                        {stats?.gestiones_activas || 1} Activa
+                      </p>
+                    </div>
+                  )}
+                  {rol === "docente" && (
+                    <div className="text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                        Por Revisar
+                      </p>
+                      <p className="text-sm font-black text-amber-300">
+                        {docente_stats?.entregas_pendientes || 0}
+                      </p>
+                    </div>
+                  )}
+                  {rol === "estudiante" && (
+                    <div className="text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                        Pendientes
+                      </p>
+                      <p className="text-sm font-black text-pink-300">
+                        {resumen?.tareas_pendientes_count || 0}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={dispararConfeti}
+                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-md border border-white/15 transition-all shadow-sm flex items-center justify-center cursor-pointer group"
+                  title="Celebrar logro del día"
+                >
+                  <PartyPopper className="h-5 w-5 text-amber-300 group-hover:rotate-12 transition-transform" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* ========================================================================= */}
         {/* VISTA 1: ADMINISTRADOR (MÉTRICAS FLOTANTES ESTILO CREATIVE TIM + RECHARTS) */}
@@ -468,7 +499,7 @@ export default function Dashboard({
         {rol === "admin" && stats && (
           <div className="space-y-8">
             {/* 1. ROW DE ACCIONES RÁPIDAS DINÁMICAS */}
-            <div className="bg-card rounded-2xl p-4 shadow-sm border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-card/90 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 flex items-center justify-center text-white shadow-md shadow-pink-500/30">
                   <Zap className="h-4 w-4" />
@@ -549,7 +580,7 @@ export default function Dashboard({
             {/* 2. TARJETAS FLOTANTES DE KPIs SUPERIORES (FIRMA CREATIVE TIM / MATERIAL DASHBOARD) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-5">
               {/* CARD 1: GESTIONES (AZUL) */}
-              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 group-hover:scale-105 transition-transform">
                     <LayoutGrid className="h-6 w-6" />
@@ -572,7 +603,7 @@ export default function Dashboard({
               </div>
 
               {/* CARD 2: CURSOS (ÍNDIGO) */}
-              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/35 group-hover:scale-105 transition-transform">
                     <School className="h-6 w-6" />
@@ -593,7 +624,7 @@ export default function Dashboard({
               </div>
 
               {/* CARD 3: DOCENTES (PÚRPURA) */}
-              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
                     <GraduationCap className="h-6 w-6" />
@@ -614,7 +645,7 @@ export default function Dashboard({
               </div>
 
               {/* CARD 4: ESTUDIANTES (ESMERALDA) */}
-              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/35 group-hover:scale-105 transition-transform">
                     <Users className="h-6 w-6" />
@@ -635,7 +666,7 @@ export default function Dashboard({
               </div>
 
               {/* CARD 5: LECCIONES (ÁMBAR) */}
-              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group col-span-1 sm:col-span-2 lg:col-span-1">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group col-span-1 sm:col-span-2 lg:col-span-1">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-amber-500/35 group-hover:scale-105 transition-transform">
                     <BookOpen className="h-6 w-6" />
@@ -662,7 +693,7 @@ export default function Dashboard({
             {/* 4. CUADRO ESTADÍSTICO INTERACTIVO CON RECHARTS */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
               {/* Tarjeta A: Rendimiento Académico y Curva Interactiva */}
-              <div className="lg:col-span-2 bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
+              <div className="lg:col-span-2 bg-card/90 backdrop-blur-md rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/30">
@@ -829,7 +860,7 @@ export default function Dashboard({
               </div>
 
               {/* Tarjeta B: Refuerzos Pedagógicos con Inteligencia Artificial */}
-              <div className="bg-card rounded-3xl p-6 shadow-md border border-border/80 flex flex-col justify-between space-y-6">
+              <div className="bg-card/90 backdrop-blur-md rounded-3xl p-6 shadow-md border border-border/80 flex flex-col justify-between space-y-6">
                 <div>
                   <div className="flex items-center gap-3 pb-4 border-b border-border">
                     <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-500/30">
@@ -952,7 +983,7 @@ export default function Dashboard({
             {/* 4 KPIs FLOTANTES DEL DOCENTE */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-5">
               {/* KPI 1: ENTREGAS POR CALIFICAR */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-amber-500/35 group-hover:scale-105 transition-transform">
                     <Inbox className="h-6 w-6" />
@@ -985,7 +1016,7 @@ export default function Dashboard({
               </div>
 
               {/* KPI 2: LECCIONES ASIGNADAS */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 group-hover:scale-105 transition-transform">
                     <BookOpen className="h-6 w-6" />
@@ -1006,7 +1037,7 @@ export default function Dashboard({
               </div>
 
               {/* KPI 3: REFUERZOS IA */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
                     <Sparkles className="h-6 w-6" />
@@ -1027,7 +1058,7 @@ export default function Dashboard({
               </div>
 
               {/* KPI 4: ALERTA DE REZAGO */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/35 group-hover:scale-105 transition-transform">
                     <AlertTriangle className="h-6 w-6" />
@@ -1263,7 +1294,7 @@ export default function Dashboard({
             {/* 3 KPIs FLOTANTES DEL ESTUDIANTE */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5">
               {/* KPI 1: TAREAS PENDIENTES */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div
                     className={`-mt-8 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform ${
@@ -1303,7 +1334,7 @@ export default function Dashboard({
               </div>
 
               {/* KPI 2: REFUERZOS CON IA */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
                     <Sparkles className="h-6 w-6" />
@@ -1331,7 +1362,7 @@ export default function Dashboard({
               </div>
 
               {/* KPI 3: PROMEDIO ACADÉMICO */}
-              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
                 <div className="flex justify-between items-start">
                   <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/35 group-hover:scale-105 transition-transform">
                     <Award className="h-6 w-6" />
@@ -1668,6 +1699,7 @@ export default function Dashboard({
             </div>
           </div>
         )}
+        </div>
       </div>
     </AppLayout>
   );
@@ -1695,7 +1727,7 @@ function SemaforoRezagoWidget({
   const totalRiesgo = (semaforo.resumen.alto || 0) + (semaforo.resumen.medio || 0);
 
   return (
-    <div className="bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
+    <div className="bg-card/90 backdrop-blur-md rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-rose-600 via-amber-500 to-emerald-500 flex items-center justify-center text-white shadow-md">

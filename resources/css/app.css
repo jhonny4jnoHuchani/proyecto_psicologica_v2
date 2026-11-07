@@ -181,6 +181,89 @@
     100% { transform: translateX(200%); }
 }
 
+@keyframes floatGentle {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(8deg);
+    }
+}
+
+@keyframes floatReverse {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(22px) rotate(-8deg);
+    }
+}
+
+@keyframes fallDrift {
+    0% {
+        transform: translateY(-40px) rotate(0deg) scale(0.9);
+        opacity: 0;
+    }
+    25% {
+        opacity: 0.55;
+    }
+    75% {
+        opacity: 0.55;
+    }
+    100% {
+        transform: translateY(70px) rotate(45deg) scale(1.1);
+        opacity: 0;
+    }
+}
+
+@keyframes fallContinuous {
+    0% {
+        transform: translateY(-80px) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: var(--shape-op, 0.45);
+    }
+    90% {
+        opacity: var(--shape-op, 0.45);
+    }
+    100% {
+        transform: translateY(105vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+@keyframes pulseScale {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.25;
+    }
+    50% {
+        transform: scale(1.18);
+        opacity: 0.65;
+    }
+}
+
+.animate-float-gentle {
+    animation: floatGentle 8s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+    animation: floatReverse 10s ease-in-out infinite;
+}
+
+.animate-fall-drift {
+    animation: fallDrift 14s ease-in-out infinite;
+}
+
+.animate-fall-continuous {
+    animation: fallContinuous linear infinite;
+}
+
+.animate-pulse-scale {
+    animation: pulseScale 7s ease-in-out infinite;
+}
+
 .animate-shimmer-sweep {
     position: relative;
     overflow: hidden;
