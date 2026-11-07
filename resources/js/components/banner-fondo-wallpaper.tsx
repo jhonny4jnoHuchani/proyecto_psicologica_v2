@@ -198,32 +198,72 @@ export function BannerFondoWallpaper() {
             src={currentItem.url}
             alt={currentItem.name}
             className={`w-full h-full object-cover transition-opacity duration-1000 ${
-              isDark ? "opacity-35 brightness-75 contrast-110" : "opacity-30 brightness-95 contrast-105"
+              isDark ? "opacity-85 brightness-90 contrast-110" : "opacity-85 brightness-100 contrast-105"
             }`}
             style={{
               filter: isDark
-                ? "saturate(1.15) brightness(0.65)"
-                : "saturate(1.1) brightness(0.95)",
+                ? "saturate(1.25) brightness(0.85)"
+                : "saturate(1.15) brightness(1.0)",
             }}
           />
         </div>
       </div>
 
-      {/* 2. PELÍCULA DE MATIZ Y GRADIENTE INSTITUCIONAL (Garantiza legibilidad y fusiona los colores) */}
+      {/* 2. ELEMENTOS GEOMÉTRICOS FLOTANTES / CAYENDO EN SEGUNDO PLANO */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
+        {/* Decorador 1: Arriba Izquierda */}
+        <img
+          src="/decoradores/circulo.png"
+          alt=""
+          className="absolute top-12 left-6 w-16 h-16 opacity-35 dark:opacity-25 animate-[floatGentle_10s_ease-in-out_infinite]"
+        />
+        {/* Decorador 2: Centro Derecha */}
+        <img
+          src="/decoradores/objeto.png"
+          alt=""
+          className="absolute top-1/3 right-10 w-14 h-14 opacity-30 dark:opacity-20 animate-[floatReverse_12s_ease-in-out_infinite]"
+        />
+        {/* Decorador 3: Abajo Izquierda */}
+        <img
+          src="/decoradores/decoradores2/objeto_puntueado.png"
+          alt=""
+          className="absolute bottom-24 left-16 w-20 h-20 opacity-35 dark:opacity-25 animate-[floatGentle_14s_ease-in-out_infinite]"
+        />
+        {/* Decorador 4: Centro Izquierda */}
+        <img
+          src="/decoradores/decoradores3/circulo_linea.png"
+          alt=""
+          className="absolute top-2/3 left-1/4 w-12 h-12 opacity-30 dark:opacity-20 animate-[floatReverse_9s_ease-in-out_infinite]"
+        />
+        {/* Decorador 5: Arriba Derecha */}
+        <img
+          src="/decoradores/redondo_punteuado5.png"
+          alt=""
+          className="absolute top-16 right-1/4 w-16 h-16 opacity-35 dark:opacity-25 animate-[floatGentle_11s_ease-in-out_infinite]"
+        />
+        {/* Decorador 6: Abajo Derecha */}
+        <img
+          src="/decoradores/cuadrado_punteado_rojo.png"
+          alt=""
+          className="absolute bottom-16 right-12 w-14 h-14 opacity-30 dark:opacity-20 animate-[floatReverse_13s_ease-in-out_infinite]"
+        />
+      </div>
+
+      {/* 3. PELÍCULA DE MATIZ Y GRADIENTE INSTITUCIONAL (Sutil para no tapar el fondo) */}
       {isDark ? (
         <div
-          className="absolute inset-0 transition-colors duration-700 pointer-events-none"
+          className="absolute inset-0 transition-colors duration-700 pointer-events-none z-2"
           style={{
             background:
-              "radial-gradient(ellipse at 20% 20%, rgba(var(--primary-rgb, 79, 70, 229), 0.15) 0%, transparent 60%), linear-gradient(to bottom, rgba(5, 7, 12, 0.72) 0%, rgba(8, 11, 20, 0.85) 100%)",
+              "radial-gradient(ellipse at 20% 20%, rgba(var(--primary-rgb, 79, 70, 229), 0.18) 0%, transparent 60%), linear-gradient(to bottom, rgba(5, 7, 14, 0.35) 0%, rgba(10, 15, 26, 0.50) 100%)",
           }}
         />
       ) : (
         <div
-          className="absolute inset-0 transition-colors duration-700 pointer-events-none"
+          className="absolute inset-0 transition-colors duration-700 pointer-events-none z-2"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(var(--secondary-rgb, 6, 182, 212), 0.12) 0%, transparent 60%), linear-gradient(to bottom, rgba(255, 255, 255, 0.78) 0%, rgba(248, 250, 252, 0.85) 100%)",
+              "radial-gradient(ellipse at 80% 10%, rgba(var(--secondary-rgb, 6, 182, 212), 0.14) 0%, transparent 60%), linear-gradient(to bottom, rgba(255, 255, 255, 0.20) 0%, rgba(248, 250, 252, 0.32) 100%)",
           }}
         />
       )}

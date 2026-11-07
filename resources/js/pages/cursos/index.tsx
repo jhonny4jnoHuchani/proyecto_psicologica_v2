@@ -1,7 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertTriangle, Archive, Eye, LoaderCircle, Pencil, Plus, Trash2 } from 'lucide-react';
+import { AlertTriangle, Archive, Eye, LoaderCircle, Pencil, Plus, School, Trash2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import { toast } from 'sonner';
+
+import { PageHeaderBanner } from '@/components/page-header-banner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -167,14 +169,37 @@ export default function CursosIndex({ cursos, gestions, materias, docentes, doce
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cursos" />
-            <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Cursos</h1>
-                    <div className="flex gap-2">
-                        <Button variant="outline" asChild><Link href="/cursos/eliminados"><Archive className="h-4 w-4 mr-2" />Ver Eliminados</Link></Button>
-                        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-2" />Nuevo Curso</Button>
-                    </div>
-                </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title="Cursos y Paralelos"
+                    subtitle="Gestión de aulas, cupos estudiantiles, asignación docente y turnos de clase."
+                    icon={School}
+                    badgeText="AULAS Y PARALELOS"
+                    stats={[
+                        { label: 'Cursos Activos', value: cursos?.length || 0 },
+                    ]}
+                    actions={
+                        <>
+                            <Button
+                                variant="outline"
+                                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                                asChild
+                            >
+                                <Link href="/cursos/eliminados">
+                                    <Archive className="h-4 w-4 mr-2" />
+                                    Papelera
+                                </Link>
+                            </Button>
+                            <Button
+                                onClick={openCreate}
+                                className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Nuevo Curso
+                            </Button>
+                        </>
+                    }
+                />
 
                 <Card>
                     <CardHeader><CardTitle>Listado de Cursos</CardTitle></CardHeader>

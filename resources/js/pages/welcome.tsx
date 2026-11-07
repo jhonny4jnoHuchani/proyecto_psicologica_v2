@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,24 +9,29 @@ import {
     BookOpen,
     CalendarDays,
     CheckCircle2,
+    ChevronDown,
     ChevronRight,
+    Download,
+    Eye,
+    ExternalLink,
     GraduationCap,
+    HeartHandshake,
+    Lightbulb,
+    MapPin,
     Megaphone,
+    MessageCircle,
+    Play,
     Quote,
+    Share2,
+    Shield,
     Sparkles,
     Target,
-    Eye,
-    MapPin,
     Users,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatoFecha } from '@/lib/formatters';
-
-
-
-//definimos funciones o procedimientos que manejamos en la vista...
 
 interface ConfigData {
     color_primario: string;
@@ -38,8 +43,21 @@ interface ConfigData {
     organigrama: string | null;
 }
 
-interface Portada { id: number; titulo: string | null; imagen: string; orden: number; }
-interface Autoridad { id: number; nombre: string; cargo: string; foto: string | null; mensaje: string | null; }
+interface Portada {
+    id: number;
+    titulo: string | null;
+    imagen: string;
+    orden: number;
+}
+
+interface Autoridad {
+    id: number;
+    nombre: string;
+    cargo: string;
+    foto: string | null;
+    mensaje: string | null;
+}
+
 interface Convocatoria {
     id: number;
     titulo: string;
@@ -50,7 +68,6 @@ interface Convocatoria {
     fecha_fin: string | null;
 }
 
-
 interface Props {
     config: ConfigData | null;
     portadas: Portada[];
@@ -59,23 +76,10 @@ interface Props {
     user: { id: number; nombre: string; apellido_paterno: string; apellido_materno: string; } | null;
 }
 
-// --- Color helpers: derive tints, shades and translucent variants from the
-// institution's own primary/secondary colors instead of hardcoding a palette.
+// Helpers de colores dinámicos
 const tint = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, white)`;
 const shade = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, black)`;
 const alpha = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, transparent)`;
-
-
-const RUTA_INGRESO = [
-    { titulo: 'Inscripción', detalle: 'Crea tu cuenta en la plataforma y elige tu horario de preparación.' },
-    { titulo: 'Preparación', detalle: 'Avanza por módulos de razonamiento, biología y ciencias sociales con docentes especialistas.' },
-    { titulo: 'Simulacros', detalle: 'Rinde exámenes cronometrados con el mismo formato y nivel de exigencia del examen real.' },
-    { titulo: 'Examen de admisión', detalle: 'Preséntate el día del examen con la práctica y confianza que construiste en el camino.' },
-];
-
-const formatFecha = (fecha: string | null) => {
-    return formatoFecha(fecha);
-};
 
 const convocatoriaAbierta = (c: Convocatoria) => {
     if (!c.fecha_fin) return true;
@@ -83,68 +87,87 @@ const convocatoriaAbierta = (c: Convocatoria) => {
     return fin.getTime() >= Date.now();
 };
 
-
 const convertirLinkAEmbed = (link: string): string | null => {
     try {
         const url = new URL(link);
-
-        // YouTube watch
         if (url.hostname.includes('youtube.com') && url.pathname === '/watch') {
             const videoId = url.searchParams.get('v');
             if (videoId) return `https://www.youtube.com/embed/${videoId}`;
         }
-
-        // YouTube Shorts
         if (url.hostname.includes('youtube.com') && url.pathname.includes('/shorts/')) {
             const shortId = url.pathname.split('/shorts/')[1]?.split('/')[0];
             if (shortId) return `https://www.youtube.com/embed/${shortId}`;
         }
-
-        // youtu.be
         if (url.hostname === 'youtu.be') {
             const videoId = url.pathname.slice(1);
             if (videoId) return `https://www.youtube.com/embed/${videoId}`;
         }
-
         return null;
     } catch {
         return null;
     }
 };
 
-const getYoutubeThumbnail = (link: string): string | null => {
-    try {
-        const url = new URL(link);
-        let videoId: string | null = null;
-
-        if (url.hostname.includes('youtube.com') && url.pathname === '/watch') {
-            videoId = url.searchParams.get('v');
-        }
-        if (url.hostname.includes('youtube.com') && url.pathname.includes('/shorts/')) {
-            videoId = url.pathname.split('/shorts/')[1]?.split('/')[0] || null;
-        }
-        if (url.hostname === 'youtu.be') {
-            videoId = url.pathname.slice(1);
-        }
-
-        if (videoId) return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-        return null;
-    } catch {
-        return null;
-    }
-};
+const EXPLORA_CARDS = [
+    {
+        title: 'Admisión & Convocatorias',
+        subtitle: 'Proceso oficial y cronograma',
+        description: 'Conoce los requisitos, fechas clave y publicaciones oficiales para el curso preuniversitario de Psicología.',
+        icon: GraduationCap,
+        badge: 'Oficial',
+        targetId: 'convocatorias',
+    },
+    {
+        title: 'Aula Virtual & Refuerzo IA',
+        subtitle: 'Tecnología pedagógica',
+        description: 'Accede a tus lecciones digitales, entrega de tareas, evaluaciones y acompañamiento cognitivo personalizado.',
+        icon: Sparkles,
+        badge: 'Innovación',
+        targetId: 'inicio',
+    },
+    {
+        title: 'Biblioteca Especializada',
+        subtitle: 'Material bibliográfico',
+        description: 'Guías de estudio, textos de psicología general, neuroanatomía, epistemología y razonamiento crítico.',
+        icon: BookOpen,
+        badge: 'Recursos',
+        targetId: 'explora',
+    },
+    {
+        title: 'Orientación Vocacional',
+        subtitle: 'Acompañamiento integral',
+        description: 'Gabinete y talleres de orientación sobre las ramas clínicas, educativas, organizacionales y forenses.',
+        icon: Target,
+        badge: 'Vocación',
+        targetId: 'sobre-nosotros',
+    },
+    {
+        title: 'Cuerpo Docente de Excelencia',
+        subtitle: 'Docentes especialistas',
+        description: 'Profesionales altamente capacitados con trayectoria académica y vocación de enseñanza universitaria.',
+        icon: Users,
+        badge: 'Calidad',
+        targetId: 'autoridades',
+    },
+    {
+        title: 'Campus Universitario UPEA',
+        subtitle: 'Infraestructura y comunidad',
+        description: 'Instalaciones equipadas en Villa Esperanza, ambientes de estudio y vida universitaria comunitaria.',
+        icon: MapPin,
+        badge: 'El Alto',
+        targetId: 'sobre-nosotros',
+    },
+];
 
 export default function Welcome({ config, portadas, autoridades, convocatorias, user }: Props) {
-    //colores ya los configura que es lo que se ah definido en la parte de props
     const primary = config?.color_primario || '#4f46e5';
     const secondary = config?.color_secundario || '#06b6d4';
     const lema = config?.lema || 'Formando Psicólogos para el Futuro';
-    const portada = portadas && portadas.length > 0 ? portadas[0] : null;
 
     const [modalVideo, setModalVideo] = useState(false);
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
-        const [currentPortada, setCurrentPortada] = useState(0);
-        
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [activeTab, setActiveTab] = useState<'mision' | 'vision' | 'valores'>('mision');
 
     const abrirVideo = (link: string) => {
         const embedUrl = convertirLinkAEmbed(link);
@@ -155,110 +178,182 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
     };
 
     useEffect(() => {
-        AOS.init({ duration: 700, easing: 'ease-out-cubic', once: true, offset: 40 });
+        AOS.init({ duration: 750, easing: 'ease-out-cubic', once: true, offset: 40 });
     }, []);
 
-        // Efecto para el carrusel automático de portadas
+    // Slider automático de portadas
     useEffect(() => {
         if (!portadas || portadas.length <= 1) return;
-        
         const interval = setInterval(() => {
-            setCurrentPortada((prev) => (prev + 1) % portadas.length);
-        }, 2000);
-        
+            setCurrentSlide((prev) => (prev + 1) % portadas.length);
+        }, 5500);
         return () => clearInterval(interval);
     }, [portadas]);
 
+    const scrollTo = (id: string) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
-
-
-        
-        <div className="font-body min-h-screen bg-white text-neutral-900">
-            <Head title="Preuniversitario de Psicología - UPEA">
+        <div className="font-body min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white relative overflow-x-hidden">
+            <Head title="Carrera de Psicología - Universidad Pública de El Alto">
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link
-                    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap"
                     rel="stylesheet"
                 />
                 <style>{`
-                    .font-display { font-family: 'Newsreader', ui-serif, Georgia, serif; font-optical-sizing: auto; }
-                    .font-body { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
-                    .font-mono-ui { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+                    .font-title { font-family: 'Outfit', system-ui, -apple-system, sans-serif; }
+                    .font-body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+                    .font-mono-tag { font-family: 'Space Grotesk', ui-monospace, monospace; }
+
+                    @keyframes floatSlow {
+                        0%, 100% { transform: translateY(0px) rotate(0deg); }
+                        50% { transform: translateY(-16px) rotate(6deg); }
+                    }
+                    @keyframes floatSlowReverse {
+                        0%, 100% { transform: translateY(0px) rotate(0deg); }
+                        50% { transform: translateY(18px) rotate(-6deg); }
+                    }
+                    @keyframes pulseGlow {
+                        0%, 100% { opacity: 0.4; transform: scale(1); }
+                        50% { opacity: 0.8; transform: scale(1.05); }
+                    }
                 `}</style>
             </Head>
 
-
-
-
-            {/* ==================== NAVBAR ==================== */}
-            <nav className="sticky top-0 z-50 border-b border-neutral-100 bg-white/85 backdrop-blur">
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-                    <div className="flex items-center gap-3">
-                        {/*aqui se muestra el logo del sibe bar*/}
+            {/* ==================== NAVBAR ESTILO CRISTAL ==================== */}
+            <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-2xl transition-all">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-3.5">
+                    {/* Logo e Identidad */}
+                    <Link href="/" className="flex items-center gap-3.5 group">
                         {config?.logo ? (
-                            <img src={`/storage/${config.logo}`} alt="Logo institucional" className="h-11 w-11 object-contain" />
+                            <div className="relative">
+                                <div
+                                    className="absolute -inset-1 rounded-full blur-md opacity-50 group-hover:opacity-90 transition-opacity"
+                                    style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+                                />
+                                <img
+                                    src={`/storage/${config.logo}`}
+                                    alt="Logo Institucional"
+                                    className="relative h-11 w-11 rounded-full object-contain bg-white p-1 shadow-md"
+                                />
+                            </div>
                         ) : (
                             <div
-                                className="flex h-11 w-11 items-center justify-center rounded-xl shadow-sm"
+                                className="flex h-11 w-11 items-center justify-center rounded-xl shadow-lg text-white font-bold text-lg"
                                 style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
                             >
-                                <GraduationCap className="h-5 w-5 text-white" />
+                                <GraduationCap className="h-6 w-6 text-white" />
                             </div>
                         )}
                         <div className="leading-tight">
-                            <p className="font-display text-[17px] font-medium">Preuniversitario de Psicología</p>
-                            <p className="font-mono-ui text-[11px] uppercase tracking-wide text-neutral-400">UPEA · Carrera de Psicología</p>
+                            <p className="font-title text-base sm:text-lg font-bold tracking-tight text-white group-hover:text-indigo-300 transition-colors">
+                                Psicología UPEA
+                            </p>
+                            <p className="font-mono-tag text-[11px] uppercase tracking-wider text-slate-400">
+                                Preuniversitario Académico
+                            </p>
                         </div>
-                    </div>
+                    </Link>
+
+                    {/* Enlaces de Navegación (Desktop) */}
+                    <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-slate-300">
+                        <button
+                            type="button"
+                            onClick={() => scrollTo('inicio')}
+                            className="hover:text-white transition-colors cursor-pointer"
+                        >
+                            Inicio
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => scrollTo('explora')}
+                            className="hover:text-white transition-colors cursor-pointer"
+                        >
+                            Explora
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => scrollTo('sobre-nosotros')}
+                            className="hover:text-white transition-colors cursor-pointer"
+                        >
+                            Nosotros
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => scrollTo('convocatorias')}
+                            className="hover:text-white transition-colors cursor-pointer"
+                        >
+                            Convocatorias
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => scrollTo('autoridades')}
+                            className="hover:text-white transition-colors cursor-pointer"
+                        >
+                            Autoridades
+                        </button>
+                    </nav>
+
+                    {/* Botones de Acción */}
                     <div className="flex items-center gap-3">
                         {user ? (
                             <Link href="/dashboard">
-                                <Button className="text-white shadow-sm hover:opacity-90" style={{ backgroundColor: primary }}>
-                                    Ir al Dashboard <ChevronRight className="ml-1 h-4 w-4" />
+                                <Button
+                                    className="font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 rounded-xl px-5"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                    }}
+                                >
+                                    Mi Aula Virtual <ChevronRight className="ml-1 h-4 w-4" />
                                 </Button>
                             </Link>
                         ) : (
-                            <>
+                            <div className="flex items-center gap-2">
                                 <Link href="/login">
-                                    <Button variant="ghost">Iniciar sesión</Button>
+                                    <Button
+                                        variant="ghost"
+                                        className="text-slate-200 hover:text-white hover:bg-white/10 rounded-xl"
+                                    >
+                                        Iniciar Sesión
+                                    </Button>
                                 </Link>
-                            </>
+                                <Link href="/register" className="hidden sm:inline-block">
+                                    <Button
+                                        className="text-white font-semibold shadow-md rounded-xl px-4 transition-transform hover:scale-105 active:scale-95"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                        }}
+                                    >
+                                        Inscribirme
+                                    </Button>
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </div>
-            </nav>
+            </header>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== HERO ==================== */}
-            <section className="relative min-h-screen overflow-hidden">
-                {/* Carrusel de imágenes de fondo */}
-                {portadas && portadas.length > 0 && (
-                    <div className="absolute inset-0">
-                        {portadas.map((portada, index) => (
+            {/* ==================== HERO SECTION (Inspirado en Gas y Petroquímica) ==================== */}
+            <section
+                id="inicio"
+                className="relative min-h-[92vh] flex items-center justify-center overflow-hidden pt-12 pb-24"
+            >
+                {/* 1. SLIDER PANORÁMICO DE PORTADAS */}
+                <div className="absolute inset-0 z-0">
+                    {portadas && portadas.length > 0 ? (
+                        portadas.map((portada, index) => (
                             <div
                                 key={portada.id}
-                                className={`absolute inset-0 transition-opacity duration-1000 ${
-                                    index === currentPortada ? 'opacity-100' : 'opacity-0'
+                                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                                    index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
                                 }`}
+                                style={{ transition: 'opacity 1.2s ease-in-out, transform 8s ease-out' }}
                             >
                                 <img
                                     src={`/storage/${portada.imagen}`}
@@ -266,692 +361,826 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                        ))}
+                        ))
+                    ) : (
+                        <div
+                            className="w-full h-full"
+                            style={{
+                                background: `radial-gradient(ellipse at 30% 20%, ${primary}35 0%, #060914 80%)`,
+                            }}
+                        />
+                    )}
+                </div>
+
+                {/* 2. PELÍCULA GRADIENTE OSCURA Y AURAS DE MARCA */}
+                <div
+                    className="absolute inset-0 z-1 pointer-events-none"
+                    style={{
+                        background:
+                            'radial-gradient(ellipse at center, rgba(15, 23, 42, 0.65) 0%, rgba(6, 9, 20, 0.88) 60%, #030712 100%)',
+                    }}
+                />
+
+                {/* Auras de color dinámicas */}
+                <div
+                    className="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-[120px] pointer-events-none z-1"
+                    style={{ background: `${primary}35` }}
+                />
+                <div
+                    className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-[130px] pointer-events-none z-1"
+                    style={{ background: `${secondary}30` }}
+                />
+
+                {/* 3. ELEMENTOS GEOMÉTRICOS FLOTANTES (PageDecorators) */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-2">
+                    <img
+                        src="/decoradores/circulo.png"
+                        alt=""
+                        className="absolute top-16 left-8 w-16 sm:w-20 opacity-40 animate-[floatSlow_8s_ease-in-out_infinite]"
+                    />
+                    <img
+                        src="/decoradores/objeto.png"
+                        alt=""
+                        className="absolute top-1/4 right-8 w-14 sm:w-16 opacity-35 animate-[floatSlowReverse_9s_ease-in-out_infinite]"
+                    />
+                    <img
+                        src="/decoradores/decoradores2/objeto_puntueado.png"
+                        alt=""
+                        className="absolute bottom-28 left-12 w-20 sm:w-24 opacity-35 animate-[floatSlow_11s_ease-in-out_infinite]"
+                    />
+                    <img
+                        src="/decoradores/redondo_punteuado5.png"
+                        alt=""
+                        className="absolute top-20 right-1/4 w-14 sm:w-16 opacity-35 animate-[floatSlow_10s_ease-in-out_infinite]"
+                    />
+                    <img
+                        src="/decoradores/cuadrado_punteado_rojo.png"
+                        alt=""
+                        className="absolute bottom-24 right-16 w-14 opacity-30 animate-[floatSlowReverse_12s_ease-in-out_infinite]"
+                    />
+                </div>
+
+                {/* 4. CONTENIDO PRINCIPAL HERO */}
+                <div className="relative z-10 mx-auto max-w-5xl px-6 text-center flex flex-col items-center">
+                    {/* Emblema / Logo Institucional Pulsante */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.7 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        className="relative mb-6"
+                    >
+                        <div
+                            className="absolute -inset-3 rounded-full blur-xl opacity-75 animate-pulse"
+                            style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+                        />
+                        <div
+                            className="relative h-28 w-28 sm:h-36 sm:w-36 rounded-full bg-white p-2.5 shadow-2xl flex items-center justify-center overflow-hidden"
+                            style={{ border: `5px solid ${primary}` }}
+                        >
+                            {config?.logo ? (
+                                <img
+                                    src={`/storage/${config.logo}`}
+                                    alt="Logo UPEA Psicología"
+                                    className="h-full w-full object-contain"
+                                />
+                            ) : (
+                                <GraduationCap className="h-16 w-16 text-indigo-600" />
+                            )}
+                        </div>
+                    </motion.div>
+
+                    {/* Insignia de Admisión */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                    >
+                        <span
+                            className="font-mono-tag inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold uppercase tracking-wider bg-white/10 backdrop-blur-md shadow-inner text-indigo-300"
+                            style={{ borderColor: `${primary}55` }}
+                        >
+                            <Sparkles className="h-4 w-4 text-cyan-400" /> Admisión Preuniversitaria · Carrera de Psicología
+                        </span>
+                    </motion.div>
+
+                    {/* TÍTULO PRINCIPAL DE IMPACTO */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, delay: 0.3 }}
+                        className="font-title mt-6 text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white drop-shadow-xl uppercase"
+                    >
+                        CARRERA DE <span style={{ color: secondary }}>PSICOLOGÍA</span>
+                        <span className="block text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-normal text-slate-300 mt-2">
+                            UNIVERSIDAD PÚBLICA DE EL ALTO
+                        </span>
+                    </motion.h1>
+
+                    {/* LEMA INSTITUCIONAL */}
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, delay: 0.4 }}
+                        className="mt-6 max-w-2xl text-base sm:text-xl font-normal leading-relaxed text-slate-200 drop-shadow-md"
+                    >
+                        "{lema}"
+                    </motion.p>
+
+                    {/* BOTONES DE ACCIÓN HERO */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, delay: 0.5 }}
+                        className="mt-8 flex flex-wrap items-center justify-center gap-4"
+                    >
+                        {user ? (
+                            <Link href="/dashboard">
+                                <Button
+                                    size="lg"
+                                    className="h-13 px-8 text-base font-bold text-white shadow-2xl rounded-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                    }}
+                                >
+                                    Ir a mi Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                                </Button>
+                            </Link>
+                        ) : (
+                            <>
+                                <Link href="/login">
+                                    <Button
+                                        size="lg"
+                                        className="h-13 px-8 text-base font-bold text-white shadow-2xl rounded-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                        }}
+                                    >
+                                        Aula Virtual / Iniciar Sesión <ArrowRight className="ml-2 h-5 w-5" />
+                                    </Button>
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={() => scrollTo('convocatorias')}
+                                    className="h-13 px-7 text-base font-semibold text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/25 rounded-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
+                                >
+                                    <Megaphone className="h-5 w-5 text-cyan-400" />
+                                    Ver Convocatorias
+                                </button>
+                            </>
+                        )}
+                    </motion.div>
+
+                    {/* INDICADORES DEL SLIDER DE PORTADAS */}
+                    {portadas && portadas.length > 1 && (
+                        <div className="mt-10 flex items-center justify-center gap-2.5">
+                            {portadas.map((_, index) => (
+                                <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setCurrentSlide(index)}
+                                    className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                        index === currentSlide ? 'w-8 bg-cyan-400 shadow-md shadow-cyan-500/50' : 'w-2.5 bg-white/40 hover:bg-white/70'
+                                    }`}
+                                    aria-label={`Ir a portada ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* SCROLL INDICATOR ANIMADO */}
+                <motion.button
+                    type="button"
+                    onClick={() => scrollTo('explora')}
+                    className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-300 hover:text-white transition-colors cursor-pointer z-10 opacity-80 hover:opacity-100"
+                    animate={{ y: [0, 8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                    <span className="font-mono-tag text-[10px] uppercase tracking-widest font-semibold text-slate-400">
+                        Descubre más
+                    </span>
+                    <ChevronDown className="h-5 w-5 text-cyan-400" />
+                </motion.button>
+            </section>
+
+            {/* ==================== SECCIÓN EXPLORA NUESTRA CARRERA ==================== */}
+            <section
+                id="explora"
+                className="relative py-24 px-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden"
+            >
+                <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background: `radial-gradient(circle at 10% 20%, ${primary}18 0%, transparent 60%), radial-gradient(circle at 90% 80%, ${secondary}15 0%, transparent 60%)`,
+                    }}
+                />
+
+                <div className="mx-auto max-w-7xl relative z-10">
+                    <div className="text-center mb-16" data-aos="fade-up">
+                        <span
+                            className="font-mono-tag inline-block rounded-full px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800/40"
+                        >
+                            Plataforma & Ecosistema
+                        </span>
+                        <h2 className="font-title mt-3 text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+                            Explora la Carrera de Psicología
+                        </h2>
+                        <div
+                            className="mx-auto mt-4 h-1 w-20 rounded-full"
+                            style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
+                        />
+                        <p className="mt-4 max-w-2xl mx-auto text-slate-400 text-sm sm:text-base leading-relaxed">
+                            Una experiencia formativa de vanguardia que combina ciencia del comportamiento, acompañamiento docente y tecnología educativa en la UPEA.
+                        </p>
                     </div>
-                )}
 
-                {/* Contenido del hero */}
-                <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-6 py-20">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 items-center w-full">
-                        {/* Columna izquierda - Texto */}
-                        <div data-aos="fade-up">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                        {EXPLORA_CARDS.map((card, idx) => {
+                            const IconComponent = card.icon;
+                            return (
+                                <motion.div
+                                    key={card.title}
+                                    data-aos="fade-up"
+                                    data-aos-delay={idx * 80}
+                                    whileHover={{ y: -6, scale: 1.02 }}
+                                    transition={{ duration: 0.3 }}
+                                    onClick={() => scrollTo(card.targetId)}
+                                    className="group relative rounded-3xl p-7 bg-slate-900/60 hover:bg-slate-800/70 border border-white/10 hover:border-cyan-500/40 shadow-xl backdrop-blur-xl transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
+                                >
+                                    {/* Acento de brillo en hover */}
+                                    <div
+                                        className="absolute -right-12 -top-12 h-32 w-32 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity"
+                                        style={{ background: idx % 2 === 0 ? primary : secondary }}
+                                    />
+
+                                    <div>
+                                        <div className="flex items-center justify-between mb-5">
+                                            <div
+                                                className="flex h-13 w-13 items-center justify-center rounded-2xl text-white shadow-lg transition-transform group-hover:rotate-6"
+                                                style={{
+                                                    background:
+                                                        idx % 2 === 0
+                                                            ? `linear-gradient(135deg, ${primary}, ${secondary})`
+                                                            : `linear-gradient(135deg, ${secondary}, ${primary})`,
+                                                }}
+                                            >
+                                                <IconComponent className="h-6 w-6" />
+                                            </div>
+                                            <Badge
+                                                variant="outline"
+                                                className="border-white/15 bg-white/5 text-slate-300 font-mono-tag text-[11px]"
+                                            >
+                                                {card.badge}
+                                            </Badge>
+                                        </div>
+
+                                        <p className="font-mono-tag text-xs font-semibold uppercase tracking-wider text-cyan-400">
+                                            {card.subtitle}
+                                        </p>
+                                        <h3 className="font-title mt-1 text-xl font-bold text-white group-hover:text-cyan-200 transition-colors">
+                                            {card.title}
+                                        </h3>
+                                        <p className="mt-3 text-sm leading-relaxed text-slate-400">
+                                            {card.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-6 flex items-center gap-1.5 text-xs font-semibold text-slate-300 group-hover:text-cyan-300 transition-colors">
+                                        <span>Conocer más</span>
+                                        <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                </div>
+            </section>
+
+            {/* ==================== SECCIÓN SOBRE NOSOTROS (Misión, Visión, Valores) ==================== */}
+            <section
+                id="sobre-nosotros"
+                className="relative py-24 px-6 bg-slate-950 overflow-hidden"
+            >
+                <div className="mx-auto max-w-7xl relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        {/* Columna Izquierda: Introducción y Métricas */}
+                        <div className="lg:col-span-5" data-aos="fade-right">
                             <span
-                                className="font-mono-ui inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] tracking-wide uppercase bg-white/80 backdrop-blur-sm"
-                                style={{ borderColor: alpha(primary, 35), color: shade(primary, 10) }}
+                                className="font-mono-tag inline-block rounded-full px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-400 bg-indigo-950/60 border border-indigo-800/40"
                             >
-                                <Sparkles className="h-3.5 w-3.5" /> Admisión UPEA · Carrera de Psicología
+                                Identidad & Compromiso
                             </span>
-
-                            <h1 className="font-display mt-6 text-5xl leading-[1.08] font-medium tracking-tight text-white md:text-6xl drop-shadow-lg">
-                                {lema}
-                            </h1>
-
-                            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/90">
-                                Prepárate para tu examen de admisión con clases virtuales en vivo, material de estudio por áreas y el
-                                acompañamiento de un equipo docente especializado.
+                            <h2 className="font-title mt-3 text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                                Formación Científica y Sensibilidad Social
+                            </h2>
+                            <p className="mt-5 text-slate-300 text-base leading-relaxed">
+                                La Carrera de Psicología de la Universidad Pública de El Alto prepara profesionales líderes orientados a la investigación, intervención clínica, comunitaria y educativa para responder a las necesidades de la sociedad boliviana.
                             </p>
 
-                            {!user && (
-                                <div className="mt-9 flex flex-wrap items-center gap-5">
-                                    <Link href="/register">
-                                        <Button
-                                            size="lg"
-                                            className="h-12 px-7 text-base text-white shadow-lg transition-transform hover:scale-[1.02] hover:opacity-95 bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30"
-                                        >
-                                            Inscríbete ahora <ChevronRight className="ml-2 h-5 w-5" />
-                                        </Button>
-                                    </Link>
-                                    <Link
-                                        href="/login"
-                                        className="text-sm font-medium underline decoration-2 underline-offset-4 text-white/90 hover:text-white"
-                                    >
-                                        Ya tengo una cuenta
-                                    </Link>
+                            {/* Tarjetas de Estadísticas / Indicadores */}
+                            <div className="mt-8 grid grid-cols-2 gap-4">
+                                <div className="rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur-md">
+                                    <p className="font-title text-3xl font-extrabold text-cyan-400">100%</p>
+                                    <p className="text-xs text-slate-400 mt-1 font-medium">Docentes Especialistas</p>
                                 </div>
-                            )}
-
-                            <div className="mt-12 flex flex-wrap gap-3">
-                                {['Clases en vivo', 'Simulacros cronometrados', 'Tutoría personalizada'].map((item) => (
-                                    <span
-                                        key={item}
-                                        className="inline-flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-3.5 py-1.5 text-xs font-medium text-white shadow-sm ring-1 ring-white/30"
-                                    >
-                                        <CheckCircle2 className="h-3.5 w-3.5" style={{ color: secondary }} />
-                                        {item}
-                                    </span>
-                                ))}
+                                <div className="rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur-md">
+                                    <p className="font-title text-3xl font-extrabold text-indigo-400">+5</p>
+                                    <p className="text-xs text-slate-400 mt-1 font-medium">Áreas de Especialidad</p>
+                                </div>
+                                <div className="rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur-md">
+                                    <p className="font-title text-3xl font-extrabold text-teal-400">24/7</p>
+                                    <p className="text-xs text-slate-400 mt-1 font-medium">Aula Virtual & Recursos</p>
+                                </div>
+                                <div className="rounded-2xl p-4 bg-white/5 border border-white/10 backdrop-blur-md">
+                                    <p className="font-title text-3xl font-extrabold text-amber-400">UPEA</p>
+                                    <p className="text-xs text-slate-400 mt-1 font-medium">Acreditación Pública</p>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Columna derecha - Logo grande flotando */}
-                        <div className="hidden lg:flex flex-col items-end justify-center gap-6" data-aos="fade-left" data-aos-delay="100">
+                        {/* Columna Derecha: Tabs interactivos Misión / Visión / Valores */}
+                        <div className="lg:col-span-7" data-aos="fade-left">
+                            <div className="rounded-3xl p-6 sm:p-8 bg-slate-900/80 border border-white/15 backdrop-blur-2xl shadow-2xl">
+                                {/* Botones de Pestaña */}
+                                <div className="flex flex-wrap gap-2 pb-6 border-b border-white/10">
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('mision')}
+                                        className={`px-5 py-2.5 rounded-xl font-title font-bold text-sm transition-all cursor-pointer flex items-center gap-2 ${
+                                            activeTab === 'mision'
+                                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        <Target className="h-4 w-4" /> Nuestra Misión
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('vision')}
+                                        className={`px-5 py-2.5 rounded-xl font-title font-bold text-sm transition-all cursor-pointer flex items-center gap-2 ${
+                                            activeTab === 'vision'
+                                                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        <Eye className="h-4 w-4" /> Nuestra Visión
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('valores')}
+                                        className={`px-5 py-2.5 rounded-xl font-title font-bold text-sm transition-all cursor-pointer flex items-center gap-2 ${
+                                            activeTab === 'valores'
+                                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                    >
+                                        <Shield className="h-4 w-4" /> Valores y Ética
+                                    </button>
+                                </div>
 
+                                {/* Contenido de la Pestaña */}
+                                <div className="pt-6 min-h-[260px] flex flex-col justify-center">
+                                    {activeTab === 'mision' && (
+                                        <motion.div
+                                            key="mision"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="space-y-4"
+                                        >
+                                            <div className="flex items-center gap-3 text-indigo-400">
+                                                <Target className="h-8 w-8" />
+                                                <h3 className="font-title text-2xl font-bold text-white">
+                                                    Misión Institucional
+                                                </h3>
+                                            </div>
+                                            <p className="text-slate-300 leading-relaxed text-base sm:text-lg">
+                                                {config?.mision ||
+                                                    'Formar profesionales en psicología idóneos, éticos, críticos e investigadores, capaces de diagnosticar, prevenir e intervenir en los procesos psicológicos individuales y sociales para el bienestar de la población boliviana.'}
+                                            </p>
+                                        </motion.div>
+                                    )}
 
-                            
-<motion.div
-    initial={{ opacity: 0, scale: 0.5, y: 50 }}
-    animate={{ 
-        opacity: 1, 
-        scale: [1, 1.1, 1],
-        y: [0, -40, 0],  // Movimiento vertical más amplio
-        rotate: [0, 3, -3, 0]
-    }}
-    transition={{ 
-        duration: 4,
-        ease: 'easeInOut',
-        repeat: Infinity,
-        repeatType: 'loop'
-    }}
-    className="relative"
->
-    {/* Logo grande */}
-    {config?.logo ? (
-        <div className="relative">
-            <motion.img
-                src={`/storage/${config.logo}`}
-                alt="Logo institucional"
-                className="w-150 h-150 object-contain drop-shadow-2xl"
-                animate={{ 
-                    x: [0, 15, -15, 0],  // Movimiento lateral
-                    y: [0, -25, 0],
-                    rotate: [0, 5, -5, 0]
-                }}
-                transition={{ 
-                    duration: 5,
-                    ease: 'easeInOut',
-                    repeat: Infinity,
-                    repeatType: 'loop'
-                }}
-            />
-            {/* Efecto de brillo con pulso fuerte */}
-            <motion.div 
-                className="absolute inset-0 -z-10 blur-3xl"
-                animate={{ 
-                    opacity: [0.2, 0.8, 0.2],
-                    scale: [0.8, 1.5, 0.8]
-                }}
-                transition={{ 
-                    duration: 3,
-                    ease: 'easeInOut',
-                    repeat: Infinity,
-                    repeatType: 'loop'
-                }}
-                style={{ background: `radial-gradient(circle, ${alpha(primary, 40)}, transparent 70%)` }}
-            />
-        </div>
-    ) : (
-        <motion.div
-            className="flex h-64 w-64 items-center justify-center rounded-full shadow-2xl"
-            style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
-            animate={{ 
-                y: [0, -30, 0],
-                rotate: [0, 15, -15, 0],
-                scale: [1, 1.15, 1]
-            }}
-            transition={{ 
-                duration: 5,
-                ease: 'easeInOut',
-                repeat: Infinity,
-                repeatType: 'loop'
-            }}
-        >
-            <GraduationCap className="h-32 w-32 text-white" />
-        </motion.div>
-    )}
-    
-    {/* Indicadores del carrusel debajo del logo */}
-    <motion.div 
-        className="flex gap-2 justify-center mt-8"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ 
-            duration: 2.5,
-            ease: 'easeInOut',
-            repeat: Infinity,
-            repeatType: 'loop'
-        }}
-    >
-        {portadas.map((_, index) => (
-            <button
-                key={index}
-                onClick={() => setCurrentPortada(index)}
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                    width: index === currentPortada ? '40px' : '8px',
-                    backgroundColor: index === currentPortada ? 'white' : 'rgba(255,255,255,0.4)'
-                }}
-                aria-label={`Ir a la imagen ${index + 1}`}
-            />
-        ))}
-    </motion.div>
-</motion.div>
+                                    {activeTab === 'vision' && (
+                                        <motion.div
+                                            key="vision"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="space-y-4"
+                                        >
+                                            <div className="flex items-center gap-3 text-cyan-400">
+                                                <Eye className="h-8 w-8" />
+                                                <h3 className="font-title text-2xl font-bold text-white">
+                                                    Visión de Futuro
+                                                </h3>
+                                            </div>
+                                            <p className="text-slate-300 leading-relaxed text-base sm:text-lg">
+                                                {config?.vision ||
+                                                    'Ser una carrera universitaria líder a nivel nacional e internacional, reconocida por la excelencia académica, la investigación científica y la contribución efectiva a la salud mental y transformación social.'}
+                                            </p>
+                                        </motion.div>
+                                    )}
+
+                                    {activeTab === 'valores' && (
+                                        <motion.div
+                                            key="valores"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                                        >
+                                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                <h4 className="font-bold text-emerald-300 flex items-center gap-2">
+                                                    <Shield className="h-4 w-4" /> Ética Profesional
+                                                </h4>
+                                                <p className="text-xs text-slate-300 mt-1">
+                                                    Confidencialidad, respeto a la dignidad humana y responsabilidad en cada intervención.
+                                                </p>
+                                            </div>
+                                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                <h4 className="font-bold text-cyan-300 flex items-center gap-2">
+                                                    <Lightbulb className="h-4 w-4" /> Rigor Científico
+                                                </h4>
+                                                <p className="text-xs text-slate-300 mt-1">
+                                                    Método empírico, actualización académica continua y pensamiento crítico.
+                                                </p>
+                                            </div>
+                                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                <h4 className="font-bold text-indigo-300 flex items-center gap-2">
+                                                    <HeartHandshake className="h-4 w-4" /> Empatía y Escucha
+                                                </h4>
+                                                <p className="text-xs text-slate-300 mt-1">
+                                                    Comprensión activa y sensibilidad hacia las realidades del contexto comunitario.
+                                                </p>
+                                            </div>
+                                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                                <h4 className="font-bold text-amber-300 flex items-center gap-2">
+                                                    <Users className="h-4 w-4" /> Compromiso Social
+                                                </h4>
+                                                <p className="text-xs text-slate-300 mt-1">
+                                                    Aporte directo al desarrollo, salud mental y calidad de vida en El Alto y Bolivia.
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-{/* ==================== LEMA RIBBON ==================== */}
-{config?.lema && (
-    <div className="relative overflow-hidden py-16 text-center" style={{ background: `linear-gradient(100deg, ${primary}, ${shade(secondary, 5)})` }}>
-        {/* Decoradores flotantes */}
-        <motion.div
-            className="pointer-events-none absolute top-10 left-10 opacity-60"
-            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        >
-            <img src="/decoradores/circulo.png" alt="" className="w-16 h-16" />
-        </motion.div>
-        
-        <motion.div
-            className="pointer-events-none absolute bottom-10 right-20 opacity-70"
-            animate={{ y: [0, 15, 0], rotate: [0, -15, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-            <img src="/decoradores/cuadrado_punteado_rojo.png" alt="" className="w-20 h-20" />
-        </motion.div>
-        
-        <motion.div
-            className="pointer-events-none absolute top-20 right-40 opacity-100"
-            animate={{ y: [0, -30, 0], x: [0, 10, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-        >
-            <img src="/decoradores/objeto.png" alt="" className="w-24 h-24" />
-        </motion.div>
-
-        <motion.div
-            className="pointer-events-none absolute bottom-20 left-1/4 opacity-60"
-            animate={{ y: [0, 10, 0], rotate: [0, 360, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        >
-            <img src="/decoradores/redondo_puntedo_rojo.png" alt="" className="w-14 h-14" />
-        </motion.div>
-
-        <motion.div
-            className="pointer-events-none absolute top-1/2 left-8 opacity-40"
-            animate={{ y: [0, -15, 0], rotate: [0, -8, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        >
-            <img src="/decoradores/objeto_combinado.png" alt="" className="w-12 h-12" />
-        </motion.div>
-
-        <motion.div
-            className="pointer-events-none absolute bottom-1/3 right-8 opacity-50"
-            animate={{ y: [0, 20, 0], rotate: [0, 12, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        >
-            <img src="/decoradores/shape-35.png" alt="" className="w-16 h-16" />
-        </motion.div>
-
-        <div className="relative z-10">
-            <Quote className="mx-auto mb-2 h-6 w-6 text-white/40" />
-            <p className="font-display mx-auto max-w-3xl px-6 text-xl text-white md:text-2xl">{config.lema}</p>
-        </div>
-    </div>
-)}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{/* ==================== MISIÓN Y VISIÓN ==================== */}
-<div className="relative mx-auto max-w-7xl px-6 py-20">
-    {/* Decoradores de fondo */}
-    <motion.div
-        className="pointer-events-none absolute top-10 right-10 opacity-90"
-        animate={{ y: [0, -25, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-    >
-        <img src="/decoradores/objeto_combinado.png" alt="" className="w-32 h-32" />
-    </motion.div>
-    
-    <motion.div
-        className="pointer-events-none absolute bottom-10 left-5 opacity-90"
-        animate={{ y: [0, 20, 0], rotate: [0, -10, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-    >
-        <img src="/decoradores/rectangulo punteado.png" alt="" className="w-28 h-28" />
-    </motion.div>
-
-    <motion.div
-        className="pointer-events-none absolute top-1/2 left-1/2 opacity-90"
-        animate={{ rotate: [0, 360, 0] }}
-        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-    >
-        <img src="/decoradores/shape-35.png" alt="" className="w-40 h-40" />
-    </motion.div>
-
-    <div className="relative grid grid-cols-1 divide-y divide-neutral-100 overflow-hidden rounded-3xl border border-neutral-100 shadow-sm md:grid-cols-2 md:divide-x md:divide-y-0 bg-white">
-        <div className="p-10 md:p-12" data-aos="fade-up">
-            <div
-                className="mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2"
-                style={{ borderColor: alpha(primary, 40) }}
+            {/* ==================== SECCIÓN CONVOCATORIAS Y AVISOS ==================== */}
+            <section
+                id="convocatorias"
+                className="relative py-24 px-6 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden"
             >
-                <Target className="h-5 w-5" style={{ color: primary }} />
-            </div>
-            <h3 className="font-display text-2xl">Misión</h3>
-            <p className="mt-4 leading-relaxed text-neutral-600">
-                {config?.mision ||
-                    'Formar profesionales en psicología con sólidas competencias académicas, científicas y tecnológicas.'}
-            </p>
-        </div>
-        <div className="p-10 md:p-12" data-aos="fade-up" data-aos-delay="100">
-            <div
-                className="mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2"
-                style={{ borderColor: alpha(secondary, 40) }}
-            >
-                <Eye className="h-5 w-5" style={{ color: secondary }} />
-            </div>
-            <h3 className="font-display text-2xl">Visión</h3>
-            <p className="mt-4 leading-relaxed text-neutral-600">
-                {config?.vision ||
-                    'Ser una institución líder en la formación de psicólogos altamente capacitados.'}
-            </p>
-        </div>
-    </div>
-</div>
+                <div className="mx-auto max-w-7xl relative z-10">
+                    <div className="text-center mb-16" data-aos="fade-up">
+                        <span
+                            className="font-mono-tag inline-block rounded-full px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-amber-400 bg-amber-950/60 border border-amber-800/40"
+                        >
+                            Comunicados Oficiales
+                        </span>
+                        <h2 className="font-title mt-3 text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+                            Convocatorias de Admisión
+                        </h2>
+                        <div
+                            className="mx-auto mt-4 h-1 w-20 rounded-full"
+                            style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
+                        />
+                        <p className="mt-4 max-w-2xl mx-auto text-slate-400 text-sm sm:text-base leading-relaxed">
+                            Infórmate sobre los periodos de inscripción, requisitos documentales y cronogramas de examen aprobados.
+                        </p>
+                    </div>
 
-
-
-
-
-
-
-
-
-
-
-
-{/* ==================== RUTA DE INGRESO ==================== */}
-<div className="relative mx-auto max-w-7xl px-6 pb-20">
-    {/* Decoradores dispersos */}
-    <motion.div
-        className="pointer-events-none absolute top-0 left-0 opacity-90"
-        animate={{ y: [0, -15, 0], x: [0, 10, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-    >
-        <img src="/decoradores/decoradores2/circulo_linea_.png" alt="" className="w-20 h-20" />
-    </motion.div>
-    
-    <motion.div
-        className="pointer-events-none absolute top-10 right-10 opacity-90"
-        animate={{ rotate: [0, 360, 0] }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-    >
-        <img src="/decoradores/decoradores2/cuadrado_puntueado.png" alt="" className="w-24 h-24" />
-    </motion.div>
-
-    <motion.div
-        className="pointer-events-none absolute bottom-0 left-1/3 opacity-90"
-        animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-    >
-        <img src="/decoradores/decoradores2/objeto_puntueado.png" alt="" className="w-28 h-28" />
-    </motion.div>
-
-    <motion.div
-        className="pointer-events-none absolute bottom-10 right-20 opacity-90"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-    >
-        <img src="/decoradores/decoradores3/circulo_linea.png" alt="" className="w-16 h-16" />
-    </motion.div>
-
-    <div className="relative mb-12 text-center" data-aos="fade-up">
-        <h2 className="font-display text-3xl md:text-4xl">Tu ruta hacia la carrera</h2>
-        <p className="mt-3 text-neutral-500">Cuatro etapas para llegar preparado al día del examen.</p>
-    </div>
-    <div className="relative grid grid-cols-1 gap-8 md:grid-cols-4">
-        <div
-            className="absolute top-6 right-0 left-0 hidden h-px md:block"
-            style={{ background: `linear-gradient(90deg, ${alpha(primary, 5)}, ${alpha(primary, 35)}, ${alpha(secondary, 35)}, ${alpha(secondary, 5)})` }}
-        />
-        {RUTA_INGRESO.map((paso, i) => (
-            <div key={paso.titulo} className="relative" data-aos="fade-up" data-aos-delay={i * 100}>
-                <div
-                    className="font-mono-ui relative z-10 flex h-12 w-12 items-center justify-center rounded-full text-sm font-medium text-white shadow-md"
-                    style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
-                >
-                    0{i + 1}
-                </div>
-                <h4 className="mt-5 text-base font-semibold text-neutral-900">{paso.titulo}</h4>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-500">{paso.detalle}</p>
-            </div>
-        ))}
-    </div>
-</div>
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== AUTORIDADES ==================== */}
-            {autoridades && autoridades.length > 0 && (
-                <div className="bg-neutral-50/70 py-20">
-                    <div className="mx-auto max-w-7xl px-6">
-                        <div className="mb-12 flex items-center justify-center gap-2 text-center" data-aos="fade-up">
-                            
-                            <Users className="h-5 w-5" style={{ color: primary }} />
-                            <h2 className="font-display text-3xl md:text-4xl">Autoridades</h2>
-                        </div>
-                        <div className="flex flex-wrap justify-center gap-7">
-                            {autoridades.map((a, i) => (
-                                <div
-                                    key={a.id}
-                                    //este es el efecto que hace al pasar el cursor
-                                    className="group w-72 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-neutral-100 transition-shadow hover:shadow-xl"
-                                    data-aos="fade-up"
-                                    data-aos-delay={i * 80}
-                                >
-                                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
-                                    <div className="p-6 text-center">
-                                        {a.foto ? (
-                                            <img
-                                                src={`/storage/${a.foto}`}
-                                                alt={a.nombre}
-                                                className="mx-auto mb-4 h-28 w-28 rounded-full border-4 object-cover"
-                                                style={{ borderColor: tint(primary, 88) }}
-                                            />
+                    {convocatorias && convocatorias.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {convocatorias.map((c, idx) => {
+                                const abierta = convocatoriaAbierta(c);
+                                return (
+                                    <div
+                                        key={c.id}
+                                        data-aos="fade-up"
+                                        data-aos-delay={idx * 90}
+                                        className="group rounded-3xl bg-slate-900/70 border border-white/10 hover:border-amber-500/40 shadow-xl backdrop-blur-xl overflow-hidden flex flex-col justify-between transition-all hover:shadow-2xl hover:-translate-y-1"
+                                    >
+                                        {/* Imagen o afiche si existe */}
+                                        {c.archivo ? (
+                                            <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+                                                <img
+                                                    src={`/storage/${c.archivo}`}
+                                                    alt={c.titulo}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                                            </div>
                                         ) : (
                                             <div
-                                                className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full"
-                                                style={{ background: tint(primary, 90) }}
+                                                className="h-28 w-full flex items-center justify-center"
+                                                style={{
+                                                    background: `linear-gradient(135deg, ${primary}40, ${secondary}40)`,
+                                                }}
                                             >
-                                                
+                                                <Megaphone className="h-10 w-10 text-slate-300 opacity-60" />
                                             </div>
                                         )}
-                                        <p className="text-lg font-semibold">{a.nombre}</p>
-                                        <span
-                                            className="mt-1.5 inline-block rounded-full px-3 py-0.5 text-xs font-medium"
-                                            style={{ background: tint(secondary, 88), color: shade(secondary, 20) }}
-                                        >
-                                            {a.cargo}
-                                        </span>
-                                        {a.mensaje && (
-                                            <div className="mt-5 border-t border-neutral-100 pt-4">
-                                                <Quote className="mx-auto mb-2 h-4 w-4 text-neutral-300" />
-                                                <p className="line-clamp-3 text-sm italic text-neutral-500">{a.mensaje}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
 
+                                        <div className="p-6 flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center justify-between gap-2 mb-3">
+                                                    <Badge
+                                                        className={`font-mono-tag text-xs font-semibold uppercase ${
+                                                            abierta
+                                                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                                                : 'bg-slate-700/40 text-slate-400 border border-slate-600/40'
+                                                        }`}
+                                                    >
+                                                        {abierta ? '● Convocatoria Abierta' : 'Cerrada'}
+                                                    </Badge>
 
+                                                    {(c.fecha_inicio || c.fecha_fin) && (
+                                                        <span className="flex items-center gap-1.5 text-xs text-slate-400 font-mono-tag">
+                                                            <CalendarDays className="h-3.5 w-3.5 text-cyan-400" />
+                                                            {c.fecha_fin ? formatoFecha(c.fecha_fin) : 'Vigente'}
+                                                        </span>
+                                                    )}
+                                                </div>
 
+                                                <h3 className="font-title text-xl font-bold text-white group-hover:text-amber-300 transition-colors">
+                                                    {c.titulo}
+                                                </h3>
 
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== CONVOCATORIAS ==================== */}
-            {convocatorias && convocatorias.length > 0 && (
-                <div className="mx-auto max-w-5xl px-6 py-20">
-                    <div className="mb-12 flex items-center justify-center gap-2 text-center" data-aos="fade-up">
-                        <Megaphone className="h-5 w-5" style={{ color: secondary }} />
-                        <h2 className="font-display text-3xl md:text-4xl">Convocatorias</h2>
-                    </div>
-                    <div className="space-y-4">
-                        {convocatorias.map((c, i) => {
-                            const abierta = convocatoriaAbierta(c);
-                            const inicio = formatFecha(c.fecha_inicio);
-                            const fin = formatFecha(c.fecha_fin);
-                            return (
-                                <div
-                                    key={c.id}
-                                    className="flex flex-col gap-4 rounded-2xl border border-neutral-100 p-5 transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
-                                    data-aos="fade-up"
-                                    data-aos-delay={i * 60}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div
-                                            className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-                                            style={{ background: tint(secondary, 88) }}
-                                        >
-                                            <Megaphone className="h-5 w-5" style={{ color: primary }} />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-neutral-900">{c.titulo}</p>
-                                            {c.descripcion && (
-                                                <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{c.descripcion}</p>
-                                            )}
-
-
-
-                                            <div className="mt-3 flex flex-col sm:flex-row gap-3">
-                                                {/* Video */}
-                                                {c.link_video && (() => {
-                                                    const thumbnail = getYoutubeThumbnail(c.link_video);
-                                                    if (!thumbnail) return null;
-                                                    return (
-                                                        <button
-                                                            onClick={() => abrirVideo(c.link_video!)}
-                                                            className="relative block w-full max-w-[200px] overflow-hidden rounded-xl group"
-                                                        >
-                                                            <img src={thumbnail} alt="Vista previa del video" className="w-full h-28 object-cover" />
-                                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/55 transition-colors">
-                                                                <span className="text-white text-3xl drop-shadow-lg">▶</span>
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })()}
-
-                                                {/* Imagen */}
-                                                {c.archivo && (
-                                                    <img
-                                                        src={`/storage/${c.archivo}`}
-                                                        alt={c.titulo}
-                                                        className="w-full max-w-[200px] h-28 object-cover rounded-xl border border-neutral-200"
-                                                    />
+                                                {c.descripcion && (
+                                                    <p className="mt-3 text-sm text-slate-300 leading-relaxed line-clamp-3">
+                                                        {c.descripcion}
+                                                    </p>
                                                 )}
                                             </div>
 
+                                            {/* Acciones de la Convocatoria */}
+                                            <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
+                                                {c.link_video && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => abrirVideo(c.link_video!)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-500/40 text-xs font-semibold transition-colors cursor-pointer"
+                                                    >
+                                                        <Play className="h-3.5 w-3.5 fill-current" /> Ver Video
+                                                    </button>
+                                                )}
 
-                                            {(inicio || fin) && (
-                                                <p className="font-mono-ui mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
-                                                    <CalendarDays className="h-3.5 w-3.5" />
-                                                    {inicio}
-                                                    {inicio && fin ? ' — ' : ''}
-                                                    {fin}
-                                                </p>
+                                                {c.archivo && (
+                                                    <a
+                                                        href={`/storage/${c.archivo}`}
+                                                        download
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors ml-auto"
+                                                    >
+                                                        <Download className="h-3.5 w-3.5" /> Descargar
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="text-center py-12 rounded-3xl bg-white/5 border border-white/10 max-w-xl mx-auto">
+                            <Megaphone className="h-12 w-12 text-slate-500 mx-auto mb-3" />
+                            <p className="text-slate-300 font-medium">No hay convocatorias publicadas en este momento.</p>
+                            <p className="text-xs text-slate-500 mt-1">Vuelve pronto para consultar el nuevo cronograma.</p>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* ==================== SECCIÓN AUTORIDADES ACADÉMICAS ==================== */}
+            {autoridades && autoridades.length > 0 && (
+                <section
+                    id="autoridades"
+                    className="relative py-24 px-6 bg-slate-950 overflow-hidden"
+                >
+                    <div className="mx-auto max-w-7xl relative z-10">
+                        <div className="text-center mb-16" data-aos="fade-up">
+                            <span
+                                className="font-mono-tag inline-block rounded-full px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-purple-400 bg-purple-950/60 border border-purple-800/40"
+                            >
+                                Liderazgo Académico
+                            </span>
+                            <h2 className="font-title mt-3 text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+                                Autoridades de la Carrera
+                            </h2>
+                            <div
+                                className="mx-auto mt-4 h-1 w-20 rounded-full"
+                                style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
+                            />
+                            <p className="mt-4 max-w-2xl mx-auto text-slate-400 text-sm sm:text-base leading-relaxed">
+                                Equipo directivo comprometido con la excelencia pedagógica y el progreso institucional.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {autoridades.map((autoridad, idx) => (
+                                <motion.div
+                                    key={autoridad.id}
+                                    data-aos="fade-up"
+                                    data-aos-delay={idx * 100}
+                                    whileHover={{ y: -8 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="group rounded-3xl bg-slate-900/80 border border-white/10 hover:border-purple-500/50 shadow-2xl backdrop-blur-xl overflow-hidden flex flex-col justify-between"
+                                >
+                                    <div className="p-7">
+                                        {/* Foto de la Autoridad con aro dinámico */}
+                                        <div className="relative mx-auto mb-6 h-36 w-36 rounded-full p-1 shadow-2xl overflow-hidden">
+                                            <div
+                                                className="absolute inset-0 rounded-full animate-spin-slow opacity-75"
+                                                style={{
+                                                    background: `conic-gradient(from 0deg, ${primary}, ${secondary}, ${primary})`,
+                                                }}
+                                            />
+                                            <div className="relative h-full w-full rounded-full overflow-hidden bg-slate-950">
+                                                {autoridad.foto ? (
+                                                    <img
+                                                        src={`/storage/${autoridad.foto}`}
+                                                        alt={autoridad.nombre}
+                                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    />
+                                                ) : (
+                                                    <div className="h-full w-full flex items-center justify-center bg-slate-900">
+                                                        <GraduationCap className="h-14 w-14 text-indigo-400" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center">
+                                            <Badge
+                                                variant="outline"
+                                                className="font-mono-tag text-xs font-semibold uppercase tracking-wider text-cyan-300 border-cyan-500/30 bg-cyan-950/40 mb-2"
+                                            >
+                                                {autoridad.cargo}
+                                            </Badge>
+                                            <h3 className="font-title text-xl font-bold text-white group-hover:text-purple-300 transition-colors">
+                                                {autoridad.nombre}
+                                            </h3>
+
+                                            {autoridad.mensaje && (
+                                                <div className="mt-4 relative p-4 rounded-2xl bg-white/5 border border-white/10 text-left">
+                                                    <Quote className="h-5 w-5 text-indigo-400 opacity-60 mb-1" />
+                                                    <p className="text-xs text-slate-300 italic leading-relaxed">
+                                                        "{autoridad.mensaje}"
+                                                    </p>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
-                                    <Badge
-                                        className="w-fit shrink-0 border-none"
-                                        style={{
-                                            background: abierta ? tint(secondary, 85) : '#f1f5f9',
-                                            color: abierta ? shade(secondary, 25) : '#64748b',
-                                        }}
-                                    >
-                                        {abierta ? 'Convocatoria abierta' : 'Cerrada'}
-                                    </Badge>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== ORGANIGRAMA ==================== */}
-            {config?.organigrama && (
-                <div className="bg-neutral-50/70 py-20">
-                    <div className="mx-auto max-w-5xl px-6" data-aos="fade-up">
-                        <h2 className="font-display mb-4 text-center text-3xl md:text-4xl">Organigrama</h2>
-                        <div className="mx-auto mb-10 h-1 w-16 rounded-full" style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }} />
-                        <div className="rounded-2xl bg-white p-4 shadow-lg ring-1 ring-neutral-100">
-                            <img src={`/storage/${config.organigrama}`} alt="Organigrama institucional" className="w-full rounded-xl" />
+                                </motion.div>
+                            ))}
                         </div>
                     </div>
-                </div>
+                </section>
             )}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            {/* ==================== ORGANIGRAMA INSTITUCIONAL ==================== */}
+            {config?.organigrama && (
+                <section className="py-20 px-6 bg-slate-950/60 border-t border-white/10">
+                    <div className="mx-auto max-w-5xl text-center" data-aos="fade-up">
+                        <span className="font-mono-tag text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            Estructura Orgánica
+                        </span>
+                        <h2 className="font-title mt-2 text-3xl font-bold text-white">Organigrama de la Carrera</h2>
+                        <div
+                            className="mx-auto mt-3 mb-8 h-1 w-16 rounded-full"
+                            style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
+                        />
+                        <div className="rounded-3xl p-4 bg-slate-900/80 border border-white/15 shadow-2xl backdrop-blur-xl overflow-hidden">
+                            <img
+                                src={`/storage/${config.organigrama}`}
+                                alt="Organigrama Institucional"
+                                className="w-full rounded-2xl object-contain max-h-[600px] mx-auto"
+                            />
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* ==================== CTA FINAL ==================== */}
             {!user && (
-                <div className="relative overflow-hidden py-16 text-center" style={{ background: `linear-gradient(120deg, ${primary}, ${shade(secondary, 5)})` }}>
-                    <div data-aos="zoom-in">
-                        <h2 className="font-display px-6 text-3xl text-white md:text-4xl">
-                            ¿Listo para asegurar tu cupo?
+                <section
+                    className="relative py-20 px-6 text-center overflow-hidden"
+                    style={{
+                        background: `linear-gradient(135deg, ${primary}cc, #030712 90%)`,
+                    }}
+                >
+                    <div className="mx-auto max-w-3xl relative z-10" data-aos="zoom-in">
+                        <h2 className="font-title text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+                            ¿Listo para iniciar tu camino en la Psicología?
                         </h2>
-                        <p className="mx-auto mt-3 max-w-md px-6 text-white/80">
-                            Regístrate hoy y empieza tu preparación para el examen de admisión.
+                        <p className="mt-4 text-base sm:text-lg text-slate-200 leading-relaxed">
+                            Asegura tu participación en el curso preuniversitario, accede al material exclusivo y prepárate con los mejores docentes.
                         </p>
-                        <Link href="/register">
-                            <Button size="lg" className="mt-8 h-12 bg-white px-8 text-base text-neutral-900 shadow-lg hover:bg-white/90">
-                                Crear mi cuenta <ArrowRight className="ml-2 h-5 w-5" />
-                            </Button>
-                        </Link>
+                        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                            <Link href="/register">
+                                <Button
+                                    size="lg"
+                                    className="h-13 px-8 text-base font-bold bg-white text-slate-950 hover:bg-slate-100 shadow-2xl rounded-2xl transition-transform hover:scale-105 active:scale-95"
+                                >
+                                    Inscribirme Ahora <ArrowRight className="ml-2 h-5 w-5" />
+                                </Button>
+                            </Link>
+                            <Link href="/login">
+                                <Button
+                                    size="lg"
+                                    variant="ghost"
+                                    className="h-13 px-6 text-base font-semibold text-white hover:bg-white/15 rounded-2xl"
+                                >
+                                    Ya tengo una cuenta
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
-                </div>
+                </section>
             )}
 
+            {/* ==================== BOTONES SOCIALES FLOTANTES (Como en Gas y Petroquímica) ==================== */}
+            <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+                <a
+                    href="https://wa.me/59170000000?text=Hola,%20deseo%20informaci%C3%B3n%20sobre%20el%20preuniversitario%20de%20Psicolog%C3%ADa%20UPEA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-400 text-white shadow-2xl transition-transform hover:scale-110 active:scale-95"
+                    title="Contacto WhatsApp"
+                >
+                    <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
+                </a>
+            </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== FOOTER ==================== */}
-            <footer className="bg-neutral-950 py-14 text-neutral-300">
+            {/* ==================== FOOTER INSTITUCIONAL ==================== */}
+            <footer className="border-t border-white/10 bg-slate-950 py-14 text-slate-400 text-sm">
                 <div className="mx-auto max-w-7xl px-6">
-                    <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
-                        <div className="flex items-center gap-3 md:items-start">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
+                        {/* Logo y descripción */}
+                        <div className="flex items-center gap-3.5">
                             {config?.logo ? (
-                                <img src={`/storage/${config.logo}`} alt="Logo" className="h-12 w-12 rounded-lg bg-white object-contain p-1" />
+                                <img
+                                    src={`/storage/${config.logo}`}
+                                    alt="Logo"
+                                    className="h-12 w-12 rounded-2xl bg-white p-1 object-contain shadow-md"
+                                />
                             ) : (
                                 <div
-                                    className="flex h-12 w-12 items-center justify-center rounded-lg"
+                                    className="flex h-12 w-12 items-center justify-center rounded-2xl text-white font-bold"
                                     style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
                                 >
-                                    <GraduationCap className="h-6 w-6 text-white" />
+                                    <GraduationCap className="h-6 w-6" />
                                 </div>
                             )}
                             <div>
-                                <p className="font-display text-lg text-white">Preuniversitario de Psicología</p>
-                                <p className="text-sm text-neutral-400">UPEA · Carrera de Psicología</p>
+                                <p className="font-title text-base font-bold text-white">Carrera de Psicología</p>
+                                <p className="text-xs text-slate-400 font-mono-tag">Universidad Pública de El Alto</p>
                             </div>
                         </div>
-                        <div className="flex flex-col items-center gap-2 text-sm text-neutral-400">
-                            <p className="flex items-center gap-1.5">
-                                <MapPin className="h-4 w-4" style={{ color: secondary }} />
-                                Av. Sucre B, Zona Villa Esperanza — El Alto, Bolivia
+
+                        {/* Ubicación y Contacto */}
+                        <div className="flex flex-col gap-2 text-xs sm:text-sm">
+                            <p className="flex items-center gap-2 text-slate-300">
+                                <MapPin className="h-4 w-4 text-cyan-400 shrink-0" />
+                                Av. Sucre B, Zona Villa Esperanza — El Alto, La Paz, Bolivia
+                            </p>
+                            <p className="text-slate-400">
+                                Área de Ciencias de la Salud / Área Social · Campus Central UPEA
                             </p>
                         </div>
-                        <div className="text-center text-sm text-neutral-500 md:text-right">
-                            <p>© {new Date().getFullYear()} Universidad Pública del Alto</p>
-                            <p className="mt-1 text-xs text-neutral-600">Todos los derechos reservados</p>
+
+                        {/* Derechos reservados y enlaces */}
+                        <div className="text-left md:text-right text-xs text-slate-500">
+                            <p className="text-slate-400">
+                                © {new Date().getFullYear()} Preuniversitario de Psicología UPEA
+                            </p>
+                            <p className="mt-1">Todos los derechos reservados.</p>
                         </div>
                     </div>
                 </div>
-
             </footer>
 
-
-
-
-
-
-
-
-
-
-
-
-            {/* ==================== MODAL VIDEO ==================== */}
+            {/* ==================== MODAL VIDEO DE CONVOCATORIA ==================== */}
             <Dialog open={modalVideo} onOpenChange={setModalVideo}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="sm:max-w-3xl bg-slate-950 border border-white/20 text-white">
                     <DialogHeader>
-                        <DialogTitle>Video de la convocatoria</DialogTitle>
+                        <DialogTitle className="font-title text-xl text-white">Video Informativo de la Convocatoria</DialogTitle>
                     </DialogHeader>
                     {videoUrl && (
-                        <div className="rounded-xl overflow-hidden">
+                        <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/10 mt-2">
                             <iframe
                                 src={videoUrl}
                                 className="w-full aspect-video"
                                 allowFullScreen
                                 allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                                title="Video Convocatoria"
                             />
                         </div>
                     )}

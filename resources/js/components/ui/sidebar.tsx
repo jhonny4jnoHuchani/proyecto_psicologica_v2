@@ -164,7 +164,7 @@ const Sidebar = React.forwardRef<
                 <SheetContent
                     data-sidebar="sidebar"
                     data-mobile="true"
-                    className="w-(--sidebar-width) bg-sidebar/90 backdrop-blur-2xl p-0 text-sidebar-foreground [&>button]:hidden border-r border-sidebar-border/50"
+                    className="w-(--sidebar-width) bg-white/60 dark:bg-slate-900/65 backdrop-blur-2xl p-0 text-sidebar-foreground [&>button]:hidden border-r border-white/30 dark:border-white/10"
                     style={
                         {
                             '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -215,7 +215,7 @@ const Sidebar = React.forwardRef<
             >
                 <div
                     data-sidebar="sidebar"
-                    className="flex h-full w-full flex-col bg-sidebar/75 dark:bg-sidebar/85 backdrop-blur-2xl group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border/60 group-data-[variant=floating]:shadow-xl group-data-[variant=inset]:rounded-2xl group-data-[variant=inset]:border group-data-[variant=inset]:border-sidebar-border/60 group-data-[variant=inset]:shadow-lg"
+                    className="flex h-full w-full flex-col bg-white/40 dark:bg-slate-900/45 backdrop-blur-2xl group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:border group-data-[variant=floating]:border-white/40 group-data-[variant=floating]:dark:border-white/10 group-data-[variant=floating]:shadow-2xl group-data-[variant=inset]:rounded-2xl group-data-[variant=inset]:border group-data-[variant=inset]:border-white/40 group-data-[variant=inset]:dark:border-white/10 group-data-[variant=inset]:shadow-xl"
                 >
                     {children}
                 </div>
@@ -281,8 +281,8 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<'main
         <main
             ref={ref}
             className={cn(
-                'relative flex min-h-svh flex-1 flex-col bg-background/50 backdrop-blur-xs',
-                'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/60 md:peer-data-[variant=inset]:shadow-sm',
+                'relative flex min-h-svh flex-1 flex-col bg-white/20 dark:bg-slate-950/25 backdrop-blur-xs',
+                'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-white/30 md:peer-data-[variant=inset]:dark:border-white/10 md:peer-data-[variant=inset]:shadow-sm',
                 className,
             )}
             {...props}
@@ -395,7 +395,7 @@ const SidebarMenuItem = React.forwardRef<HTMLLIElement, React.ComponentProps<'li
 SidebarMenuItem.displayName = 'SidebarMenuItem';
 
 const sidebarMenuButtonVariants = cva(
-    'peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-xl p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-all hover:bg-sidebar-accent/60 hover:backdrop-blur-sm hover:text-sidebar-accent-foreground focus-visible:ring-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-primary/20 data-[active=true]:backdrop-blur-md data-[active=true]:text-primary data-[active=true]:font-bold data-[active=true]:border data-[active=true]:border-primary/40 data-[active=true]:shadow-sm data-[active=true]:shadow-primary/20 data-[active=true]:[&>svg]:text-primary dark:data-[active=true]:bg-primary/25 dark:data-[active=true]:text-white dark:data-[active=true]:border-primary/50 data-[state=open]:hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+    'peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-xl p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-all text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-white/10 hover:backdrop-blur-md focus-visible:ring-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-primary/25 data-[active=true]:backdrop-blur-md data-[active=true]:text-primary data-[active=true]:font-bold data-[active=true]:border data-[active=true]:border-primary/40 data-[active=true]:shadow-md data-[active=true]:shadow-primary/20 data-[active=true]:[&>svg]:text-primary dark:data-[active=true]:bg-primary/30 dark:data-[active=true]:text-white dark:data-[active=true]:border-primary/50 data-[state=open]:hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
     {
         variants: {
             variant: {

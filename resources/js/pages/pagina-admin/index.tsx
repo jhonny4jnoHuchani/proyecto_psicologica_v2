@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { FileUploadDropzone } from '@/components/ui/file-upload-dropzone';
 import AppLayout from '@/layouts/app-layout';
 import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
@@ -377,7 +378,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
 
                 {/* MODAL PORTADA */}
                 <Dialog open={modalPortada} onOpenChange={setModalPortada}>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader><DialogTitle>{portadaSelect ? 'Editar Portada' : 'Agregar Portada'}</DialogTitle></DialogHeader>
                         <form onSubmit={handlePortada} className="space-y-4">
                             <div className="space-y-1">
@@ -385,9 +386,19 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                 <Input value={portadaTitulo} onChange={(e) => setPortadaTitulo(e.target.value)} placeholder="Ej: Campus Universitario" />
                             </div>
                             <div className="space-y-1">
-                                <Label>Imagen *</Label>
-                                <Input type="file" accept="image/*" onChange={(e) => setPortadaImagen(e.target.files?.[0] || null)} required={!portadaSelect} />
-                                {portadaSelect?.imagen && !portadaImagen && <img src={`/storage/${portadaSelect.imagen}`} className="h-20 rounded mt-1" />}
+                                <Label>Imagen del Banner / Portada *</Label>
+                                <FileUploadDropzone
+                                    accept="image/*"
+                                    maxSizeMB={15}
+                                    helperText="Sube una fotografía horizontal de alta resolución (JPG, PNG, WEBP hasta 15MB)"
+                                    onFileSelect={(file) => setPortadaImagen(file)}
+                                />
+                                {portadaSelect?.imagen && !portadaImagen && (
+                                    <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-muted/40 border border-border/60">
+                                        <img src={`/storage/${portadaSelect.imagen}`} className="h-14 w-24 object-cover rounded-lg shadow-xs" alt="Portada actual" />
+                                        <span className="text-xs text-muted-foreground font-medium">Portada actual en el sistema</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-1">
                                 <Label>Orden</Label>
@@ -403,7 +414,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
 
                 {/* MODAL AUTORIDAD */}
                 <Dialog open={modalAutoridad} onOpenChange={setModalAutoridad}>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader><DialogTitle>{autoridadSelect ? 'Editar Autoridad' : 'Agregar Autoridad'}</DialogTitle></DialogHeader>
                         <form onSubmit={handleAutoridad} className="space-y-4">
                             <div className="space-y-1">
@@ -415,13 +426,23 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                 <Input value={autoridadCargo} onChange={(e) => setAutoridadCargo(e.target.value)} placeholder="Ej: Directora de Carrera" required />
                             </div>
                             <div className="space-y-1">
-                                <Label>Foto</Label>
-                                <Input type="file" accept="image/*" onChange={(e) => setAutoridadFoto(e.target.files?.[0] || null)} />
-                                {autoridadSelect?.foto && !autoridadFoto && <img src={`/storage/${autoridadSelect.foto}`} className="h-16 w-16 rounded-full mt-1 object-cover" />}
+                                <Label>Fotografía de la Autoridad</Label>
+                                <FileUploadDropzone
+                                    accept="image/*"
+                                    maxSizeMB={10}
+                                    helperText="Fotografía formal para el portal de autoridades (JPG, PNG, WEBP)"
+                                    onFileSelect={(file) => setAutoridadFoto(file)}
+                                />
+                                {autoridadSelect?.foto && !autoridadFoto && (
+                                    <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-muted/40 border border-border/60">
+                                        <img src={`/storage/${autoridadSelect.foto}`} className="h-12 w-12 rounded-full object-cover shadow-xs" alt="Foto actual" />
+                                        <span className="text-xs text-muted-foreground font-medium">Fotografía registrada actualmente</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-1">
                                 <Label>Mensaje</Label>
-                                <textarea value={autoridadMensaje} onChange={(e) => setAutoridadMensaje(e.target.value)} className="w-full rounded-md border p-2 text-sm" rows={3} />
+                                <textarea value={autoridadMensaje} onChange={(e) => setAutoridadMensaje(e.target.value)} className="w-full rounded-md border p-2 text-sm bg-background" rows={3} />
                             </div>
                             <div className="space-y-1">
                                 <Label>Orden</Label>
@@ -437,7 +458,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
 
                 {/* MODAL CONVOCATORIA */}
                 <Dialog open={modalConvocatoria} onOpenChange={setModalConvocatoria}>
-                    <DialogContent>
+                    <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader><DialogTitle>{convocatoriaSelect ? 'Editar Convocatoria' : 'Nueva Convocatoria'}</DialogTitle></DialogHeader>
                         <form onSubmit={handleConvocatoria} className="space-y-4">
                             <div className="space-y-1">
@@ -446,7 +467,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                             </div>
                             <div className="space-y-1">
                                 <Label>Descripción</Label>
-                                <textarea value={convocatoriaDescripcion} onChange={(e) => setConvocatoriaDescripcion(e.target.value)} className="w-full rounded-md border p-2 text-sm" rows={3} />
+                                <textarea value={convocatoriaDescripcion} onChange={(e) => setConvocatoriaDescripcion(e.target.value)} className="w-full rounded-md border p-2 text-sm bg-background" rows={3} />
                             </div>
                             <div className="space-y-1">
                                 <Label>Link de Video (YouTube)</Label>
@@ -454,9 +475,19 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                 <p className="text-xs text-neutral-500">Pega el link normal de compartir</p>
                             </div>
                             <div className="space-y-1">
-                                <Label>Imagen (opcional)</Label>
-                                <Input type="file" accept="image/*" onChange={(e) => setConvocatoriaArchivo(e.target.files?.[0] || null)} />
-                                {convocatoriaSelect?.archivo && !convocatoriaArchivo && <img src={`/storage/${convocatoriaSelect.archivo}`} className="h-16 rounded mt-1 object-cover" />}
+                                <Label>Afiche o Imagen de la Convocatoria (opcional)</Label>
+                                <FileUploadDropzone
+                                    accept="image/*,.pdf"
+                                    maxSizeMB={20}
+                                    helperText="Sube la imagen de la convocatoria o el documento oficial"
+                                    onFileSelect={(file) => setConvocatoriaArchivo(file)}
+                                />
+                                {convocatoriaSelect?.archivo && !convocatoriaArchivo && (
+                                    <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-muted/40 border border-border/60">
+                                        <img src={`/storage/${convocatoriaSelect.archivo}`} className="h-14 w-20 rounded-lg object-cover shadow-xs" alt="Afiche actual" />
+                                        <span className="text-xs text-muted-foreground font-medium">Afiche registrado actualmente</span>
+                                    </div>
+                                )}
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">

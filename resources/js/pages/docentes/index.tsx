@@ -2,6 +2,7 @@ import { Head, Link, router } from "@inertiajs/react";
 import {
   Archive,
   Eye,
+  GraduationCap,
   LoaderCircle,
   LockKeyhole,
   Pencil,
@@ -12,6 +13,7 @@ import { FormEventHandler, useState } from "react";
 import { toast } from "sonner";
 
 import InputError from "@/components/input-error";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -220,22 +222,37 @@ export default function DocentesIndex({ docentes }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Docentes" />
 
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Docentes</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/docentes/eliminados">
-                <Archive className="h-4 w-4 mr-2" />
-                Ver Eliminados
-              </Link>
-            </Button>
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Docente
-            </Button>
-          </div>
-        </div>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+        <PageHeaderBanner
+          title="Planta Docente"
+          subtitle="Gestión del cuerpo docente, asignaciones de aula, credenciales y seguimiento pedagógico."
+          icon={GraduationCap}
+          badgeText="EQUIPO DOCENTE"
+          stats={[
+            { label: "Docentes Activos", value: docentes.length },
+          ]}
+          actions={
+            <>
+              <Button
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                asChild
+              >
+                <Link href="/docentes/eliminados">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Papelera
+                </Link>
+              </Button>
+              <Button
+                onClick={openCreate}
+                className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Docente
+              </Button>
+            </>
+          }
+        />
 
         <Card>
           <CardHeader>

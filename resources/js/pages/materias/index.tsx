@@ -11,6 +11,7 @@ import {
 import { FormEventHandler, useState } from "react";
 
 import InputError from "@/components/input-error";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -257,28 +258,37 @@ export default function MateriasIndex({ materias }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Materias" />
 
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Materias y Temarios</h1>
-            <p className="text-sm text-neutral-500">
-              Administra las materias y los temas oficiales asignados a cada
-              una.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/materias/eliminados">
-                <Archive className="h-4 w-4 mr-2" />
-                Ver Eliminadas
-              </Link>
-            </Button>
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Materia
-            </Button>
-          </div>
-        </div>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+        <PageHeaderBanner
+          title="Materias y Temarios"
+          subtitle="Catálogo curricular oficial, unidades temáticas, códigos y bibliografía asignada."
+          icon={BookOpen}
+          badgeText="CURRÍCULA ACADÉMICA"
+          stats={[
+            { label: "Materias", value: materias.length },
+          ]}
+          actions={
+            <>
+              <Button
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                asChild
+              >
+                <Link href="/materias/eliminados">
+                  <Archive className="h-4 w-4 mr-2" />
+                  Papelera
+                </Link>
+              </Button>
+              <Button
+                onClick={openCreate}
+                className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Materia
+              </Button>
+            </>
+          }
+        />
 
         <Card>
           <CardHeader>

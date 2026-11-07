@@ -365,11 +365,6 @@ export default function Dashboard({
       <Head title="Dashboard" />
 
       <div className="relative min-h-[calc(100vh-4rem)]">
-        {/* ========================================================================= */}
-        {/* FONDO GEOMÉTRICO DINÁMICO (FIGURAS FLOTANTES CAYENDO Y AURAS DE COLOR)   */}
-        {/* ========================================================================= */}
-        <GeometricFallingBackground />
-
         <div className="relative z-10 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
           {/* ========================================================================= */}
           {/* HERO BANNER DINÁMICO (MATICES VIVOS CON COLOR PRIMARIO Y SECUNDARIO)      */}

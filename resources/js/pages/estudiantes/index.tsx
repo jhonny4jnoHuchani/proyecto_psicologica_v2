@@ -10,12 +10,14 @@ import {
   Plus,
   Trash2,
   Upload,
+  Users,
 } from "lucide-react";
 
 import { FormEventHandler, useState } from "react";
 import { toast } from "sonner";
 
 import InputError from "@/components/input-error";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -393,34 +395,56 @@ export default function EstudiantesIndex({ estudiantes, cursos }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Estudiantes" />
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Estudiantes</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/estudiantes/eliminados">
-                <Archive className="mr-2 h-4 w-4" />
-                Ver Eliminados
-              </Link>
-            </Button>
-            <Button onClick={openCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo Estudiante
-            </Button>
-
-            <Button variant="outline" asChild>
-              <a href="/estudiantes/importar/plantilla">
-                <Download className="mr-2 h-4 w-4" />
-                Plantilla
-              </a>
-            </Button>
-
-            <Button variant="outline" onClick={openImport}>
-              <Upload className="mr-2 h-4 w-4" />
-              Importar
-            </Button>
-          </div>
-        </div>
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        <PageHeaderBanner
+          title="Gestión de Estudiantes"
+          subtitle="Padrón académico oficial, matriculación, importación masiva y seguimiento curricular."
+          icon={Users}
+          badgeText="PADRÓN ESTUDIANTIL"
+          stats={[
+            { label: "Matriculados", value: estudiantes.length },
+            { label: "Paralelos", value: cursos.length },
+          ]}
+          actions={
+            <>
+              <Button
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                asChild
+              >
+                <Link href="/estudiantes/eliminados">
+                  <Archive className="mr-2 h-4 w-4" />
+                  Papelera
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                asChild
+              >
+                <a href="/estudiantes/importar/plantilla">
+                  <Download className="mr-2 h-4 w-4" />
+                  Plantilla
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                onClick={openImport}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Importar
+              </Button>
+              <Button
+                onClick={openCreate}
+                className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nuevo Estudiante
+              </Button>
+            </>
+          }
+        />
 
         {/* Tabla */}
         <Card>
