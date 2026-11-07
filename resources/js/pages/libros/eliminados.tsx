@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeaderBanner } from '@/components/page-header-banner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { formatoFechaHora } from '@/lib/formatters';
@@ -76,22 +77,27 @@ export default function LibrosTrashed({ libros }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Libros Eliminados" />
-            <div className="p-6 space-y-6">
-
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-600 text-white">
-                                <Trash2 className="h-4.5 w-4.5" />
-                            </div>
-                            <h1 className="text-2xl font-bold tracking-tight">Libros Eliminados</h1>
-                        </div>
-                        <p className="mt-1 text-sm text-neutral-500">Gestiona los libros que han sido eliminados del sistema.</p>
-                    </div>
-                    <a href="/libros">
-                        <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />Volver a activos</Button>
-                    </a>
-                </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title="Papelera de Libros"
+                    subtitle="Recursos bibliográficos dados de baja. Puedes restaurarlos para volver a ponerlos a disposición de los estudiantes."
+                    icon={Trash2}
+                    badgeText="BIBLIOTECA ARCHIVADA"
+                    stats={[
+                        { label: 'Archivados', value: libros?.length || 0 },
+                    ]}
+                    actions={
+                        <a href="/libros">
+                            <Button
+                                variant="outline"
+                                className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                            >
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Volver a Libros
+                            </Button>
+                        </a>
+                    }
+                />
 
                 <Card className="shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between">

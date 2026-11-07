@@ -1,7 +1,9 @@
 import { Head, router } from '@inertiajs/react';
-import { Image, LoaderCircle, Megaphone, Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { Image, Layout, LoaderCircle, Megaphone, Pencil, Plus, Trash2, Users } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import { toast } from 'sonner';
+
+import { PageHeaderBanner } from '@/components/page-header-banner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -251,24 +253,46 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Página Admin" />
-            <div className="p-6 space-y-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Administrar Página Welcome</h1>
-                    <p className="text-sm text-neutral-500 mt-1">Configura el contenido que se muestra en la página principal.</p>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex gap-2">
-                    <Button type="button" variant={activeTab === 'portadas' ? 'default' : 'outline'} onClick={() => setActiveTab('portadas')}>
-                        <Image className="h-4 w-4 mr-2" />Portadas
-                    </Button>
-                    <Button type="button" variant={activeTab === 'autoridades' ? 'default' : 'outline'} onClick={() => setActiveTab('autoridades')}>
-                        <Users className="h-4 w-4 mr-2" />Autoridades
-                    </Button>
-                    <Button type="button" variant={activeTab === 'convocatorias' ? 'default' : 'outline'} onClick={() => setActiveTab('convocatorias')}>
-                        <Megaphone className="h-4 w-4 mr-2" />Convocatorias
-                    </Button>
-                </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title="Página Web Pública"
+                    subtitle="Gestión del portal de bienvenida: portadas del slider, catálogo de autoridades y convocatorias públicas."
+                    icon={Layout}
+                    badgeText="PORTAL PÚBLICO"
+                    stats={[
+                        { label: 'Portadas', value: portadas?.length || 0 },
+                        { label: 'Autoridades', value: autoridades?.length || 0 },
+                        { label: 'Convocatorias', value: convocatorias?.length || 0 },
+                    ]}
+                    actions={
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant={activeTab === 'portadas' ? 'default' : 'outline'}
+                                onClick={() => setActiveTab('portadas')}
+                                className={activeTab === 'portadas' ? 'bg-white text-slate-950 font-bold' : 'bg-white/10 hover:bg-white/20 text-white border-white/25'}
+                            >
+                                <Image className="h-4 w-4 mr-2" />Portadas
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={activeTab === 'autoridades' ? 'default' : 'outline'}
+                                onClick={() => setActiveTab('autoridades')}
+                                className={activeTab === 'autoridades' ? 'bg-white text-slate-950 font-bold' : 'bg-white/10 hover:bg-white/20 text-white border-white/25'}
+                            >
+                                <Users className="h-4 w-4 mr-2" />Autoridades
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={activeTab === 'convocatorias' ? 'default' : 'outline'}
+                                onClick={() => setActiveTab('convocatorias')}
+                                className={activeTab === 'convocatorias' ? 'bg-white text-slate-950 font-bold' : 'bg-white/10 hover:bg-white/20 text-white border-white/25'}
+                            >
+                                <Megaphone className="h-4 w-4 mr-2" />Convocatorias
+                            </Button>
+                        </div>
+                    }
+                />
 
                 {/* ==================== PORTADAS ==================== */}
                 {activeTab === 'portadas' && (

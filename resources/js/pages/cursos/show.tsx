@@ -1,5 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, BookOpen, GraduationCap, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, GraduationCap, School, Users } from 'lucide-react';
+
+import { PageHeaderBanner } from '@/components/page-header-banner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,28 +51,29 @@ export default function CursosShow({ curso, docentes }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Curso: ${curso.gestion?.año} - Paralelo ${curso.paralelo}`} />
 
-            <div className="p-6 space-y-6">
-                <Button variant="outline" asChild>
-                    <Link href="/cursos"><ArrowLeft className="h-4 w-4 mr-2" />Volver</Link>
-                </Button>
-
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-bold">
-                                    {curso.gestion?.año} - {curso.gestion?.etapa} | Paralelo {curso.paralelo}
-                                </h1>
-                                <p className="text-muted-foreground mt-1">
-                                    Turno: <span className="capitalize">{curso.turno}</span> | Cupos: {curso.estudiantes?.length || 0}/{curso.cupos}
-                                </p>
-                            </div>
-                            <Badge variant={estadoBadge(curso.estado)} className="text-lg px-4 py-2">
-                                {curso.estado}
-                            </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title={`Paralelo ${curso.paralelo} — ${curso.gestion?.año} (${curso.gestion?.etapa})`}
+                    subtitle={`Turno ${curso.turno} • Estado: ${curso.estado} • Cupos matriculados: ${curso.estudiantes?.length || 0} de ${curso.cupos}.`}
+                    icon={School}
+                    badgeText="DETALLE DEL CURSO"
+                    stats={[
+                        { label: 'Materias', value: `${curso.materias?.length || 0}/6` },
+                        { label: 'Estudiantes', value: `${curso.estudiantes?.length || 0}/${curso.cupos}` },
+                    ]}
+                    actions={
+                        <Button
+                            variant="outline"
+                            className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                            asChild
+                        >
+                            <Link href="/cursos">
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Volver a Cursos
+                            </Link>
+                        </Button>
+                    }
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>

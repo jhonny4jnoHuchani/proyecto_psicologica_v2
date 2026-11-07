@@ -1,9 +1,11 @@
 import Heading from "@/components/heading";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { type NavItem } from "@/types";
 import { Link, usePage } from "@inertiajs/react";
+import { Sliders } from "lucide-react";
 
 const sidebarNavItems: NavItem[] = [
   {
@@ -50,10 +52,12 @@ export default function SettingsLayout({
   }
 
   return (
-    <div className="px-4 py-6">
-      <Heading
-        title="Configuracion usuario"
-        description="Gestiona tu perfil y la configuración de tu cuenta."
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <PageHeaderBanner
+        title="Configuración del Sistema y Cuenta"
+        subtitle="Administra tu perfil, credenciales de acceso, colores institucionales y vinculación del bot de Telegram."
+        icon={Sliders}
+        badgeText="AJUSTES Y PREFERENCIAS"
       />
 
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">

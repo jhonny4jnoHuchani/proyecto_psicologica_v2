@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeaderBanner } from '@/components/page-header-banner';
 import {
     Dialog,
     DialogContent,
@@ -73,16 +74,28 @@ export default function DocentesEliminados({ docentes }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Docentes Eliminados" />
 
-            <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Docentes Eliminados</h1>
-                    <Button variant="outline" asChild>
-                        <Link href="/docentes">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Volver a Docentes
-                        </Link>
-                    </Button>
-                </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title="Papelera de Docentes"
+                    subtitle="Registros de docentes archivados. Puedes reincorporarlos a la planta activa en cualquier momento."
+                    icon={Trash2}
+                    badgeText="DOCENTES INACTIVOS"
+                    stats={[
+                        { label: 'Archivados', value: docentes?.length || 0 },
+                    ]}
+                    actions={
+                        <Button
+                            variant="outline"
+                            className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                            asChild
+                        >
+                            <Link href="/docentes">
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Volver a Docentes
+                            </Link>
+                        </Button>
+                    }
+                />
 
                 <Card>
                     <CardHeader>

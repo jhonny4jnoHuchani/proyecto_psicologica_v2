@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeaderBanner } from '@/components/page-header-banner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { formatoFechaHora } from '@/lib/formatters';
@@ -44,11 +45,28 @@ export default function CursosEliminados({ cursos }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cursos Eliminados" />
-            <div className="p-6 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Cursos Eliminados</h1>
-                    <Button variant="outline" asChild><Link href="/cursos"><ArrowLeft className="h-4 w-4 mr-2" />Volver</Link></Button>
-                </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title="Papelera de Cursos"
+                    subtitle="Paralelos y cursos archivados. Puedes restaurarlos para recuperar sus listas y asignaciones."
+                    icon={Trash2}
+                    badgeText="CURSOS INACTIVOS"
+                    stats={[
+                        { label: 'Archivados', value: cursos?.length || 0 },
+                    ]}
+                    actions={
+                        <Button
+                            variant="outline"
+                            className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                            asChild
+                        >
+                            <Link href="/cursos">
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Volver a Cursos
+                            </Link>
+                        </Button>
+                    }
+                />
                 <Card>
                     <CardHeader><CardTitle>Papelera</CardTitle></CardHeader>
                     <CardContent>

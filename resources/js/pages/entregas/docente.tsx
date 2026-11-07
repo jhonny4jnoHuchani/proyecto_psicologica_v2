@@ -20,6 +20,7 @@ import { AxiosError } from "axios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import {
   Dialog,
   DialogContent,
@@ -391,18 +392,17 @@ export default function EntregasDocente({
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Entregas de Estudiantes" />
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Revisión y Calificación de Entregas
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Evalúa tareas, asigna retroalimentación y genera refuerzos
-              pedagógicos asistidos por IA.
-            </p>
-          </div>
-        </div>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+        <PageHeaderBanner
+          title="Revisión y Calificación de Entregas"
+          subtitle="Evaluación pedagógica de tareas, retroalimentación cuantitativa/cualitativa y generación de refuerzo con IA."
+          icon={Sparkles}
+          badgeText="PANEL DEL DOCENTE"
+          stats={[
+            { label: "Total Entregas", value: entregas?.length || 0 },
+            { label: "Lecciones", value: lecciones?.length || 0 },
+          ]}
+        />
 
         {/* Filtro por lección */}
         <Card>

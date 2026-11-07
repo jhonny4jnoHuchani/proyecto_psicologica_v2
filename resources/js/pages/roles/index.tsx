@@ -3,6 +3,7 @@ import { ShieldCheck, LoaderCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState, FormEventHandler, useEffect } from 'react';
 
 import InputError from '@/components/input-error';
+import { PageHeaderBanner } from '@/components/page-header-banner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -139,17 +140,25 @@ export default function RolesIndex({ roles, permissions, flash }: Props) {
                     </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
-                        <ShieldCheck className="w-6 h-6" /> Roles del Sistema
-                    </h1>
-                    <div className="flex gap-2">
-                        <Button onClick={openCreate}>
+                <PageHeaderBanner
+                    title="Roles y Permisos de Acceso"
+                    subtitle="Control de seguridad granular, definición de perfiles, roles institucionales y privilegios."
+                    icon={ShieldCheck}
+                    badgeText="SEGURIDAD Y CONTROL"
+                    stats={[
+                        { label: 'Roles', value: roles?.length || 0 },
+                        { label: 'Permisos', value: permissions?.length || 0 },
+                    ]}
+                    actions={
+                        <Button
+                            onClick={openCreate}
+                            className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+                        >
                             <Plus className="h-4 w-4 mr-2" />
                             Nuevo Rol
                         </Button>
-                    </div>
-                </div>
+                    }
+                />
 
                 <Card>
                     <CardHeader>

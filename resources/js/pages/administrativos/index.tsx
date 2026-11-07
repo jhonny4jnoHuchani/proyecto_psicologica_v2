@@ -10,6 +10,7 @@ import {
 import { useState, FormEventHandler } from "react";
 
 import InputError from "@/components/input-error";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -177,17 +178,25 @@ export default function AdministrativosIndex({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
-            <UserCog className="w-6 h-6" /> Personal Administrativo
-          </h1>
-          <div className="flex gap-2">
-            <Button onClick={openCreate}>
+        <PageHeaderBanner
+          title="Personal Administrativo"
+          subtitle="Gestión de usuarios internos, cuentas de staff, asignación de privilegios y accesos."
+          icon={UserCog}
+          badgeText="STAFF ADMINISTRATIVO"
+          stats={[
+            { label: "Personal", value: users.data?.length || 0 },
+            { label: "Roles", value: roles_list?.length || 0 },
+          ]}
+          actions={
+            <Button
+              onClick={openCreate}
+              className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Nuevo Personal
             </Button>
-          </div>
-        </div>
+          }
+        />
 
         <Card>
           <CardHeader>

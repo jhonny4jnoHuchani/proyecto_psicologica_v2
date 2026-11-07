@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import { LoaderCircle, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Calendar, LoaderCircle, Pencil, Plus, Trash2 } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import { toast } from 'sonner';
 
 import InputError from '@/components/input-error';
+import { PageHeaderBanner } from '@/components/page-header-banner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -178,15 +179,25 @@ export default function GestionesIndex({ gestiones }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Gestiones" />
 
-            <div className="p-6 space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Gestiones Académicas</h1>
-                    <Button onClick={openCreate}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Nueva Gestión
-                    </Button>
-                </div>
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+                <PageHeaderBanner
+                    title="Gestiones Académicas"
+                    subtitle="Planificación de periodos académicos, etapas de admisión, fechas de inicio y culminación."
+                    icon={Calendar}
+                    badgeText="CALENDARIO ACADÉMICO"
+                    stats={[
+                        { label: 'Gestiones', value: gestiones?.length || 0 },
+                    ]}
+                    actions={
+                        <Button
+                            onClick={openCreate}
+                            className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Nueva Gestión
+                        </Button>
+                    }
+                />
 
                 {/* Tabla */}
                 <Card>

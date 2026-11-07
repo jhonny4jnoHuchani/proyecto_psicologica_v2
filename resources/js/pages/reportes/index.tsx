@@ -1,8 +1,9 @@
 import { Head } from "@inertiajs/react";
-import { FileSpreadsheet, FileText, Sparkles } from "lucide-react";
+import { BarChart3, FileSpreadsheet, FileText, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -59,16 +60,17 @@ export default function ReportesIndex({ cursos, materias, filtros }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Reportes" />
-      <div className="mx-auto max-w-xl space-y-6 p-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Generar Reportes
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Exporta las calificaciones y actividades de refuerzo con IA en
-            formato PDF o Excel.
-          </p>
-        </div>
+      <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
+        <PageHeaderBanner
+          title="Centro de Reportes y Calificaciones"
+          subtitle="Generación y exportación de planillas de calificaciones oficiales, actas de notas y reforzamientos pedagógicos con IA."
+          icon={BarChart3}
+          badgeText="INFORMES Y EXPORTACIÓN"
+          stats={[
+            { label: "Cursos", value: cursos?.length || 0 },
+            { label: "Materias", value: materias?.length || 0 },
+          ]}
+        />
 
         <Card className="shadow-xs border-border">
           <CardHeader>

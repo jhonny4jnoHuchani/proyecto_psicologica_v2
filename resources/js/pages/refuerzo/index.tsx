@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import AppLayout from "@/layouts/app-layout";
 import { formatoFechaHora } from "@/lib/formatters";
 import { type BreadcrumbItem } from "@/types";
@@ -83,23 +84,17 @@ export default function RefuerzoIndex({ refuerzos }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Mis Refuerzos" />
 
-      <div className="mx-auto max-w-5xl space-y-6 p-6">
-        {/* HEADER */}
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-purple-500 text-white shadow-lg shadow-purple-500/30">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Mis Refuerzos
-              </h1>
-              <p className="text-sm text-neutral-500 mt-0.5">
-                Preguntas generadas por la IA para reforzar tus temas.
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
+        <PageHeaderBanner
+          title="Refuerzos Pedagógicos con IA"
+          subtitle="Preguntas adaptativas y ejercicios generados por inteligencia artificial para consolidar tu aprendizaje."
+          icon={Sparkles}
+          badgeText="TUTOR INTELIGENTE"
+          stats={[
+            { label: "Pendientes", value: totalPendientes },
+            { label: "Completados", value: totalCompletados },
+          ]}
+        />
 
         {/* TABS */}
         <div className="border-b border-neutral-200">

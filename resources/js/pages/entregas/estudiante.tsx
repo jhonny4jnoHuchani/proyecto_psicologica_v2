@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import {
   Dialog,
   DialogContent,
@@ -153,8 +154,17 @@ export default function EntregasEstudiante({
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Mis Entregas" />
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Mis Entregas</h1>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+        <PageHeaderBanner
+          title="Mis Tareas y Entregas"
+          subtitle="Seguimiento de lecciones asignadas, subida de tareas, estado de calificación y retroalimentación docente."
+          icon={Send}
+          badgeText="AULA DEL ESTUDIANTE"
+          stats={[
+            { label: "Pendientes", value: leccionesPendientes?.length || 0 },
+            { label: "Enviadas", value: entregas?.length || 0 },
+          ]}
+        />
 
         {/* Pendientes */}
         <Card>

@@ -3,16 +3,18 @@ import {
   Archive,
   BookOpen,
   Eye,
-  Plus,
-  Pencil,
-  Trash2,
-  LoaderCircle,
-  Sparkles,
   Filter,
+  Library,
+  LoaderCircle,
+  Pencil,
+  Plus,
+  Sparkles,
+  Trash2,
 } from "lucide-react";
 import { FormEventHandler, useMemo, useState } from "react";
 
 import InputError from "@/components/input-error";
+import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -244,34 +246,37 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Libros" />
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <BookOpen className="h-4.5 w-4.5" />
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Biblioteca de Libros
-              </h1>
-            </div>
-            <p className="mt-1 text-sm text-neutral-500">
-              Gestiona los libros y recursos bibliográficos del sistema.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <a href="/libros/eliminados">
-              <Button variant="outline">
-                <Archive className="mr-2 h-4 w-4" />
-                Ver Eliminados
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+        <PageHeaderBanner
+          title="Biblioteca y Recursos Bibliográficos"
+          subtitle="Catálogo digital de libros, guías de estudio, textos oficiales y material de apoyo por materia."
+          icon={Library}
+          badgeText="BIBLIOTECA VIRTUAL"
+          stats={[
+            { label: "Libros", value: stats.total },
+            { label: "Materias", value: stats.materias },
+          ]}
+          actions={
+            <>
+              <a href="/libros/eliminados">
+                <Button
+                  variant="outline"
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/25 backdrop-blur-md rounded-xl transition-all"
+                >
+                  <Archive className="mr-2 h-4 w-4" />
+                  Papelera
+                </Button>
+              </a>
+              <Button
+                onClick={openCreate}
+                className="bg-white text-slate-950 hover:bg-white/90 font-bold shadow-lg rounded-xl transition-all"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nuevo Libro
               </Button>
-            </a>
-            <Button onClick={openCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nuevo libro
-            </Button>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card className="border-none bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-sm">
