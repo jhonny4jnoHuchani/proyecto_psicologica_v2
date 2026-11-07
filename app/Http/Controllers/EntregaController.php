@@ -54,7 +54,7 @@ class EntregaController extends Controller
         $user = Auth::user();
         $docente = Docente::where('user_id', $user->id)->first();
 
-        //aqui buscamos todas las lecciones del docente que esta logueado?
+        // aqui buscamos todas las lecciones del docente que esta logueado?
         $lecciones = Leccion::with('materia', 'curso')
             ->where('docente_id', $docente->id)
             ->orderBy('created_at', 'desc')

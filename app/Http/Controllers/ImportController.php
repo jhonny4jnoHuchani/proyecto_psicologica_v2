@@ -66,9 +66,15 @@ class ImportController extends Controller
                 $apellidoMaterno = trim((string) ($fila['apellido_materno'] ?? ''));
                 $ci = trim((string) ($fila['ci'] ?? ''));
                 $expedido = strtoupper(trim((string) ($fila['expedido'] ?? '')));
-                if ($expedido === 'CBBA') $expedido = 'CB';
-                if ($expedido === 'SCZ') $expedido = 'SC';
-                if ($expedido === 'BENI') $expedido = 'BN';
+                if ($expedido === 'CBBA') {
+                    $expedido = 'CB';
+                }
+                if ($expedido === 'SCZ') {
+                    $expedido = 'SC';
+                }
+                if ($expedido === 'BENI') {
+                    $expedido = 'BN';
+                }
                 $celular = trim((string) ($fila['celular'] ?? ''));
                 $email = trim((string) ($fila['email'] ?? ''));
                 $genero = trim((string) ($fila['genero'] ?? ''));

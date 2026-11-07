@@ -119,7 +119,7 @@ class NotificacionService
         if ($materiaNombre) {
             $mensaje .= " en la materia {$materiaNombre}.";
         } else {
-            $mensaje .= ".";
+            $mensaje .= '.';
         }
 
         if ($fechaEntrega) {

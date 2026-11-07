@@ -121,7 +121,7 @@ class RefuerzoController extends Controller
             ], 500);
         }
 
-        //si esto falla
+        // si esto falla
         try {
             $resultado = $this->iaService->generarPreguntas($entrega);
 
@@ -135,7 +135,7 @@ class RefuerzoController extends Controller
                 'preguntas' => $resultado['preguntas'],
                 'recomendacion' => $resultado['recomendacion'],
             ]);
-        //esto ya no falla
+            // esto ya no falla
         } catch (\Exception $e) {
             Log::error("Error al generar preguntas IA para la entrega #{$entrega->id}: ".$e->getMessage(), [
                 'exception' => $e,

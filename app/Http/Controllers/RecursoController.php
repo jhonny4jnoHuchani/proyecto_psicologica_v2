@@ -134,4 +134,3 @@ class RecursoController extends Controller
         return back()->with('success', 'Recurso de estudio eliminado.');
     }
 }
-

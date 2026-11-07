@@ -11,7 +11,7 @@ import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type NavItem, type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search, Bell, FileSignature, Sparkles, KeyRound } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Bell, FileSignature, Sparkles, KeyRound, ArrowRight } from 'lucide-react';
 import AppearanceToggleDropdown from '@/components/appearance-dropdown';
 import AppLogo from './app-logo';
 import AppLogoIcon from './app-logo-icon';
@@ -195,8 +195,9 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                                                 </div>
                                                 <p className="text-neutral-500 dark:text-neutral-400 text-xs">{notif.mensaje}</p>
                                                 {notif.url && (
-                                                    <Link href={notif.url} className="text-blue-600 dark:text-blue-400 text-[11px] font-medium mt-1 inline-block hover:underline">
-                                                        Ver detalles &rarr;
+                                                    <Link href={notif.url} className="text-blue-600 dark:text-blue-400 text-[11px] font-medium mt-1 inline-flex items-center gap-1 hover:underline">
+                                                        <span>Ver detalles</span>
+                                                        <ArrowRight className="h-3 w-3" />
                                                     </Link>
                                                 )}
                                             </div>

@@ -244,7 +244,7 @@ class TelegramWebhookController extends Controller
             "👤 Usuario (Correo): {$user->email}\n".
             "🔑 Contraseña: {$password}\n".
             "🆔 CI: {$user->ci}\n\n".
-            "A partir de ahora recibirás todas tus notificaciones y tareas aquí.";
+            'A partir de ahora recibirás todas tus notificaciones y tareas aquí.';
 
         $this->enviarMensaje($chatId, $mensaje);
     }

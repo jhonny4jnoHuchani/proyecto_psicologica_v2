@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Configuracion extends Model
 {
@@ -49,10 +50,10 @@ class Configuracion extends Model
      */
     public static function clearTelegramCache(): void
     {
-        \Illuminate\Support\Facades\Cache::forget('telegram_config_token');
-        \Illuminate\Support\Facades\Cache::forget('telegram_config_chat_id');
-        \Illuminate\Support\Facades\Cache::forget('telegram_config_activo');
-        \Illuminate\Support\Facades\Cache::forget('telegram_config_username');
+        Cache::forget('telegram_config_token');
+        Cache::forget('telegram_config_chat_id');
+        Cache::forget('telegram_config_activo');
+        Cache::forget('telegram_config_username');
     }
 
     /**
@@ -60,11 +61,12 @@ class Configuracion extends Model
      */
     public static function getTelegramToken(): ?string
     {
-        return \Illuminate\Support\Facades\Cache::remember('telegram_config_token', now()->addDay(), function () {
+        return Cache::remember('telegram_config_token', now()->addDay(), function () {
             $config = static::query()->select(['telegram_bot_token'])->first();
             if ($config && ! empty($config->telegram_bot_token)) {
                 return $config->telegram_bot_token;
             }
+
             return config('services.telegram.bot_token');
         });
     }
@@ -74,8 +76,9 @@ class Configuracion extends Model
      */
     public static function getTelegramChatId(): ?string
     {
-        return \Illuminate\Support\Facades\Cache::remember('telegram_config_chat_id', now()->addDay(), function () {
+        return Cache::remember('telegram_config_chat_id', now()->addDay(), function () {
             $config = static::query()->select(['telegram_chat_id'])->first();
+
             return $config?->telegram_chat_id;
         });
     }
@@ -85,7 +88,7 @@ class Configuracion extends Model
      */
     public static function isTelegramActivo(): bool
     {
-        return \Illuminate\Support\Facades\Cache::remember('telegram_config_activo', now()->addDay(), function () {
+        return Cache::remember('telegram_config_activo', now()->addDay(), function () {
             $token = static::getTelegramToken();
             if (empty($token) || $token === 'YOUR-BOT-TOKEN' || $token === 'xxxxx') {
                 return false;
@@ -105,8 +108,9 @@ class Configuracion extends Model
      */
     public static function getTelegramBotUsername(): ?string
     {
-        return \Illuminate\Support\Facades\Cache::remember('telegram_config_username', now()->addDay(), function () {
+        return Cache::remember('telegram_config_username', now()->addDay(), function () {
             $config = static::query()->select(['telegram_bot_username'])->first();
+
             return $config?->telegram_bot_username;
         });
     }
@@ -204,5 +208,66 @@ class Configuracion extends Model
     public static function colorBorderRgba(?string $hex, float $alpha = 0.28): string
     {
         return self::colorLightRgba($hex, $alpha);
+    }
+
+    /**
+     * Mezcla dos colores hexadecimales con un ratio especificado (0.0 = color1, 1.0 = color2).
+     */
+    public static function mixColors(string $hex1, string $hex2, float $ratio = 0.5): string
+    {
+        $hex1 = ltrim($hex1, '#');
+        $hex2 = ltrim($hex2, '#');
+
+        $r1 = hexdec(substr($hex1, 0, 2));
+        $g1 = hexdec(substr($hex1, 2, 2));
+        $b1 = hexdec(substr($hex1, 4, 2));
+
+        $r2 = hexdec(substr($hex2, 0, 2));
+        $g2 = hexdec(substr($hex2, 2, 2));
+        $b2 = hexdec(substr($hex2, 4, 2));
+
+        $r = (int) round($r1 + ($r2 - $r1) * $ratio);
+        $g = (int) round($g1 + ($g2 - $g1) * $ratio);
+        $b = (int) round($b1 + ($b2 - $b1) * $ratio);
+
+        $r = max(0, min(255, $r));
+        $g = max(0, min(255, $g));
+        $b = max(0, min(255, $b));
+
+        return sprintf('#%02x%02x%02x', $r, $g, $b);
+    }
+
+    /**
+     * Genera la paleta de colores derivada para modo claro y modo oscuro.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getThemePalette(?string $primario = '#4f46e5', ?string $secundario = '#06b6d4'): array
+    {
+        $prim = $primario ?: '#4f46e5';
+        $sec = $secundario ?: '#06b6d4';
+
+        return [
+            'primary' => $prim,
+            'primary_fg' => self::colorContraste($prim),
+            'secondary' => $sec,
+            'secondary_fg' => self::colorContraste($sec),
+            'light' => [
+                'sidebar_background' => '#f8fafc',
+                'sidebar_foreground' => '#334155',
+                'sidebar_accent' => self::colorLightRgba($prim, 0.1),
+                'header_background' => '#ffffff',
+                'background' => '#f1f5f9',
+                'card' => '#ffffff',
+            ],
+            'dark' => [
+                'sidebar_background' => '#0b0f19',
+                'sidebar_foreground' => '#94a3b8',
+                'sidebar_accent' => self::colorLightRgba($prim, 0.2),
+                'header_background' => '#0d121f',
+                'background' => '#070a12',
+                'card' => '#111827',
+            ],
+        ];
     }
 }

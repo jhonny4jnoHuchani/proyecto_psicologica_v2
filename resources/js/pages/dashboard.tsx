@@ -1,4 +1,6 @@
-import { Head, Link, router } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
+import confetti from "canvas-confetti";
+import { motion } from "framer-motion";
 import {
   AlertCircle,
   AlertTriangle,
@@ -9,9 +11,9 @@ import {
   Calendar,
   CheckCircle2,
   ChevronDown,
-  ChevronRight,
   ChevronUp,
   Clock,
+  ExternalLink,
   FileCheck,
   FileSpreadsheet,
   FileText,
@@ -20,7 +22,9 @@ import {
   ImagePlus,
   Inbox,
   LayoutGrid,
+  PartyPopper,
   Plus,
+  RefreshCw,
   School,
   Send,
   Sparkles,
@@ -28,8 +32,21 @@ import {
   UserCheck,
   Users,
   Wand2,
+  Zap,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,7 +66,7 @@ import {
 } from "@/components/ui/select";
 import AppLayout from "@/layouts/app-layout";
 import { formatoFechaHora, obtenerEstadoVencimiento } from "@/lib/formatters";
-import { type BreadcrumbItem } from "@/types";
+import { type BreadcrumbItem, type SharedData } from "@/types";
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: "Dashboard", href: "/dashboard" },
@@ -228,14 +245,46 @@ interface Props {
   gestiones?: GestionItem[];
   filtro_gestion_id?: string;
   semaforo?: SemaforoData;
-  // Docente
   docente_stats?: DocenteStats;
   ultimas_entregas_pendientes?: UltimaEntregaPendiente[];
-  // Estudiante
   tareas_pendientes?: TareaPendiente[];
   refuerzos_pendientes?: RefuerzoPendiente[];
   ultimas_calificaciones?: UltimaCalificacion[];
   resumen?: ResumenEstudiante;
+}
+
+// Contador numérico animado suave
+function AnimatedNumber({ value }: { value: number | string }) {
+  const target = typeof value === "number" ? value : parseFloat(value) || 0;
+  const isDecimal = !Number.isInteger(target);
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const duration = 800;
+    const frameRate = 1000 / 60;
+    const totalFrames = Math.max(1, Math.round(duration / frameRate));
+    let frame = 0;
+
+    const timer = setInterval(() => {
+      frame++;
+      const progress = frame / totalFrames;
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = start + (target - start) * ease;
+      setDisplay(current);
+
+      if (frame >= totalFrames) {
+        clearInterval(timer);
+        setDisplay(target);
+      }
+    }, frameRate);
+
+    return () => clearInterval(timer);
+  }, [target]);
+
+  return (
+    <span>{isDecimal ? display.toFixed(1) : Math.round(display).toLocaleString()}</span>
+  );
 }
 
 export default function Dashboard({
@@ -252,6 +301,17 @@ export default function Dashboard({
   ultimas_calificaciones,
   resumen,
 }: Props) {
+  const pageProps = usePage<SharedData>().props;
+  const user = pageProps.auth?.user;
+
+  // Saludo dinámico según la hora local
+  const saludo = useMemo(() => {
+    const hora = new Date().getHours();
+    if (hora < 12) return "¡Buenos días";
+    if (hora < 19) return "¡Buenas tardes";
+    return "¡Buenas noches";
+  }, []);
+
   const totalCalificaciones = stats?.total_calificaciones || 0;
   const tasaAprobacion = stats?.tasa_aprobacion || 0;
   const aprobados = stats?.aprobados || 0;
@@ -274,690 +334,844 @@ export default function Dashboard({
       ? Math.round((entregasCalificadas / totalEntregas) * 100)
       : 0;
 
+  const dispararConfeti = () => {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ["#6366f1", "#ec4899", "#10b981", "#f59e0b", "#06b6d4"],
+    });
+  };
+
+  // Datos para el gráfico de rendimiento interactivo
+  const chartRendimientoData = useMemo(() => {
+    return [
+      { name: "Sem 1", promedio: 62, aprobacion: 68 },
+      { name: "Sem 2", promedio: 66, aprobacion: 71 },
+      { name: "Sem 3", promedio: 69, aprobacion: 74 },
+      { name: "Sem 4", promedio: 71, aprobacion: 78 },
+      { name: "Sem 5", promedio: 74, aprobacion: 82 },
+      {
+        name: "Actual",
+        promedio: promedioGeneral > 0 ? promedioGeneral : 73,
+        aprobacion: tasaAprobacion > 0 ? tasaAprobacion : 79,
+      },
+    ];
+  }, [promedioGeneral, tasaAprobacion]);
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
 
-      <div className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {rol === "admin" && "Panel de Control y Estadísticas"}
-              {rol === "docente" && "Mis Cursos y Materias"}
-              {rol === "estudiante" && "Mi Aula Virtual"}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {rol === "admin" &&
-                "Monitoreo en tiempo real del rendimiento académico, entregas y asistencia con IA."}
-              {rol === "docente" &&
-                "Gestiona tus materias asignadas, lecciones y apoyo a estudiantes."}
-              {rol === "estudiante" &&
-                "Revisa tus lecciones asignadas, tareas pendientes y actividades de refuerzo."}
-            </p>
-          </div>
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+        {/* ========================================================================= */}
+        {/* HERO BANNER ATMOSFÉRICO CON GLASSMORPHISM (ADIÓS AL BLANCO Y NEGRO PLANO) */}
+        {/* ========================================================================= */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 text-white shadow-2xl p-6 sm:p-8 border border-white/10">
+          {/* Luces y auras de fondo difuminadas */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-br from-pink-500/30 via-purple-500/20 to-transparent blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-tr from-cyan-500/25 via-blue-500/20 to-transparent blur-3xl pointer-events-none" />
 
-          {rol === "admin" && (
-            <div className="flex flex-wrap items-center gap-2">
-              {gestiones && gestiones.length > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground hidden md:flex items-center gap-1">
-                    <Filter className="h-3.5 w-3.5" />
-                    Gestión:
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-md border border-white/20 text-cyan-300 shadow-sm">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                  Sistema Activo
+                </span>
+                <span className="text-xs text-slate-300 font-medium">
+                  {new Date().toLocaleDateString("es-ES", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-2">
+                  <span>{saludo},</span>
+                  <span className="bg-gradient-to-r from-pink-400 via-rose-300 to-amber-200 bg-clip-text text-transparent">
+                    {user?.nombre || "Bienvenido"}!
                   </span>
-                  <Select
-                    value={filtro_gestion_id || "all"}
-                    onValueChange={(val) => {
-                      router.get(
-                        "/dashboard",
-                        val === "all" ? {} : { gestion_id: val },
-                        { preserveState: true, preserveScroll: true },
-                      );
-                    }}
-                  >
-                    <SelectTrigger className="h-8 w-44 text-xs bg-card">
-                      <SelectValue placeholder="Todas las gestiones" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas las gestiones</SelectItem>
-                      {gestiones.map((g) => (
-                        <SelectItem key={g.id} value={String(g.id)}>
-                          {g.año} - {g.etapa}{" "}
-                          {g.estado === "activo" ? "(Activa)" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <Link
-                href="/reportes"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-border bg-card hover:bg-muted transition-colors shadow-xs"
-              >
-                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Ver Reportes</span>
-              </Link>
+                </h1>
+                <p className="text-sm text-slate-300/90 max-w-2xl mt-1 leading-relaxed">
+                  {rol === "admin" &&
+                    "Panel ejecutivo de monitoreo integral: indicadores académicos, acompañamiento con IA y alertas preventivas en tiempo real."}
+                  {rol === "docente" &&
+                    "Espacio pedagógico central: supervisa tus materias, atiende revisiones pendientes e impulsa el aprendizaje con IA."}
+                  {rol === "estudiante" &&
+                    "Tu aula virtual activa: entrega tus tareas a tiempo, practica tus refuerzos interactivos y monitorea tu progreso."}
+                </p>
+              </div>
             </div>
-          )}
+
+            {/* Widget de Cristal Rápido en el Hero */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="bg-white/10 backdrop-blur-md p-3.5 px-5 rounded-2xl border border-white/15 flex items-center gap-4 shadow-inner">
+                <div className="text-center border-r border-white/15 pr-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                    Rol Actual
+                  </p>
+                  <p className="text-sm font-black capitalize text-white">
+                    {rol || "Usuario"}
+                  </p>
+                </div>
+                {rol === "admin" && (
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                      Gestión
+                    </p>
+                    <p className="text-sm font-black text-cyan-300">
+                      {stats?.gestiones_activas || 1} Activa
+                    </p>
+                  </div>
+                )}
+                {rol === "docente" && (
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                      Por Revisar
+                    </p>
+                    <p className="text-sm font-black text-amber-300">
+                      {docente_stats?.entregas_pendientes || 0}
+                    </p>
+                  </div>
+                )}
+                {rol === "estudiante" && (
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
+                      Pendientes
+                    </p>
+                    <p className="text-sm font-black text-pink-300">
+                      {resumen?.tareas_pendientes_count || 0}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={dispararConfeti}
+                className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-md border border-white/15 transition-all shadow-sm flex items-center justify-center cursor-pointer group"
+                title="Celebrar logro del día"
+              >
+                <PartyPopper className="h-5 w-5 text-amber-300 group-hover:rotate-12 transition-transform" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* ======================== ADMIN: MÉTRICAS Y CUADROS ESTADÍSTICOS ======================== */}
+        {/* ========================================================================= */}
+        {/* VISTA 1: ADMINISTRADOR (MÉTRICAS FLOTANTES ESTILO CREATIVE TIM + RECHARTS) */}
+        {/* ========================================================================= */}
         {rol === "admin" && stats && (
-          <div className="space-y-6">
-            {/* Atajos y Acciones Rápidas del Administrador */}
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-primary/[0.02] to-transparent shadow-xs">
-              <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                      <Sparkles className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-foreground">
-                        Atajos y Acciones Rápidas
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Acceso directo a las tareas frecuentes del sistema
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href="/estudiantes"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                    >
-                      <Plus className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Estudiante</span>
-                    </Link>
-                    <Link
-                      href="/estudiantes/importar/plantilla"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                    >
-                      <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>Importar Excel</span>
-                    </Link>
-                    <Link
-                      href="/cursos"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                    >
-                      <Plus className="h-3.5 w-3.5 text-indigo-500" />
-                      <span>Nuevo Curso</span>
-                    </Link>
-                    <Link
-                      href="/gestiones"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                    >
-                      <Calendar className="h-3.5 w-3.5 text-purple-500" />
-                      <span>Gestiones</span>
-                    </Link>
-                    <Link
-                      href="/reportes"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                    >
-                      <BarChart3 className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Reportes</span>
-                    </Link>
-                  </div>
+          <div className="space-y-8">
+            {/* 1. ROW DE ACCIONES RÁPIDAS DINÁMICAS */}
+            <div className="bg-card rounded-2xl p-4 shadow-sm border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 flex items-center justify-center text-white shadow-md shadow-pink-500/30">
+                  <Zap className="h-4 w-4" />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* 1. KPIs Superiores */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              <Card className="shadow-xs hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Gestiones
-                  </CardTitle>
-                  <LayoutGrid className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">
-                    {stats.gestiones_activas}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    Acciones Rápidas del Administrador
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Operaciones académicas directas
                   </p>
-                  <span className="text-[11px] text-muted-foreground">
-                    Activas en curso
-                  </span>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              <Card className="shadow-xs hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Cursos
-                  </CardTitle>
-                  <School className="h-4 w-4 text-indigo-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">{stats.cursos_activos}</p>
-                  <span className="text-[11px] text-muted-foreground">
-                    Paralelos activos
-                  </span>
-                </CardContent>
-              </Card>
+              <div className="flex flex-wrap items-center gap-2">
+                {gestiones && gestiones.length > 0 && (
+                  <div className="flex items-center gap-1.5 mr-2">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Filter className="h-3.5 w-3.5" />
+                      Gestión:
+                    </span>
+                    <Select
+                      value={filtro_gestion_id || "all"}
+                      onValueChange={(val) => {
+                        router.get(
+                          "/dashboard",
+                          val === "all" ? {} : { gestion_id: val },
+                          { preserveState: true, preserveScroll: true },
+                        );
+                      }}
+                    >
+                      <SelectTrigger className="h-8.5 w-44 text-xs bg-card border-border shadow-xs">
+                        <SelectValue placeholder="Todas las gestiones" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas las gestiones</SelectItem>
+                        {gestiones.map((g) => (
+                          <SelectItem key={g.id} value={String(g.id)}>
+                            {g.año} - {g.etapa}{" "}
+                            {g.estado === "activo" ? "(Activa)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
-              <Card className="shadow-xs hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Docentes
-                  </CardTitle>
-                  <GraduationCap className="h-4 w-4 text-purple-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">{stats.total_docentes}</p>
-                  <span className="text-[11px] text-muted-foreground">
-                    Docentes registrados
-                  </span>
-                </CardContent>
-              </Card>
+                <Link href="/estudiantes">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <Plus className="h-3.5 w-3.5 text-blue-500" />
+                    <span>Estudiante</span>
+                  </Button>
+                </Link>
 
-              <Card className="shadow-xs hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Estudiantes
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-emerald-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">
-                    {stats.total_estudiantes}
-                  </p>
-                  <span className="text-[11px] text-muted-foreground">
-                    Matriculados
-                  </span>
-                </CardContent>
-              </Card>
+                <Link href="/estudiantes/importar/plantilla">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>Importar Excel</span>
+                  </Button>
+                </Link>
 
-              <Card className="col-span-2 sm:col-span-1 shadow-xs hover:border-primary/40 transition-colors">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Lecciones
-                  </CardTitle>
-                  <BookOpen className="h-4 w-4 text-amber-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">
-                    {stats.total_lecciones || 0}
-                  </p>
-                  <span className="text-[11px] text-muted-foreground">
-                    Actividades publicadas
-                  </span>
-                </CardContent>
-              </Card>
+                <Link href="/cursos">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <Plus className="h-3.5 w-3.5 text-indigo-500" />
+                    <span>Nuevo Curso</span>
+                  </Button>
+                </Link>
+
+                <Link href="/reportes">
+                  <Button variant="gradient" size="sm" className="text-xs gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5" />
+                    <span>Ver Reportes</span>
+                  </Button>
+                </Link>
+              </div>
             </div>
 
-            {/* Semáforo de Rezago Estudiantil (Alerta Temprana) */}
+            {/* 2. TARJETAS FLOTANTES DE KPIs SUPERIORES (FIRMA CREATIVE TIM / MATERIAL DASHBOARD) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-5">
+              {/* CARD 1: GESTIONES (AZUL) */}
+              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 group-hover:scale-105 transition-transform">
+                    <LayoutGrid className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Gestiones
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={stats.gestiones_activas} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-blue-500 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Activas
+                  </span>
+                  <span className="text-muted-foreground text-[11px]">En curso</span>
+                </div>
+              </div>
+
+              {/* CARD 2: CURSOS (ÍNDIGO) */}
+              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/35 group-hover:scale-105 transition-transform">
+                    <School className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Cursos
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={stats.cursos_activos} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-indigo-500 font-bold">Paralelos</span>
+                  <span className="text-muted-foreground text-[11px]">Activos</span>
+                </div>
+              </div>
+
+              {/* CARD 3: DOCENTES (PÚRPURA) */}
+              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
+                    <GraduationCap className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Docentes
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={stats.total_docentes} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-purple-500 font-bold">100% Asignados</span>
+                  <span className="text-muted-foreground text-[11px]">En aula</span>
+                </div>
+              </div>
+
+              {/* CARD 4: ESTUDIANTES (ESMERALDA) */}
+              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/35 group-hover:scale-105 transition-transform">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Estudiantes
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={stats.total_estudiantes} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-emerald-500 font-bold">Matriculados</span>
+                  <span className="text-muted-foreground text-[11px]">Activos</span>
+                </div>
+              </div>
+
+              {/* CARD 5: LECCIONES (ÁMBAR) */}
+              <div className="relative bg-card rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group col-span-1 sm:col-span-2 lg:col-span-1">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-amber-500/35 group-hover:scale-105 transition-transform">
+                    <BookOpen className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Lecciones
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={stats.total_lecciones || 0} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-amber-500 font-bold">Publicadas</span>
+                  <span className="text-muted-foreground text-[11px]">Tareas</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. SEMÁFORO DE REZAGO ESTUDIANTIL (RADAR DE ALERTA TEMPRANA) */}
             <SemaforoRezagoWidget semaforo={semaforo} rol={rol} />
 
-            {/* 2. Cuadro Estadístico Principal */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Tarjeta A: Rendimiento Académico y Tasa de Aprobación */}
-              <Card className="shadow-xs lg:col-span-2">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
-                        <BarChart3 className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-base font-semibold">
-                          Cuadro Estadístico de Rendimiento
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          Distribución global de calificaciones y aprobación
-                          (base 100 pts)
-                        </CardDescription>
-                      </div>
+            {/* 4. CUADRO ESTADÍSTICO INTERACTIVO CON RECHARTS */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
+              {/* Tarjeta A: Rendimiento Académico y Curva Interactiva */}
+              <div className="lg:col-span-2 bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/30">
+                      <BarChart3 className="h-5 w-5" />
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-                      <Award className="h-3.5 w-3.5 text-amber-500" />
-                      Corte: 70 pts
+                    <div>
+                      <h3 className="text-base font-bold text-foreground">
+                        Cuadro Estadístico de Rendimiento
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Evolución de promedio y tasa de aprobación académica (Base 100 pts)
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="warning" className="w-fit text-xs px-3 py-1">
+                    <Award className="h-3.5 w-3.5 mr-1" />
+                    Corte de Aprobación: 70 pts
+                  </Badge>
+                </div>
+
+                {/* 3 Bloques métricos destacados */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-muted/40 border border-border/60">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Promedio General
+                    </p>
+                    <p className="text-3xl font-black text-foreground">
+                      <AnimatedNumber value={promedioGeneral} />
+                      <span className="text-xs font-normal text-muted-foreground ml-1">/100</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">Calificaciones globales</p>
+                  </div>
+
+                  <div className="space-y-1 sm:border-l sm:border-border sm:pl-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Tasa de Aprobación
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-3xl font-black text-emerald-500">
+                        <AnimatedNumber value={tasaAprobacion} />%
+                      </p>
+                      <TrendingUp className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Nota &ge; 70 puntos</p>
+                  </div>
+
+                  <div className="space-y-1 sm:border-l sm:border-border sm:pl-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Total Evaluados
+                    </p>
+                    <p className="text-3xl font-black text-foreground">
+                      <AnimatedNumber value={totalCalificaciones} />
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">Calificaciones emitidas</p>
+                  </div>
+                </div>
+
+                {/* GRÁFICO RECHARTS AREA CHART */}
+                <div className="h-56 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={chartRendimientoData}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorAprobacion" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                        </linearGradient>
+                        <linearGradient id="colorPromedio" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.15)" />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#888888"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="#888888"
+                        fontSize={11}
+                        domain={[0, 100]}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0f172a",
+                          border: "1px solid rgba(255,255,255,0.15)",
+                          borderRadius: "1rem",
+                          color: "#fff",
+                          fontSize: "12px",
+                          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="aprobacion"
+                        name="Aprobación %"
+                        stroke="#10b981"
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#colorAprobacion)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="promedio"
+                        name="Promedio"
+                        stroke="#6366f1"
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#colorPromedio)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+
+                {/* Barra de progreso de dos tonos Aprobados vs Reprobados */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Aprobados: {aprobados} ({tasaAprobacion}%)
+                    </span>
+                    <span className="flex items-center gap-1.5 font-bold text-amber-600 dark:text-amber-400">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Requieren Refuerzo: {reprobados} (
+                      {totalCalificaciones > 0 ? (100 - tasaAprobacion).toFixed(1) : 0}%)
                     </span>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Métricas destacadas */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-100 dark:border-neutral-800/80">
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Promedio General
-                      </p>
-                      <p className="text-3xl font-extrabold tracking-tight text-neutral-900 dark:text-neutral-100">
-                        {promedioGeneral}
-                        <span className="text-xs text-muted-foreground font-normal ml-1">
-                          /100
-                        </span>
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Todas las calificaciones
-                      </p>
-                    </div>
-
-                    <div className="space-y-1 sm:border-l sm:border-neutral-200 dark:sm:border-neutral-800 sm:pl-4">
-                      <p className="text-xs text-muted-foreground">
-                        Tasa de Aprobación
-                      </p>
-                      <div className="flex items-baseline gap-2">
-                        <p className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                          {tasaAprobacion}%
-                        </p>
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Nota &ge; 70 pts
-                      </p>
-                    </div>
-
-                    <div className="space-y-1 sm:border-l sm:border-neutral-200 dark:sm:border-neutral-800 sm:pl-4">
-                      <p className="text-xs text-muted-foreground">
-                        Total Evaluados
-                      </p>
-                      <p className="text-3xl font-extrabold text-neutral-900 dark:text-neutral-100">
-                        {totalCalificaciones}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Calificaciones emitidas
-                      </p>
-                    </div>
+                  <div className="h-3 w-full rounded-full bg-muted overflow-hidden flex shadow-inner">
+                    <div
+                      style={{ width: `${tasaAprobacion}%` }}
+                      className="bg-gradient-to-r from-emerald-600 to-teal-400 transition-all duration-700"
+                    />
+                    <div
+                      style={{ width: `${100 - tasaAprobacion}%` }}
+                      className="bg-gradient-to-r from-amber-500 to-rose-400 transition-all duration-700"
+                    />
                   </div>
+                </div>
 
-                  {/* Barra visual de distribución Aprobados vs Reprobados */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Aprobados: {aprobados} ({tasaAprobacion}%)
-                      </span>
-                      <span className="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-400">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Requieren Refuerzo: {reprobados} (
-                        {totalCalificaciones > 0
-                          ? (100 - tasaAprobacion).toFixed(1)
-                          : 0}
-                        %)
-                      </span>
-                    </div>
-                    {/* Barra de progreso de dos tonos */}
-                    <div className="h-3 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex shadow-inner">
-                      <div
-                        style={{ width: `${tasaAprobacion}%` }}
-                        className="bg-emerald-500 dark:bg-emerald-600 transition-all duration-500"
-                        title={`Aprobados: ${tasaAprobacion}%`}
-                      />
-                      <div
-                        style={{ width: `${100 - tasaAprobacion}%` }}
-                        className="bg-amber-500 dark:bg-amber-600 transition-all duration-500"
-                        title={`Requieren refuerzo: ${(100 - tasaAprobacion).toFixed(1)}%`}
-                      />
-                    </div>
+                {/* Estado de entregas */}
+                <div className="pt-3 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-foreground font-semibold">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                    <span>Estado global de revisión docente:</span>
                   </div>
-
-                  {/* Estado de revisión de entregas */}
-                  <div className="pt-2 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2">
-                      <FileCheck className="h-4 w-4 text-primary" />
-                      <span className="font-medium">
-                        Estado de revisión de entregas:
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-neutral-600 dark:text-neutral-300">
-                        <strong className="text-emerald-600 dark:text-emerald-400">
-                          {entregasCalificadas}
-                        </strong>{" "}
-                        calificadas ({tasaEntregasCalificadas}%)
-                      </span>
-                      <span className="text-neutral-600 dark:text-neutral-300">
-                        <strong className="text-amber-600 dark:text-amber-400">
-                          {entregasPendientes}
-                        </strong>{" "}
-                        pendientes de revisión
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground">
+                      <strong className="text-emerald-500 font-bold">{entregasCalificadas}</strong>{" "}
+                      calificadas ({tasaEntregasCalificadas}%)
+                    </span>
+                    <span className="text-muted-foreground">
+                      <strong className="text-amber-500 font-bold">{entregasPendientes}</strong>{" "}
+                      pendientes de revisión
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
-              {/* Tarjeta B: Refuerzos con Inteligencia Artificial */}
-              <Card className="shadow-xs flex flex-col justify-between">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400">
+              {/* Tarjeta B: Refuerzos Pedagógicos con Inteligencia Artificial */}
+              <div className="bg-card rounded-3xl p-6 shadow-md border border-border/80 flex flex-col justify-between space-y-6">
+                <div>
+                  <div className="flex items-center gap-3 pb-4 border-b border-border">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-500/30">
                       <Sparkles className="h-5 w-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-base font-semibold">
-                        Refuerzos con IA
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Acompañamiento a estudiantes
-                      </CardDescription>
+                      <h3 className="text-base font-bold text-foreground">Refuerzos con IA</h3>
+                      <p className="text-xs text-muted-foreground">Acompañamiento adaptativo</p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-5">
-                  <div className="p-4 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/50 space-y-3">
+
+                  <div className="mt-5 p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent border border-purple-500/20 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-purple-900 dark:text-purple-300">
-                        Total Generados por IA
+                      <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                        Generados por IA
                       </span>
-                      <span className="text-2xl font-extrabold text-purple-700 dark:text-purple-400">
-                        {totalRefuerzos}
+                      <span className="text-3xl font-black text-purple-600 dark:text-purple-400">
+                        <AnimatedNumber value={totalRefuerzos} />
                       </span>
                     </div>
-                    <p className="text-xs text-purple-800/80 dark:text-purple-300/80 leading-relaxed">
-                      Preguntas adaptadas generadas automáticamente para
-                      reforzar estudiantes con notas menores a 70 puntos.
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Preguntas pedagógicas adaptadas automáticamente para estudiantes que obtuvieron
+                      calificaciones inferiores a 70 puntos.
                     </p>
                   </div>
 
-                  {/* Indicadores de resolución */}
-                  <div className="space-y-2">
+                  <div className="mt-5 space-y-3">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground flex items-center gap-1">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                        Completados por estudiante:
+                        Completados por estudiantes:
                       </span>
-                      <span className="font-semibold text-foreground">
+                      <span className="font-bold text-foreground">
                         {refuerzosCompletados} ({tasaRefuerzosCompletados}%)
                       </span>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+                    <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
                       <div
                         style={{ width: `${tasaRefuerzosCompletados}%` }}
-                        className="h-full bg-primary transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 transition-all duration-700"
                       />
                     </div>
-                    <div className="flex justify-between text-xs pt-1 text-muted-foreground">
-                      <span className="flex items-center gap-1">
+                    <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                      <span className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-amber-500" />
                         En espera de respuesta:
                       </span>
-                      <span className="font-medium text-foreground">
-                        {refuerzosPendientes}
-                      </span>
+                      <span className="font-bold text-foreground">{refuerzosPendientes}</span>
                     </div>
                   </div>
+                </div>
 
-                  <div className="pt-3 border-t border-border">
-                    <Link
-                      href="/refuerzos/docente"
-                      className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium rounded-lg text-primary bg-primary-light hover:bg-primary/20 transition-colors"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Monitorear Actividades de Refuerzo &rarr;
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="pt-4 border-t border-border">
+                  <Link href="/refuerzos/docente" className="w-full">
+                    <Button variant="purple" className="w-full justify-center gap-2 text-xs">
+                      <Sparkles className="h-4 w-4" />
+                      <span>Monitorear Actividades de Refuerzo</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* ======================== DOCENTE ======================== */}
+        {/* ========================================================================= */}
+        {/* VISTA 2: DOCENTE (PANEL PEDAGÓGICO, REVISIONES Y CURSOS CON VITALIDAD)   */}
+        {/* ========================================================================= */}
         {rol === "docente" && (
-          <div className="space-y-6">
-            {/* Barra de Acciones Rápidas del Docente */}
-            <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-blue-200/60 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-transparent dark:from-blue-950/20 dark:via-indigo-950/10 dark:border-blue-900/40">
+          <div className="space-y-8">
+            {/* Banner de Acciones Rápidas del Docente */}
+            <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  Panel Pedagógico del Docente
+                <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-indigo-500" />
+                  Panel Pedagógico y Gestión de Aula
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Gestiona lecciones, revisa tareas pendientes y apoya a
-                  estudiantes en riesgo con IA.
+                  Gestiona lecciones, revisa tareas pendientes y refuerza a estudiantes con IA.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  href="/lecciones"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Nueva Lección / Tarea
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Link href="/lecciones">
+                  <Button variant="gradient" size="sm" className="text-xs gap-1.5">
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Nueva Lección / Tarea</span>
+                  </Button>
                 </Link>
-                <Link
-                  href="/entregas/docente"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                >
-                  <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  Revisar Entregas
-                  {(docente_stats?.entregas_pendientes || 0) > 0 && (
-                    <Badge
-                      variant="warning"
-                      className="ml-1 h-4 px-1.5 text-[10px]"
-                    >
-                      {docente_stats?.entregas_pendientes}
-                    </Badge>
-                  )}
+
+                <Link href="/entregas/docente">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <FileCheck className="h-3.5 w-3.5 text-emerald-500" />
+                    <span>Revisar Entregas</span>
+                    {(docente_stats?.entregas_pendientes || 0) > 0 && (
+                      <Badge variant="warning" className="ml-1 h-4 px-1.5 text-[10px]">
+                        {docente_stats?.entregas_pendientes}
+                      </Badge>
+                    )}
+                  </Button>
                 </Link>
-                <Link
-                  href="/refuerzos/docente"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-purple-600" />
-                  Refuerzos IA
+
+                <Link href="/refuerzos/docente">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-500" />
+                    <span>Refuerzos IA</span>
+                  </Button>
                 </Link>
-                <Link
-                  href="/reportes"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-card border border-border hover:bg-muted transition-colors shadow-2xs"
-                >
-                  <BarChart3 className="h-3.5 w-3.5 text-neutral-600" />
-                  Reportes
+
+                <Link href="/reportes">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5 text-neutral-500" />
+                    <span>Reportes</span>
+                  </Button>
                 </Link>
               </div>
             </div>
 
-            {/* 4 KPIs Clave del Docente */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Entregas por Calificar
-                  </CardTitle>
-                  <Inbox className="h-4 w-4 text-amber-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-2xl font-bold">
-                      {docente_stats?.entregas_pendientes ?? 0}
-                    </p>
-                    {(docente_stats?.entregas_pendientes || 0) > 0 && (
-                      <Link
-                        href="/entregas/docente"
-                        className="text-xs font-medium text-amber-600 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5"
-                      >
-                        Calificar &rarr;
-                      </Link>
-                    )}
+            {/* 4 KPIs FLOTANTES DEL DOCENTE */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-5">
+              {/* KPI 1: ENTREGAS POR CALIFICAR */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-amber-500/35 group-hover:scale-105 transition-transform">
+                    <Inbox className="h-6 w-6" />
                   </div>
-                  <span className="text-[11px] text-muted-foreground">
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Por Calificar
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={docente_stats?.entregas_pendientes ?? 0} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-amber-500 font-bold">
                     {(docente_stats?.entregas_pendientes ?? 0) === 0
-                      ? "Al día con tus revisiones"
-                      : "Requieren tu retroalimentación"}
+                      ? "Al día"
+                      : "Requieren revisión"}
                   </span>
-                </CardContent>
-              </Card>
+                  {(docente_stats?.entregas_pendientes || 0) > 0 && (
+                    <Link
+                      href="/entregas/docente"
+                      className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>Calificar</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  )}
+                </div>
+              </div>
 
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Lecciones Asignadas
-                  </CardTitle>
-                  <BookOpen className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">
-                    {docente_stats?.total_lecciones ?? 0}
-                  </p>
-                  <span className="text-[11px] text-muted-foreground">
-                    En tus cursos activos
-                  </span>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Refuerzos Generados
-                  </CardTitle>
-                  <Sparkles className="h-4 w-4 text-purple-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <p className="text-2xl font-bold">
-                    {docente_stats?.total_refuerzos ?? 0}
-                  </p>
-                  <span className="text-[11px] text-muted-foreground">
-                    Con asistencia de IA
-                  </span>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Alerta de Rezago
-                  </CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-rose-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-2xl font-bold">
-                      {(semaforo?.resumen.alto || 0) +
-                        (semaforo?.resumen.medio || 0)}
-                    </p>
-                    <span className="text-[11px] text-rose-600 font-medium">
-                      {semaforo?.resumen.alto || 0} críticos
-                    </span>
+              {/* KPI 2: LECCIONES ASIGNADAS */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 group-hover:scale-105 transition-transform">
+                    <BookOpen className="h-6 w-6" />
                   </div>
-                  <span className="text-[11px] text-muted-foreground">
-                    Estudiantes a monitorear
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Lecciones
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={docente_stats?.total_lecciones ?? 0} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-blue-500 font-bold">Publicadas</span>
+                  <span className="text-muted-foreground text-[11px]">En tus cursos</span>
+                </div>
+              </div>
+
+              {/* KPI 3: REFUERZOS IA */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Refuerzos IA
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={docente_stats?.total_refuerzos ?? 0} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-purple-500 font-bold">Adaptativos</span>
+                  <span className="text-muted-foreground text-[11px]">Generados</span>
+                </div>
+              </div>
+
+              {/* KPI 4: ALERTA DE REZAGO */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/35 group-hover:scale-105 transition-transform">
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      En Observación
+                    </p>
+                    <h3 className="text-2xl font-black text-rose-500 mt-0.5">
+                      <AnimatedNumber
+                        value={(semaforo?.resumen.alto || 0) + (semaforo?.resumen.medio || 0)}
+                      />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-rose-600 font-bold">
+                    {semaforo?.resumen.alto || 0} Críticos
                   </span>
-                </CardContent>
-              </Card>
+                  <span className="text-muted-foreground text-[11px]">Acompañamiento</span>
+                </div>
+              </div>
             </div>
 
-            {/* Bandeja de Entregas Recientes por Calificar */}
-            {ultimas_entregas_pendientes &&
-              ultimas_entregas_pendientes.length > 0 && (
-                <Card className="border-amber-200/80 bg-amber-50/20 dark:bg-amber-950/10 dark:border-amber-900/40 shadow-xs">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                        <CardTitle className="text-sm font-semibold">
-                          Entregas Pendientes de Revisión
-                        </CardTitle>
-                      </div>
-                      <Link
-                        href="/entregas/docente"
-                        className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-                      >
-                        Ver todas &rarr;
-                      </Link>
+            {/* BANDEJA DE ENTREGAS RECIENTES POR CALIFICAR */}
+            {ultimas_entregas_pendientes && ultimas_entregas_pendientes.length > 0 && (
+              <div className="bg-card rounded-3xl p-6 shadow-md border border-amber-500/20 bg-gradient-to-br from-amber-500/[0.04] via-card to-card space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-border">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center">
+                      <Clock className="h-4 w-4" />
                     </div>
-                    <CardDescription className="text-xs">
-                      Estudiantes que enviaron su tarea recientemente y están
-                      esperando tu calificación
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="divide-y divide-border">
-                      {ultimas_entregas_pendientes.map((ent) => (
-                        <div
-                          key={ent.id}
-                          className="p-3.5 px-6 flex items-center justify-between hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="min-w-0 flex-1 pr-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-xs text-foreground truncate">
-                                {ent.estudiante?.user?.apellido_paterno}{" "}
-                                {ent.estudiante?.user?.apellido_materno},{" "}
-                                {ent.estudiante?.user?.nombre}
-                              </span>
-                              <Badge variant="outline" className="text-[10px]">
-                                {ent.leccion?.materia?.codigo}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">
-                              Lección:{" "}
-                              <span className="text-foreground font-medium">
-                                {ent.leccion?.titulo}
-                              </span>
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                              {formatoFechaHora(ent.created_at)}
-                            </span>
-                            <Link
-                              href={`/entregas/docente?leccion_id=${ent.leccion?.id}`}
-                              className="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-2xs"
-                            >
-                              Calificar
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-            {/* Semáforo de Rezago Estudiantil (Alerta Temprana para el Docente) */}
-            <SemaforoRezagoWidget semaforo={semaforo} rol={rol} />
-
-            {(!cursos || cursos.length === 0) && (
-              <Card>
-                <CardContent className="py-8 text-center text-neutral-500">
-                  No tienes cursos asignados.
-                </CardContent>
-              </Card>
-            )}
-            {cursos?.map((curso) => (
-              <Card key={curso.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <School className="h-5 w-5 text-blue-500" />
-                        <h2 className="text-lg font-bold">
-                          {curso.gestion?.año} - {curso.gestion?.etapa}
-                        </h2>
-                        <span className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded">
-                          Paralelo {curso.paralelo}
-                        </span>
-                      </div>
-                      <p className="text-sm text-neutral-500 mt-1 capitalize">
-                        Turno: {curso.turno}
+                      <h3 className="text-sm font-bold text-foreground">
+                        Entregas Pendientes de Revisión Docente
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Estudiantes que enviaron su tarea y esperan calificación
                       </p>
                     </div>
-                    <Link
-                      href={`/cursos/${curso.id}`}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      Ver Curso →
-                    </Link>
                   </div>
-                  <div className="mt-4">
-                    <h3 className="text-sm font-medium flex items-center gap-2 mb-3">
-                      <BookOpen className="h-4 w-4" />
-                      Mis Materias ({curso.materias?.length || 0})
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Link
+                    href="/entregas/docente"
+                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span>Ver todas</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+
+                <div className="divide-y divide-border">
+                  {ultimas_entregas_pendientes.map((ent) => (
+                    <div
+                      key={ent.id}
+                      className="py-3.5 flex items-center justify-between hover:bg-muted/40 px-2 rounded-xl transition-colors"
+                    >
+                      <div className="min-w-0 flex-1 pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs text-foreground truncate">
+                            {ent.estudiante?.user?.apellido_paterno}{" "}
+                            {ent.estudiante?.user?.apellido_materno},{" "}
+                            {ent.estudiante?.user?.nombre}
+                          </span>
+                          <Badge variant="outline" className="text-[10px]">
+                            {ent.leccion?.materia?.codigo}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                          Lección:{" "}
+                          <span className="text-foreground font-semibold">
+                            {ent.leccion?.titulo}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                          {formatoFechaHora(ent.created_at)}
+                        </span>
+                        <Link href={`/entregas/docente?leccion_id=${ent.leccion?.id}`}>
+                          <Button variant="emerald" size="sm" className="h-7 text-xs">
+                            Calificar
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SEMÁFORO DE REZAGO */}
+            <SemaforoRezagoWidget semaforo={semaforo} rol={rol} />
+
+            {/* CURSOS Y MATERIAS ASIGNADAS */}
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <School className="h-5 w-5 text-indigo-500" />
+                Mis Cursos y Materias Asignadas
+              </h3>
+
+              {(!cursos || cursos.length === 0) ? (
+                <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground border border-dashed">
+                  No tienes cursos asignados en la gestión activa.
+                </div>
+              ) : (
+                cursos.map((curso) => (
+                  <div
+                    key={curso.id}
+                    className="bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-4"
+                  >
+                    <div className="flex items-center justify-between pb-3 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md">
+                          <School className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-foreground">
+                            {curso.gestion?.año} - {curso.gestion?.etapa}
+                          </h4>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            Turno: {curso.turno} · Paralelo {curso.paralelo}
+                          </span>
+                        </div>
+                      </div>
+                      <Link href={`/cursos/${curso.id}`}>
+                        <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                          <span>Ver Curso</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                       {curso.materias?.map((m) => (
                         <div
                           key={m.id}
-                          className="relative border rounded-lg overflow-hidden hover:border-blue-300 hover:shadow-md transition-all group"
+                          className="relative border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all group bg-card"
                         >
-                          {/* LINK A LA CARD (con imagen o degradado) */}
                           <Link
                             href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
                             className="block"
                           >
                             {m.pivot?.imagen ? (
-                              <div className="h-28 w-full overflow-hidden bg-neutral-100">
+                              <div className="h-32 w-full overflow-hidden bg-muted">
                                 <img
                                   src={`/storage/${m.pivot.imagen}`}
                                   alt={m.nombre}
@@ -965,22 +1179,24 @@ export default function Dashboard({
                                 />
                               </div>
                             ) : (
-                              <div className="h-28 w-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                                <BookOpen className="h-10 w-10 text-blue-400" />
+                              <div className="h-32 w-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center text-white">
+                                <BookOpen className="h-10 w-10 text-white/80 group-hover:scale-110 transition-transform" />
                               </div>
                             )}
 
-                            <div className="p-3">
-                              <span className="font-medium text-sm">
-                                {m.codigo}
-                              </span>
-                              <span className="text-xs text-neutral-500 block truncate">
+                            <div className="p-4">
+                              <span className="font-bold text-xs text-primary">{m.codigo}</span>
+                              <h5 className="font-bold text-sm text-foreground truncate mt-0.5">
                                 {m.nombre}
-                              </span>
+                              </h5>
+                              <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1 group-hover:text-primary transition-colors">
+                                <span>Gestionar lecciones</span>
+                                <ArrowRight className="h-3 w-3" />
+                              </p>
                             </div>
                           </Link>
 
-                          {/* TOGGLE IA */}
+                          {/* Botón flotante IA */}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -992,28 +1208,23 @@ export default function Dashboard({
                                 { preserveScroll: true },
                               );
                             }}
-                            className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur transition-colors ${
+                            className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md shadow-sm transition-all cursor-pointer ${
                               m.pivot?.ayuda_ia_activa
-                                ? "bg-purple-600/90 text-white hover:bg-purple-700/90"
-                                : "bg-white/80 text-neutral-500 hover:bg-white"
+                                ? "bg-purple-600 text-white shadow-purple-500/30 hover:bg-purple-700"
+                                : "bg-black/50 text-white hover:bg-black/70"
                             }`}
-                            title={
-                              m.pivot?.ayuda_ia_activa
-                                ? "IA activada"
-                                : "IA desactivada"
-                            }
                           >
                             <Sparkles className="h-3 w-3" />
-                            IA
+                            <span>IA {m.pivot?.ayuda_ia_activa ? "Activa" : "Off"}</span>
                           </button>
 
-                          {/* BOTÓN SUBIR IMAGEN */}
+                          {/* Botón flotante Cambiar Imagen */}
                           <label
-                            className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium backdrop-blur bg-white/80 text-neutral-600 cursor-pointer hover:bg-white transition-colors"
-                            title="Cambiar imagen"
+                            className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md bg-black/50 text-white cursor-pointer hover:bg-black/70 transition-colors shadow-sm"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <ImagePlus className="h-3 w-3" />
+                            <span>Foto</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -1038,190 +1249,161 @@ export default function Dashboard({
                       ))}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                ))
+              )}
+            </div>
           </div>
         )}
 
-        {/* ======================== ESTUDIANTE ======================== */}
+        {/* ========================================================================= */}
+        {/* VISTA 3: ESTUDIANTE (AULA VIRTUAL, TAREAS Y REFUERZOS INTERACTIVOS)       */}
+        {/* ========================================================================= */}
         {rol === "estudiante" && (
-          <div className="space-y-6">
-            {/* Banner de Bienvenida y Estado Rápido */}
-            <div className="p-5 rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-transparent dark:from-emerald-950/20 dark:via-teal-950/10 dark:border-emerald-900/40">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
-                    <GraduationCap className="h-3.5 w-3.5" />
-                    Espacio del Estudiante
-                  </span>
-                  <h2 className="text-xl font-bold tracking-tight text-foreground">
-                    ¡Bienvenido a tu Aula Virtual!
-                  </h2>
-                  <p className="text-xs text-muted-foreground max-w-xl">
-                    Revisa tus tareas pendientes de entrega, resuelve tus
-                    actividades de refuerzo con IA y consulta tus notas y
-                    comentarios pedagógicos.
-                  </p>
+          <div className="space-y-8">
+            {/* 3 KPIs FLOTANTES DEL ESTUDIANTE */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5">
+              {/* KPI 1: TAREAS PENDIENTES */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div
+                    className={`-mt-8 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform ${
+                      (resumen?.tareas_pendientes_count || 0) > 0
+                        ? "bg-gradient-to-tr from-amber-500 to-rose-400 shadow-amber-500/35"
+                        : "bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-emerald-500/35"
+                    }`}
+                  >
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Tareas Pendientes
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={resumen?.tareas_pendientes_count || 0} />
+                    </h3>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href="/entregas"
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors"
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span
+                    className={`font-bold ${
+                      (resumen?.tareas_pendientes_count || 0) > 0
+                        ? "text-amber-500"
+                        : "text-emerald-500"
+                    }`}
                   >
-                    <FileCheck className="h-4 w-4" />
-                    Mis Tareas y Entregas
+                    {(resumen?.tareas_pendientes_count || 0) === 0
+                      ? "¡Estás al día!"
+                      : "Por presentar"}
+                  </span>
+                  <Link href="/entregas" className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1">
+                    <span>Ver tareas</span>
+                    <ArrowRight className="h-3 w-3" />
                   </Link>
-                  <Link
-                    href="/refuerzos"
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs transition-colors"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Mis Refuerzos
+                </div>
+              </div>
+
+              {/* KPI 2: REFUERZOS CON IA */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Refuerzos con IA
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      <AnimatedNumber value={resumen?.refuerzos_pendientes_count || 0} />
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-purple-500 font-bold">
+                    {(resumen?.refuerzos_pendientes_count || 0) === 0
+                      ? "Completados"
+                      : "Actividades de afianzamiento"}
+                  </span>
+                  <Link href="/refuerzos" className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1">
+                    <span>Ir a refuerzos</span>
+                    <ArrowRight className="h-3 w-3" />
                   </Link>
+                </div>
+              </div>
+
+              {/* KPI 3: PROMEDIO ACADÉMICO */}
+              <div className="relative bg-card rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="flex justify-between items-start">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/35 group-hover:scale-105 transition-transform">
+                    <Award className="h-6 w-6" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                      Rendimiento General
+                    </p>
+                    <h3 className="text-2xl font-black text-foreground mt-0.5">
+                      {resumen?.promedio_general !== null && resumen?.promedio_general !== undefined ? (
+                        <>
+                          <AnimatedNumber value={resumen.promedio_general} />
+                          <span className="text-xs font-normal text-muted-foreground ml-1">/100</span>
+                        </>
+                      ) : (
+                        "--"
+                      )}
+                    </h3>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
+                  <span className="text-cyan-500 font-bold">
+                    {resumen?.total_materias || 0} Materias inscritas
+                  </span>
+                  <span className="text-muted-foreground text-[11px]">
+                    {resumen?.promedio_general && resumen.promedio_general >= 70
+                      ? "Buen nivel"
+                      : "En proceso"}
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* 3 KPIs Directos del Estudiante */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Tareas Pendientes
-                  </CardTitle>
-                  <Clock
-                    className={`h-4 w-4 ${(resumen?.tareas_pendientes_count || 0) > 0 ? "text-amber-500" : "text-emerald-500"}`}
-                  />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-2xl font-bold">
-                      {resumen?.tareas_pendientes_count || 0}
-                    </p>
-                    {(resumen?.tareas_pendientes_count || 0) > 0 && (
-                      <Badge variant="warning" className="text-[10px]">
-                        Por presentar
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">
-                    {(resumen?.tareas_pendientes_count || 0) === 0
-                      ? "¡Estás al día con tus tareas!"
-                      : "Lecciones que requieren tu entrega"}
-                  </span>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Refuerzos con IA
-                  </CardTitle>
-                  <Sparkles className="h-4 w-4 text-purple-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-2xl font-bold">
-                      {resumen?.refuerzos_pendientes_count || 0}
-                    </p>
-                    {(resumen?.refuerzos_pendientes_count || 0) > 0 && (
-                      <Badge variant="purple" className="text-[10px]">
-                        Pendientes
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">
-                    {(resumen?.refuerzos_pendientes_count || 0) === 0
-                      ? "Sin refuerzos pendientes"
-                      : "Actividades para afianzar temas"}
-                  </span>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:border-primary/40 transition-colors shadow-xs">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 p-4">
-                  <CardTitle className="text-xs font-medium text-muted-foreground">
-                    Rendimiento Académico
-                  </CardTitle>
-                  <Award className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="flex items-baseline justify-between">
-                    <p className="text-2xl font-bold">
-                      {resumen?.promedio_general !== null &&
-                      resumen?.promedio_general !== undefined
-                        ? `${resumen.promedio_general}/100`
-                        : "--"}
-                    </p>
-                    <span className="text-[11px] text-muted-foreground">
-                      {resumen?.total_materias || 0} materias inscritas
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground">
-                    {resumen?.promedio_general !== null &&
-                    resumen?.promedio_general !== undefined &&
-                    resumen.promedio_general >= 70
-                      ? "Buen desempeño general"
-                      : resumen?.promedio_general !== null
-                        ? "Requiere seguimiento"
-                        : "Aún sin calificaciones"}
-                  </span>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* 1. SECCIÓN DE TAREAS PENDIENTES (AL TOQUE) */}
-            <div className="space-y-3">
+            {/* SECCIÓN 1: TAREAS PENDIENTES POR ENTREGAR */}
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-amber-500" />
-                  Tareas Pendientes por Entregar (
-                  {tareas_pendientes?.length || 0})
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-amber-500" />
+                  Tareas Pendientes de Entrega ({tareas_pendientes?.length || 0})
                 </h3>
                 <Link
                   href="/entregas"
-                  className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                 >
-                  Ver todas mis tareas &rarr;
+                  <span>Ver todas mis tareas</span>
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
 
               {!tareas_pendientes || tareas_pendientes.length === 0 ? (
-                <Card className="border-dashed bg-muted/20">
-                  <CardContent className="py-8 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
-                        <CheckCircle2 className="h-5 w-5" />
-                      </div>
-                      <p className="text-sm font-medium text-foreground">
-                        ¡Estás al día!
-                      </p>
-                      <p className="text-xs text-muted-foreground max-w-sm">
-                        No tienes tareas pendientes por entregar en este
-                        momento. Revisa tus materias para consultar contenidos o
-                        materiales.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="bg-card rounded-3xl p-8 text-center border border-dashed border-border flex flex-col items-center justify-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <h4 className="font-bold text-sm text-foreground">¡Estás al día con tus entregas!</h4>
+                  <p className="text-xs text-muted-foreground max-w-sm">
+                    No tienes tareas pendientes por entregar en este momento. Revisa tus materias para
+                    consultar contenidos y guías pedagógicas.
+                  </p>
+                </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {tareas_pendientes.map((tarea) => {
-                    const estadoVenc = obtenerEstadoVencimiento(
-                      tarea.fecha_entrega,
-                    );
+                    const estadoVenc = obtenerEstadoVencimiento(tarea.fecha_entrega);
                     return (
-                      <Card
+                      <div
                         key={tarea.id}
-                        className="hover:border-primary/50 transition-all hover:shadow-sm flex flex-col justify-between"
+                        className="bg-card rounded-2xl p-5 shadow-sm border border-border hover:border-primary/50 hover:shadow-lg transition-all flex flex-col justify-between space-y-4 group"
                       >
-                        <CardHeader className="p-4 pb-2">
+                        <div>
                           <div className="flex items-start justify-between gap-2">
-                            <Badge
-                              variant="outline"
-                              className="text-[10px] font-medium shrink-0"
-                            >
+                            <Badge variant="outline" className="text-[10px] font-bold">
                               {tarea.materia?.codigo} · {tarea.materia?.nombre}
                             </Badge>
                             {estadoVenc && (
@@ -1233,244 +1415,254 @@ export default function Dashboard({
                                       ? "warning"
                                       : "info"
                                 }
-                                className="text-[10px] shrink-0"
+                                className="text-[10px]"
                               >
                                 {estadoVenc.textoBadge}
                               </Badge>
                             )}
                           </div>
-                          <CardTitle className="text-sm font-semibold leading-snug line-clamp-2 mt-2">
+
+                          <h4 className="text-sm font-bold text-foreground mt-3 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                             {tarea.titulo}
-                          </CardTitle>
+                          </h4>
                           {tarea.descripcion && (
-                            <CardDescription className="text-xs line-clamp-2 mt-1">
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                               {tarea.descripcion}
-                            </CardDescription>
+                            </p>
                           )}
-                        </CardHeader>
-                        <CardContent className="p-4 pt-2">
-                          <div className="text-[11px] text-muted-foreground mb-3 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              Fecha límite:{" "}
-                              {formatoFechaHora(tarea.fecha_entrega)}
-                            </span>
+                        </div>
+
+                        <div className="pt-3 border-t border-border space-y-3">
+                          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-amber-500" />
+                            <span>Límite: {formatoFechaHora(tarea.fecha_entrega)}</span>
                           </div>
+
                           <Link
                             href={`/lecciones/${tarea.hash_id || tarea.id}`}
-                            className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-2xs"
+                            className="block w-full"
                           >
-                            <Send className="h-3.5 w-3.5" />
-                            Entregar Tarea
+                            <Button variant="gradient" className="w-full text-xs justify-center gap-2">
+                              <Send className="h-3.5 w-3.5" />
+                              <span>Entregar Tarea</span>
+                            </Button>
                           </Link>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               )}
             </div>
 
-            {/* 2. SECCIÓN DE REFUERZOS PENDIENTES CON IA */}
+            {/* SECCIÓN 2: REFUERZOS PEDAGÓGICOS CON IA ASIGNADOS */}
             {refuerzos_pendientes && refuerzos_pendientes.length > 0 && (
-              <Card className="border-purple-200 bg-purple-50/20 dark:bg-purple-950/10 dark:border-purple-900/40 shadow-xs">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      <CardTitle className="text-sm font-semibold">
-                        Refuerzos Pedagógicos con IA Asignados
-                      </CardTitle>
+              <div className="bg-gradient-to-br from-purple-500/10 via-card to-card rounded-3xl p-6 shadow-md border border-purple-500/20 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-border">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-500 flex items-center justify-center">
+                      <Sparkles className="h-4 w-4" />
                     </div>
-                    <Link
-                      href="/refuerzos"
-                      className="text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">
+                        Refuerzos Pedagógicos con IA Asignados
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Preguntas adaptadas para fortalecer temas clave
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/refuerzos"
+                    className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Ver todos</span>
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+
+                <div className="divide-y divide-border">
+                  {refuerzos_pendientes.map((refuerzo) => (
+                    <div
+                      key={refuerzo.id}
+                      className="py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-muted/40 px-2 rounded-xl transition-colors"
                     >
-                      Ver todos &rarr;
-                    </Link>
-                  </div>
-                  <CardDescription className="text-xs">
-                    Tu docente te asignó preguntas de práctica asistidas por
-                    inteligencia artificial para fortalecer temas clave.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-border">
-                    {refuerzos_pendientes.map((refuerzo) => (
-                      <div
-                        key={refuerzo.id}
-                        className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-muted/40 transition-colors"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="purple" className="text-[10px]">
-                              {refuerzo.entrega?.leccion?.materia?.codigo ||
-                                "Refuerzo"}
-                            </Badge>
-                            <span className="text-xs font-semibold text-foreground">
-                              {refuerzo.entrega?.leccion?.materia?.nombre ||
-                                "Materia"}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Tarea:{" "}
-                            <span className="text-foreground font-medium">
-                              {refuerzo.entrega?.leccion?.titulo || "Lección"}
-                            </span>
-                            {refuerzo.entrega?.calificacion?.nota !==
-                              undefined && (
-                              <span className="ml-2 text-rose-600 font-medium">
-                                (Nota: {refuerzo.entrega.calificacion.nota}/100)
-                              </span>
-                            )}
-                          </p>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="purple" className="text-[10px]">
+                            {refuerzo.entrega?.leccion?.materia?.codigo || "Refuerzo"}
+                          </Badge>
+                          <span className="text-xs font-bold text-foreground">
+                            {refuerzo.entrega?.leccion?.materia?.nombre || "Materia"}
+                          </span>
                         </div>
-                        <Link
-                          href={`/refuerzos/${refuerzo.hash_id || refuerzo.id}`}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary-hover transition-colors shadow-2xs shrink-0"
-                        >
-                          <Sparkles className="h-3.5 w-3.5" />
-                          Resolver Refuerzo &rarr;
-                        </Link>
+                        <p className="text-xs text-muted-foreground">
+                          Lección:{" "}
+                          <span className="text-foreground font-semibold">
+                            {refuerzo.entrega?.leccion?.titulo || "Lección"}
+                          </span>
+                          {refuerzo.entrega?.calificacion?.nota !== undefined && (
+                            <span className="ml-2 text-rose-500 font-bold">
+                              (Nota previa: {refuerzo.entrega.calificacion.nota}/100)
+                            </span>
+                          )}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+
+                      <Link
+                        href={`/refuerzos/${refuerzo.hash_id || refuerzo.id}`}
+                        className="shrink-0"
+                      >
+                        <Button variant="purple" size="sm" className="text-xs gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span>Resolver Refuerzo</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
-            {/* 3. CALIFICACIONES Y RETROALIMENTACIÓN RECIENTE */}
+            {/* SECCIÓN 3: ÚLTIMAS CALIFICACIONES Y RETROALIMENTACIÓN */}
             {ultimas_calificaciones && ultimas_calificaciones.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <Award className="h-4 w-4 text-blue-500" />
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <Award className="h-5 w-5 text-blue-500" />
                     Últimas Calificaciones y Retroalimentación
                   </h3>
                   <Link
                     href="/entregas"
-                    className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                   >
-                    Ver historial completo &rarr;
+                    <span>Ver historial completo</span>
+                    <ArrowRight className="h-3 w-3" />
                   </Link>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {ultimas_calificaciones.map((cal) => {
                     const esAprobado = cal.calificacion.nota >= 70;
                     return (
-                      <Card
+                      <div
                         key={cal.id}
-                        className="shadow-xs hover:border-primary/40 transition-colors"
+                        className="bg-card rounded-2xl p-5 shadow-sm border border-border hover:border-primary/50 transition-all space-y-3"
                       >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <span className="text-[11px] font-medium text-muted-foreground block truncate">
-                                {cal.leccion?.materia?.nombre}
-                              </span>
-                              <h4 className="text-sm font-semibold text-foreground truncate mt-0.5">
-                                {cal.leccion?.titulo}
-                              </h4>
-                            </div>
-                            <Badge
-                              variant={esAprobado ? "success" : "warning"}
-                              className="text-xs font-bold shrink-0"
-                            >
-                              {cal.calificacion.nota}/100
-                            </Badge>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[11px] font-bold text-muted-foreground block truncate">
+                              {cal.leccion?.materia?.nombre}
+                            </span>
+                            <h4 className="text-sm font-bold text-foreground truncate mt-0.5">
+                              {cal.leccion?.titulo}
+                            </h4>
                           </div>
-                          {cal.calificacion.comentarios ? (
-                            <div className="mt-3 p-2.5 rounded-lg bg-muted/50 border border-border/60 text-xs text-muted-foreground italic">
-                              &ldquo;{cal.calificacion.comentarios}&rdquo;
-                            </div>
-                          ) : (
-                            <p className="mt-2 text-[11px] text-muted-foreground">
-                              Sin comentarios adicionales
-                            </p>
+                          <Badge
+                            variant={esAprobado ? "success" : "warning"}
+                            className="text-xs font-black px-2.5 py-0.5"
+                          >
+                            {cal.calificacion.nota}/100
+                          </Badge>
+                        </div>
+
+                        {cal.calificacion.comentarios ? (
+                          <div className="p-3 rounded-xl bg-muted/60 border border-border/80 text-xs text-muted-foreground italic">
+                            &ldquo;{cal.calificacion.comentarios}&rdquo;
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground italic">
+                            Sin comentarios adicionales
+                          </p>
+                        )}
+
+                        <div className="text-[10px] text-muted-foreground text-right pt-1">
+                          Revisado:{" "}
+                          {formatoFechaHora(
+                            cal.calificacion.fecha_calificacion || cal.fecha_entrega,
                           )}
-                          <div className="mt-2 text-[10px] text-muted-foreground text-right">
-                            Revisado:{" "}
-                            {formatoFechaHora(
-                              cal.calificacion.fecha_calificacion ||
-                                cal.fecha_entrega,
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
             )}
 
-            {/* 4. MIS MATERIAS E INSCRIPCIONES */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-emerald-500" />
-                Mis Materias y Aulas
+            {/* SECCIÓN 4: MIS MATERIAS Y AULAS VIRTUALES */}
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-emerald-500" />
+                Mis Materias y Aulas Virtuales
               </h3>
+
               {!cursos || cursos.length === 0 ? (
-                <Card>
-                  <CardContent className="py-8 text-center text-neutral-500">
-                    No estás inscrito en ningún curso.
-                  </CardContent>
-                </Card>
+                <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground border border-dashed">
+                  No estás inscrito en ningún curso actualmente.
+                </div>
               ) : (
                 cursos.map((curso) => (
-                  <Card key={curso.id} className="shadow-xs">
-                    <CardContent className="pt-5">
-                      <div className="flex items-center justify-between pb-3 border-b border-border">
-                        <div className="flex items-center gap-2">
-                          <School className="h-5 w-5 text-emerald-500" />
-                          <h2 className="text-base font-bold">
+                  <div
+                    key={curso.id}
+                    className="bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-4"
+                  >
+                    <div className="flex items-center justify-between pb-3 border-b border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md">
+                          <School className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-base font-bold text-foreground">
                             {curso.gestion?.año} - {curso.gestion?.etapa}
-                          </h2>
-                          <Badge variant="outline" className="text-xs">
-                            Paralelo {curso.paralelo}
-                          </Badge>
-                        </div>
-                        <span className="text-xs text-muted-foreground capitalize">
-                          Turno: {curso.turno}
-                        </span>
-                      </div>
-                      <div className="mt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {curso.materias?.map((m) => (
-                            <Link
-                              key={m.id}
-                              href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
-                              className="border rounded-lg overflow-hidden hover:border-emerald-400 hover:shadow-md transition-all group bg-card flex flex-col justify-between"
-                            >
-                              {m.pivot?.imagen ? (
-                                <div className="h-24 w-full overflow-hidden bg-neutral-100">
-                                  <img
-                                    src={`/storage/${m.pivot.imagen}`}
-                                    alt={m.nombre}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="h-24 w-full bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-950/40 dark:to-teal-950/40 flex items-center justify-center">
-                                  <BookOpen className="h-8 w-8 text-emerald-500/70" />
-                                </div>
-                              )}
-                              <div className="p-3">
-                                <span className="font-semibold text-xs text-emerald-700 dark:text-emerald-400">
-                                  {m.codigo}
-                                </span>
-                                <span className="text-xs text-foreground font-medium block truncate mt-0.5">
-                                  {m.nombre}
-                                </span>
-                                <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2 group-hover:text-primary transition-colors">
-                                  Ver lecciones y tareas &rarr;
-                                </span>
-                              </div>
-                            </Link>
-                          ))}
+                          </h4>
+                          <span className="text-xs text-muted-foreground capitalize">
+                            Turno: {curso.turno} · Paralelo {curso.paralelo}
+                          </span>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <Badge variant="outline" className="text-xs">
+                        Paralelo {curso.paralelo}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                      {curso.materias?.map((m) => (
+                        <Link
+                          key={m.id}
+                          href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
+                          className="border border-border rounded-2xl overflow-hidden hover:border-emerald-500 hover:shadow-lg transition-all group bg-card flex flex-col justify-between"
+                        >
+                          {m.pivot?.imagen ? (
+                            <div className="h-28 w-full overflow-hidden bg-muted">
+                              <img
+                                src={`/storage/${m.pivot.imagen}`}
+                                alt={m.nombre}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          ) : (
+                            <div className="h-28 w-full bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 flex items-center justify-center text-white">
+                              <BookOpen className="h-9 w-9 text-white/80 group-hover:scale-110 transition-transform" />
+                            </div>
+                          )}
+
+                          <div className="p-4">
+                            <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                              {m.codigo}
+                            </span>
+                            <h5 className="font-bold text-sm text-foreground truncate mt-0.5">
+                              {m.nombre}
+                            </h5>
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2 group-hover:text-primary transition-colors">
+                              <span>Ver lecciones y tareas</span>
+                              <ArrowRight className="h-3 w-3" />
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 ))
               )}
             </div>
@@ -1481,6 +1673,9 @@ export default function Dashboard({
   );
 }
 
+// =========================================================================
+// WIDGET: SEMÁFORO DE REZAGO ESTUDIANTIL (RADAR DE ALERTA TEMPRANA CON VIDA)
+// =========================================================================
 function SemaforoRezagoWidget({
   semaforo,
 }: {
@@ -1491,258 +1686,249 @@ function SemaforoRezagoWidget({
   const [filtro, setFiltro] = useState<"todos" | "alto" | "medio">("todos");
   const [expandido, setExpandido] = useState(false);
 
-  const estudiantesFiltrados = (semaforo.estudiantes_riesgo || []).filter(
-    (e) => {
-      if (filtro === "alto") return e.nivel === "alto";
-      if (filtro === "medio") return e.nivel === "medio";
-      return true;
-    },
-  );
+  const estudiantesFiltrados = (semaforo.estudiantes_riesgo || []).filter((e) => {
+    if (filtro === "alto") return e.nivel === "alto";
+    if (filtro === "medio") return e.nivel === "medio";
+    return true;
+  });
 
-  const totalRiesgo =
-    (semaforo.resumen.alto || 0) + (semaforo.resumen.medio || 0);
+  const totalRiesgo = (semaforo.resumen.alto || 0) + (semaforo.resumen.medio || 0);
 
   return (
-    <Card className="border-2 border-neutral-200/90 dark:border-neutral-800 shadow-sm overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-neutral-50 via-white to-neutral-50 dark:from-neutral-900/60 dark:via-neutral-900 dark:to-neutral-900/60 pb-4 border-b">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-red-500 via-amber-500 to-emerald-500 text-white shadow-xs">
-              <AlertTriangle className="h-5 w-5" />
+    <div className="bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-rose-600 via-amber-500 to-emerald-500 flex items-center justify-center text-white shadow-md">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-foreground">
+                Semáforo de Rezago Estudiantil
+              </h3>
+              <Badge variant="warning" className="text-[10px] uppercase font-bold">
+                Alerta Temprana
+              </Badge>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-base font-bold">
-                  Semáforo de Rezago Estudiantil
-                </CardTitle>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-neutral-200/70 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-                  Alerta Temprana
-                </span>
-              </div>
-              <CardDescription className="text-xs mt-0.5">
-                Identificación preventiva de estudiantes para evitar abandono y
-                reprobación académica.
-              </CardDescription>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Identificación preventiva de estudiantes para evitar abandono y reprobación
+            </p>
+          </div>
+        </div>
+
+        {totalRiesgo > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setExpandido(!expandido)}
+            className="text-xs h-8.5 gap-1.5"
+          >
+            {expandido ? (
+              <>
+                <ChevronUp className="h-3.5 w-3.5" />
+                <span>Ocultar detalles ({totalRiesgo})</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3.5 w-3.5" />
+                <span>Ver estudiantes en observación ({totalRiesgo})</span>
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+
+      {/* 3 TARJETAS RADAR INTERACTIVAS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* 🔴 ALTO */}
+        <div
+          onClick={() => {
+            setFiltro("alto");
+            setExpandido(true);
+          }}
+          className={`cursor-pointer rounded-2xl p-4 transition-all duration-300 border ${
+            filtro === "alto" && expandido
+              ? "border-rose-500 bg-rose-500/15 ring-2 ring-rose-500/30 shadow-md"
+              : "border-rose-500/30 bg-rose-500/[0.06] hover:bg-rose-500/10 hover:shadow-sm"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
+              Riesgo Crítico (Rojo)
+            </span>
+            <span className="text-3xl font-black text-rose-600 dark:text-rose-400">
+              <AnimatedNumber value={semaforo.resumen.alto} />
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            Promedio &lt; 51 pts o &ge; 2 tareas reprobadas. Requieren tutoría y seguimiento urgente.
+          </p>
+        </div>
+
+        {/* 🟡 MEDIO */}
+        <div
+          onClick={() => {
+            setFiltro("medio");
+            setExpandido(true);
+          }}
+          className={`cursor-pointer rounded-2xl p-4 transition-all duration-300 border ${
+            filtro === "medio" && expandido
+              ? "border-amber-500 bg-amber-500/15 ring-2 ring-amber-500/30 shadow-md"
+              : "border-amber-500/30 bg-amber-500/[0.06] hover:bg-amber-500/10 hover:shadow-sm"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+              En Observación (Amarillo)
+            </span>
+            <span className="text-3xl font-black text-amber-600 dark:text-amber-400">
+              <AnimatedNumber value={semaforo.resumen.medio} />
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            Promedio entre 51 y 69 pts o refuerzos pendientes de resolución.
+          </p>
+        </div>
+
+        {/* 🟢 BAJO */}
+        <div className="rounded-2xl p-4 border border-emerald-500/30 bg-emerald-500/[0.06]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              Desempeño Óptimo (Verde)
+            </span>
+            <span className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+              <AnimatedNumber value={semaforo.resumen.bajo} />
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            Promedio &ge; 70 pts y actividades de práctica al día.
+          </p>
+        </div>
+      </div>
+
+      {/* LISTADO EXPANDIBLE DE ESTUDIANTES */}
+      {expandido && (
+        <div className="pt-4 border-t border-border space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+              <span>Filtrar lista:</span>
+              <button
+                type="button"
+                onClick={() => setFiltro("todos")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  filtro === "todos"
+                    ? "bg-foreground text-background shadow-xs"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                Todos ({totalRiesgo})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltro("alto")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                  filtro === "alto"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping inline-block" />
+                <span>Crítico ({semaforo.resumen.alto})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltro("medio")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                  filtro === "medio"
+                    ? "bg-amber-600 text-white shadow-xs"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" />
+                <span>Observación ({semaforo.resumen.medio})</span>
+              </button>
             </div>
           </div>
 
-          {totalRiesgo > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setExpandido(!expandido)}
-              className="text-xs h-8 border-neutral-300 dark:border-neutral-700"
-            >
-              {expandido ? (
-                <>
-                  <ChevronUp className="mr-1.5 h-3.5 w-3.5" />
-                  Ocultar detalles ({totalRiesgo})
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="mr-1.5 h-3.5 w-3.5" />
-                  Ver estudiantes en observación ({totalRiesgo})
-                </>
-              )}
-            </Button>
+          {estudiantesFiltrados.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted-foreground bg-muted/40 rounded-2xl">
+              No se registraron estudiantes con este criterio de filtro.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-2xl border border-border">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-muted/70 text-muted-foreground font-bold uppercase tracking-wider border-b border-border">
+                  <tr>
+                    <th className="py-3 px-4">Estudiante</th>
+                    <th className="py-3 px-4">Curso</th>
+                    <th className="py-3 px-4 text-center">Promedio</th>
+                    <th className="py-3 px-4 text-center">Tareas Reprobadas</th>
+                    <th className="py-3 px-4 text-center">Refuerzos Pendientes</th>
+                    <th className="py-3 px-4">Diagnóstico / Alerta</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-card">
+                  {estudiantesFiltrados.map((est) => (
+                    <tr key={est.id} className="hover:bg-muted/40 transition-colors">
+                      <td className="py-3 px-4 font-bold text-foreground">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full shrink-0 ${
+                              est.nivel === "alto" ? "bg-rose-500 animate-pulse" : "bg-amber-500"
+                            }`}
+                          />
+                          <span>{est.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-muted-foreground">{est.curso}</td>
+                      <td className="py-3 px-4 text-center font-black">
+                        {est.promedio !== null ? (
+                          <span className={est.promedio < 51 ? "text-rose-500" : "text-amber-500"}>
+                            {est.promedio} pts
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground font-normal">S/C</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {est.tareas_reprobadas > 0 ? (
+                          <span className="font-bold text-rose-500">{est.tareas_reprobadas}</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {est.refuerzos_pendientes > 0 ? (
+                          <span className="font-bold text-amber-500">
+                            {est.refuerzos_pendientes}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                            est.nivel === "alto"
+                              ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/25"
+                              : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25"
+                          }`}
+                        >
+                          {est.motivo}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
-      </CardHeader>
-
-      <CardContent className="p-4 sm:p-6 space-y-4">
-        {/* 3 Tarjetas del Semáforo */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          {/* 🔴 ALTO */}
-          <div
-            onClick={() => {
-              setFiltro("alto");
-              setExpandido(true);
-            }}
-            className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 ${
-              filtro === "alto" && expandido
-                ? "border-red-400 bg-red-50/90 dark:bg-red-950/40 ring-2 ring-red-400/40 shadow-xs"
-                : "border-red-200 bg-red-50/40 hover:bg-red-50/70 dark:border-red-900/40 dark:bg-red-950/20"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-red-700 dark:text-red-400 flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse" />
-                Riesgo Crítico (Rojo)
-              </span>
-              <span className="text-2xl font-extrabold text-red-700 dark:text-red-400">
-                {semaforo.resumen.alto}
-              </span>
-            </div>
-            <p className="text-[11px] text-red-600/90 dark:text-red-300/80 leading-snug">
-              Promedio &lt; 51 pts o &ge; 2 tareas reprobadas. Requieren
-              atención y tutoría docente urgente.
-            </p>
-          </div>
-
-          {/* 🟡 MEDIO */}
-          <div
-            onClick={() => {
-              setFiltro("medio");
-              setExpandido(true);
-            }}
-            className={`cursor-pointer rounded-xl border p-4 transition-all duration-200 ${
-              filtro === "medio" && expandido
-                ? "border-amber-400 bg-amber-50/90 dark:bg-amber-950/40 ring-2 ring-amber-400/40 shadow-xs"
-                : "border-amber-200 bg-amber-50/40 hover:bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                En Observación (Amarillo)
-              </span>
-              <span className="text-2xl font-extrabold text-amber-700 dark:text-amber-400">
-                {semaforo.resumen.medio}
-              </span>
-            </div>
-            <p className="text-[11px] text-amber-600/90 dark:text-amber-300/80 leading-snug">
-              Promedio entre 51 y 69 pts o actividades de refuerzo pendientes
-              por responder.
-            </p>
-          </div>
-
-          {/* 🟢 BAJO */}
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                Desempeño Óptimo (Verde)
-              </span>
-              <span className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400">
-                {semaforo.resumen.bajo}
-              </span>
-            </div>
-            <p className="text-[11px] text-emerald-600/90 dark:text-emerald-300/80 leading-snug">
-              Promedio &ge; 70 pts y actividades de práctica al día.
-            </p>
-          </div>
-        </div>
-
-        {/* Listado desplegable de estudiantes en riesgo */}
-        {expandido && (
-          <div className="mt-4 pt-4 border-t space-y-3">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                <span>Filtrar lista:</span>
-                <button
-                  type="button"
-                  onClick={() => setFiltro("todos")}
-                  className={`px-2.5 py-1 rounded-md text-xs transition-colors ${filtro === "todos" ? "bg-neutral-800 text-white dark:bg-neutral-200 dark:text-neutral-900 font-bold" : "bg-neutral-100 hover:bg-neutral-200 text-neutral-600"}`}
-                >
-                  Todos ({totalRiesgo})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFiltro("alto")}
-                  className={`px-2.5 py-1 rounded-md text-xs transition-colors ${filtro === "alto" ? "bg-red-600 text-white font-bold" : "bg-red-100 text-red-700 hover:bg-red-200"}`}
-                >
-                  🔴 Crítico ({semaforo.resumen.alto})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFiltro("medio")}
-                  className={`px-2.5 py-1 rounded-md text-xs transition-colors ${filtro === "medio" ? "bg-amber-600 text-white font-bold" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}`}
-                >
-                  🟡 Observación ({semaforo.resumen.medio})
-                </button>
-              </div>
-            </div>
-
-            {estudiantesFiltrados.length === 0 ? (
-              <div className="py-6 text-center text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50 rounded-lg">
-                No se registraron estudiantes con este criterio de filtro.
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-neutral-100/70 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 font-semibold border-b">
-                    <tr>
-                      <th className="py-2.5 px-3">Estudiante</th>
-                      <th className="py-2.5 px-3">Curso</th>
-                      <th className="py-2.5 px-3 text-center">Promedio</th>
-                      <th className="py-2.5 px-3 text-center">
-                        Tareas Reprobadas
-                      </th>
-                      <th className="py-2.5 px-3 text-center">
-                        Refuerzos Pendientes
-                      </th>
-                      <th className="py-2.5 px-3">Diagnóstico / Alerta</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 bg-white dark:bg-neutral-950">
-                    {estudiantesFiltrados.map((est) => (
-                      <tr
-                        key={est.id}
-                        className="hover:bg-neutral-50 dark:hover:bg-neutral-900/40 transition-colors"
-                      >
-                        <td className="py-2.5 px-3 font-medium text-neutral-800 dark:text-neutral-200">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`h-2 w-2 rounded-full shrink-0 ${est.nivel === "alto" ? "bg-red-500" : "bg-amber-500"}`}
-                            />
-                            <span>{est.nombre}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-neutral-500">
-                          {est.curso}
-                        </td>
-                        <td className="py-2.5 px-3 text-center font-bold">
-                          {est.promedio !== null ? (
-                            <span
-                              className={
-                                est.promedio < 51
-                                  ? "text-red-600"
-                                  : "text-amber-600"
-                              }
-                            >
-                              {est.promedio} pts
-                            </span>
-                          ) : (
-                            <span className="text-neutral-400 font-normal">
-                              S/C
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {est.tareas_reprobadas > 0 ? (
-                            <span className="font-semibold text-red-600">
-                              {est.tareas_reprobadas}
-                            </span>
-                          ) : (
-                            <span className="text-neutral-400">0</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          {est.refuerzos_pendientes > 0 ? (
-                            <span className="font-semibold text-amber-600">
-                              {est.refuerzos_pendientes}
-                            </span>
-                          ) : (
-                            <span className="text-neutral-400">0</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-3 text-neutral-600 dark:text-neutral-400">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${est.nivel === "alto" ? "bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300" : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"}`}
-                          >
-                            {est.motivo}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

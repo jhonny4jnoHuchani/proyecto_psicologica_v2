@@ -342,7 +342,7 @@ class EstudianteSeeder extends Seeder
             $userData = $estudiante['user'];
 
             // Si el CI contiene expedido (ej. '8377246 LP'), separarlo para la columna expedido
-            if (!empty($userData['ci']) && str_contains($userData['ci'], ' ')) {
+            if (! empty($userData['ci']) && str_contains($userData['ci'], ' ')) {
                 $partes = explode(' ', $userData['ci'], 2);
                 $userData['ci'] = trim($partes[0]);
                 $userData['expedido'] = trim($partes[1]);

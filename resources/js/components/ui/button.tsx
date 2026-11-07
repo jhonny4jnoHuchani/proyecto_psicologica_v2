@@ -10,15 +10,27 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs",
+          "bg-primary text-primary-foreground hover:bg-primary-hover shadow-xs active:scale-[0.98] transition-all",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-[0.98] transition-all",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background/80 backdrop-blur-xs hover:bg-accent hover:text-accent-foreground active:scale-[0.98] transition-all",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-secondary-hover active:scale-[0.98] transition-all",
+        ghost: "hover:bg-accent hover:text-accent-foreground active:scale-[0.98] transition-all",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient:
+          "bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 text-white font-semibold shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200",
+        glow:
+          "relative bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/35 hover:shadow-primary/50 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200",
+        emerald:
+          "bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200",
+        cyan:
+          "bg-gradient-to-r from-cyan-600 to-blue-500 text-white font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200",
+        purple:
+          "bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-500 text-white font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200",
+        glass:
+          "bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 text-foreground hover:bg-white/20 dark:hover:bg-white/10 shadow-sm active:scale-[0.98] transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",

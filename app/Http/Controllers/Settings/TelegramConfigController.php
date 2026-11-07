@@ -191,7 +191,7 @@ class TelegramConfigController extends Controller
             return back()->with('error', 'Debes configurar o ingresar el Chat ID del responsable para enviar el mensaje de prueba.');
         }
 
-        $texto = "🔔 *Mensaje de Prueba - ".config('app.name')."*\n\n".
+        $texto = '🔔 *Mensaje de Prueba - '.config('app.name')."*\n\n".
                  "¡Conexión exitosa! La integración de Telegram con la plataforma web está funcionando correctamente.\n\n".
                  '📅 *Fecha y Hora:* '.now()->format('d/m/Y H:i:s')."\n".
                  '🌐 *URL Webhook:* '.rtrim(config('app.url'), '/').'/telegram/webhook';

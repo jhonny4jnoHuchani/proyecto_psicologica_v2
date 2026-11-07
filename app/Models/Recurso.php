@@ -50,4 +50,3 @@ class Recurso extends Model
         return $this->belongsTo(Docente::class);
     }
 }
-

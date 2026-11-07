@@ -124,4 +124,3 @@ class PdfTextExtractor
         return $texto;
     }
 }
-

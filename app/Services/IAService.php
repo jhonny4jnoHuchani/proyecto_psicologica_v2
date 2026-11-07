@@ -65,10 +65,7 @@ class IAService
                     'temperature' => 0.7,
                     'response_format' => ['type' => 'json_object'],
                 ]);
-        } 
-        
-        
-        catch (\Exception $httpException) {
+        } catch (\Exception $httpException) {
             Log::error("Fallo de conexión HTTP con el servicio de IA para la entrega #{$entrega->id}: ".$httpException->getMessage(), [
                 'exception' => $httpException,
             ]);
@@ -519,7 +516,7 @@ class IAService
             return $this->generarFallbackResumenTema($textoLimpio, $materiaNombre);
         }
 
-        $systemPrompt = "Eres un pedagogo universitario y docente experto en Psicología. Tu objetivo es estructurar temas académicos claros y atractivos para el plan de estudios, extrayendo los conceptos fundamentales del material provisto.";
+        $systemPrompt = 'Eres un pedagogo universitario y docente experto en Psicología. Tu objetivo es estructurar temas académicos claros y atractivos para el plan de estudios, extrayendo los conceptos fundamentales del material provisto.';
 
         $userPrompt = "Analiza el siguiente material correspondiente a la materia '{$materiaNombre}'.\n\n"
             ."Genera un objeto JSON con exactamente estas 3 propiedades:\n"
@@ -536,7 +533,7 @@ class IAService
             ."  \"nombre\": \"...\",\n"
             ."  \"paginas_libro\": \"...\",\n"
             ."  \"resumen\": \"...\"\n"
-            ."}";
+            .'}';
 
         try {
             $response = Http::withToken($this->apiKey)

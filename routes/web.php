@@ -207,7 +207,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Calificaciones
     Route::middleware(['role:docente|admin'])->group(function () {
-        //guada la calificacion 
+        // guada la calificacion
         Route::post('/calificaciones', [CalificacionController::class, 'store'])->name('calificaciones.store');
         Route::post('/calificaciones/sugerir-retroalimentacion', [CalificacionController::class, 'sugerirRetroalimentacion'])->name('calificaciones.sugerir-retroalimentacion');
     });
