@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image as ImageIcon, Sparkles, Play, Pause } from "lucide-react";
+import { Image as ImageIcon, Play, Pause } from "lucide-react";
 
 export interface BannerFondoItem {
   id: string;
@@ -60,11 +60,11 @@ export const BANNER_FONDO_CONFIG: {
 /**
  * BannerFondoWallpaper
  *
- * Fondo panorámico con efecto "Ventana corrediza" (Ken Burns / Pan lento):
- * - Adapta automáticamente las imágenes según el modo Claro y Oscuro.
- * - Desliza suavemente la imagen hacia la izquierda/abajo para recorrer toda su longitud.
- * - Aplica una película translúcida institucional con los colores primario y secundario
- *   para garantizar perfecta legibilidad y contraste.
+ * Fondo panorámico exclusivo para el bloque del menú lateral (Sidebar):
+ * - Aplica el efecto "Ventana corrediza" (pan lento) recortado exclusivamente dentro del sidebar.
+ * - Respeta los modos Claro y Oscuro con sus respectivas imágenes institucionales.
+ * - Incluye una película de vidrio esmerilado (frosted glass) translúcida que garantiza
+ *   la perfecta legibilidad de los textos, botones e iconos del menú.
  */
 export function BannerFondoWallpaper() {
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -119,7 +119,7 @@ export function BannerFondoWallpaper() {
       attributeFilter: ["class"],
     });
 
-    // Escuchar evento personalizado de cambio de fondo
+    // Escuchar evento personalizado de cambio de fondo o toggle
     const handleToggle = () => {
       if (document.documentElement.classList.contains("dark")) {
         setActiveOscuroIdx((prev) => {
@@ -147,38 +147,17 @@ export function BannerFondoWallpaper() {
   const currentList = isDark ? BANNER_FONDO_CONFIG.oscuro : BANNER_FONDO_CONFIG.claro;
   const currentIdx = isDark ? activeOscuroIdx : activeClaroIdx;
   const currentItem = currentList[currentIdx] || currentList[0];
-
-  const toggleImage = () => {
-    if (isDark) {
-      const next = (activeOscuroIdx + 1) % BANNER_FONDO_CONFIG.oscuro.length;
-      setActiveOscuroIdx(next);
-      localStorage.setItem("banner_fondo_oscuro_idx", String(next));
-    } else {
-      const next = (activeClaroIdx + 1) % BANNER_FONDO_CONFIG.claro.length;
-      setActiveClaroIdx(next);
-      localStorage.setItem("banner_fondo_claro_idx", String(next));
-    }
-  };
-
-  const togglePan = () => {
-    const next = !panEnabled;
-    setPanEnabled(next);
-    localStorage.setItem("banner_fondo_pan_enabled", String(next));
-  };
-
   const isVertical = currentItem.panType === "vertical";
 
   return (
     <div
       aria-hidden="true"
-      className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0"
+      className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 rounded-2xl"
     >
-      {/* 1. CONTENEDOR DE LA IMAGEN CON DESLIZAMIENTO PANORÁMICO TIPO VENTANA */}
-      <div
-        className={`absolute inset-0 w-full h-full overflow-hidden transition-opacity duration-1000 ease-in-out`}
-      >
+      {/* 1. CONTENEDOR DE LA IMAGEN CON DESLIZAMIENTO PANORÁMICO EXCLUSIVO DEL SIDEBAR */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden transition-opacity duration-700 ease-in-out">
         <div
-          className={`absolute top-0 left-0 w-full h-full flex items-center justify-center ${
+          className={`absolute top-0 left-0 h-full flex items-center ${
             panEnabled
               ? isVertical
                 ? "animate-pan-window-v"
@@ -186,10 +165,8 @@ export function BannerFondoWallpaper() {
               : "scale-105"
           }`}
           style={{
-            width: isVertical ? "105vw" : "135vw",
-            height: isVertical ? "135vh" : "105vh",
-            minWidth: isVertical ? "100%" : "135%",
-            minHeight: isVertical ? "135%" : "100%",
+            width: isVertical ? "120%" : "180%",
+            height: isVertical ? "130%" : "100%",
             transformOrigin: "center center",
           }}
         >
@@ -197,99 +174,58 @@ export function BannerFondoWallpaper() {
             key={currentItem.url}
             src={currentItem.url}
             alt={currentItem.name}
-            className={`w-full h-full object-cover transition-opacity duration-1000 ${
-              isDark ? "opacity-85 brightness-90 contrast-110" : "opacity-85 brightness-100 contrast-105"
+            className={`w-full h-full object-cover object-center transition-opacity duration-700 ${
+              isDark
+                ? "opacity-95 brightness-95 contrast-110"
+                : "opacity-100 brightness-100 contrast-105"
             }`}
-            style={{
-              filter: isDark
-                ? "saturate(1.25) brightness(0.85)"
-                : "saturate(1.15) brightness(1.0)",
-            }}
           />
         </div>
       </div>
 
-      {/* 2. ELEMENTOS GEOMÉTRICOS FLOTANTES / CAYENDO EN SEGUNDO PLANO */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-1">
-        {/* Decorador 1: Arriba Izquierda */}
-        <img
-          src="/decoradores/circulo.png"
-          alt=""
-          className="absolute top-12 left-6 w-16 h-16 opacity-35 dark:opacity-25 animate-[floatGentle_10s_ease-in-out_infinite]"
-        />
-        {/* Decorador 2: Centro Derecha */}
-        <img
-          src="/decoradores/objeto.png"
-          alt=""
-          className="absolute top-1/3 right-10 w-14 h-14 opacity-30 dark:opacity-20 animate-[floatReverse_12s_ease-in-out_infinite]"
-        />
-        {/* Decorador 3: Abajo Izquierda */}
-        <img
-          src="/decoradores/decoradores2/objeto_puntueado.png"
-          alt=""
-          className="absolute bottom-24 left-16 w-20 h-20 opacity-35 dark:opacity-25 animate-[floatGentle_14s_ease-in-out_infinite]"
-        />
-        {/* Decorador 4: Centro Izquierda */}
-        <img
-          src="/decoradores/decoradores3/circulo_linea.png"
-          alt=""
-          className="absolute top-2/3 left-1/4 w-12 h-12 opacity-30 dark:opacity-20 animate-[floatReverse_9s_ease-in-out_infinite]"
-        />
-        {/* Decorador 5: Arriba Derecha */}
-        <img
-          src="/decoradores/redondo_punteuado5.png"
-          alt=""
-          className="absolute top-16 right-1/4 w-16 h-16 opacity-35 dark:opacity-25 animate-[floatGentle_11s_ease-in-out_infinite]"
-        />
-        {/* Decorador 6: Abajo Derecha */}
-        <img
-          src="/decoradores/cuadrado_punteado_rojo.png"
-          alt=""
-          className="absolute bottom-16 right-12 w-14 h-14 opacity-30 dark:opacity-20 animate-[floatReverse_13s_ease-in-out_infinite]"
-        />
-      </div>
-
-      {/* 3. PELÍCULA DE MATIZ Y GRADIENTE INSTITUCIONAL (Sutil para no tapar el fondo) */}
+      {/* 2. CAPA TRANSLÚCIDA ULTRA LIGERA: PERMITE VER LA IMAGEN NÍTIDA */}
       {isDark ? (
         <div
-          className="absolute inset-0 transition-colors duration-700 pointer-events-none z-2"
+          className="absolute inset-0 transition-colors duration-500 pointer-events-none z-1"
           style={{
             background:
-              "radial-gradient(ellipse at 20% 20%, rgba(var(--primary-rgb, 79, 70, 229), 0.18) 0%, transparent 60%), linear-gradient(to bottom, rgba(5, 7, 14, 0.35) 0%, rgba(10, 15, 26, 0.50) 100%)",
+              "linear-gradient(to bottom, rgba(10, 15, 26, 0.38) 0%, rgba(15, 23, 42, 0.22) 50%, rgba(10, 15, 26, 0.44) 100%), radial-gradient(circle at 10% 10%, var(--primary-light, rgba(79, 70, 229, 0.08)) 0%, transparent 60%)",
           }}
         />
       ) : (
         <div
-          className="absolute inset-0 transition-colors duration-700 pointer-events-none z-2"
+          className="absolute inset-0 transition-colors duration-500 pointer-events-none z-1"
           style={{
             background:
-              "radial-gradient(ellipse at 80% 10%, rgba(var(--secondary-rgb, 6, 182, 212), 0.14) 0%, transparent 60%), linear-gradient(to bottom, rgba(255, 255, 255, 0.20) 0%, rgba(248, 250, 252, 0.32) 100%)",
+              "linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.20) 100%), radial-gradient(circle at 10% 10%, var(--primary-light, rgba(79, 70, 229, 0.05)) 0%, transparent 60%)",
           }}
         />
       )}
-
-      {/* 3. BOTÓN FLOTANTE DISCRETO PARA CONTROLAR / CAMBIAR FONDO */}
-      <div className="pointer-events-auto fixed bottom-3 right-3 z-50 flex items-center gap-1.5 p-1 rounded-full bg-card/80 backdrop-blur-md border border-border/70 shadow-lg text-xs opacity-40 hover:opacity-100 transition-opacity">
-        <button
-          type="button"
-          onClick={toggleImage}
-          className="flex items-center gap-1 px-2.5 py-1 rounded-full hover:bg-muted text-[11px] font-semibold text-foreground transition-colors cursor-pointer"
-          title={`Fondo actual: ${currentItem.name}. Haz clic para alternar imagen.`}
-        >
-          <ImageIcon className="h-3.5 w-3.5 text-primary" />
-          <span>{currentItem.name.split(" ")[0]} ({currentIdx + 1}/{currentList.length})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={togglePan}
-          className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          title={panEnabled ? "Pausar movimiento de ventana" : "Activar movimiento de ventana"}
-        >
-          {panEnabled ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-        </button>
-      </div>
     </div>
   );
 }
 
+/**
+ * BannerFondoButton
+ *
+ * Botón compacto estilo cápsula de vidrio para alternar el fondo del sidebar
+ */
+export function BannerFondoButton({ className = "" }: { className?: string }) {
+  const triggerToggle = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("toggle-banner-fondo"));
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={triggerToggle}
+      className={`inline-flex items-center justify-center p-1.5 rounded-xl bg-white/70 hover:bg-white/95 dark:bg-slate-900/70 dark:hover:bg-slate-900/95 text-slate-700 dark:text-slate-200 border border-white/60 dark:border-white/15 shadow-xs transition-all active:scale-95 cursor-pointer ${className}`}
+      title="Alternar arte fotográfico del menú"
+      aria-label="Alternar imagen del fondo"
+    >
+      <ImageIcon className="h-4 w-4 text-primary" />
+    </button>
+  );
+}

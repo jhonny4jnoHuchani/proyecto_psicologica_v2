@@ -36,15 +36,43 @@ import {
   Bot,
 } from "lucide-react";
 import AppLogo from "./app-logo";
+import { BannerFondoWallpaper, BannerFondoButton } from "./banner-fondo-wallpaper";
 
 export function AppSidebar() {
-  const { auth } = usePage().props as {
-    auth?: { user?: { roles?: { name: string }[] } };
+  const { auth, rol } = usePage().props as {
+    auth?: {
+      user?: {
+        roles?: (string | { name: string })[];
+      };
+      roles?: string[];
+    };
+    rol?: string;
   };
-  const roles = auth?.user?.roles?.map((r) => r.name) || [];
-  const isAdmin = roles.includes("admin");
-  const isDocente = roles.includes("docente");
-  const isEstudiante = roles.includes("estudiante");
+
+  // Extraer roles de forma resiliente desde auth.roles, auth.user.roles o prop rol
+  const roleNames: string[] = [];
+
+  if (Array.isArray(auth?.roles)) {
+    roleNames.push(...auth.roles);
+  }
+
+  if (Array.isArray(auth?.user?.roles)) {
+    auth.user.roles.forEach((r) => {
+      if (typeof r === "string") {
+        roleNames.push(r);
+      } else if (r && typeof r === "object" && "name" in r && typeof r.name === "string") {
+        roleNames.push(r.name);
+      }
+    });
+  }
+
+  if (rol && typeof rol === "string" && !roleNames.includes(rol)) {
+    roleNames.push(rol);
+  }
+
+  const isAdmin = roleNames.includes("admin");
+  const isDocente = roleNames.includes("docente");
+  const isEstudiante = roleNames.includes("estudiante");
 
   // Agrupación para ADMIN
   const adminGroups = [
@@ -151,10 +179,17 @@ export function AppSidebar() {
     },
   ];
 
-  let activeGroups: typeof adminGroups = [];
-  if (isAdmin) activeGroups = adminGroups;
-  else if (isDocente) activeGroups = docenteGroups;
-  else if (isEstudiante) activeGroups = estudianteGroups;
+  let activeGroups = adminGroups;
+  if (isAdmin) {
+    activeGroups = adminGroups;
+  } else if (isDocente) {
+    activeGroups = docenteGroups;
+  } else if (isEstudiante) {
+    activeGroups = estudianteGroups;
+  } else {
+    // Respaldo de seguridad para usuarios autenticados: nunca dejar el sidebar vacío
+    activeGroups = estudianteGroups;
+  }
 
   const footerNavItems: NavItem[] = isAdmin
     ? [{ title: "Apariencia", url: "/settings/apariencia", icon: Palette }]
@@ -162,25 +197,29 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="inset">
-      <SidebarHeader>
+      {/* Fondo panorámico corredizo exclusivo del bloque del menú lateral */}
+      <BannerFondoWallpaper />
+
+      <SidebarHeader className="relative z-10">
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+          <SidebarMenuItem className="flex items-center justify-between gap-1 p-1 rounded-2xl bg-white/60 dark:bg-slate-900/60 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/40 dark:border-white/10 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 backdrop-blur-md transition-all duration-300">
+            <SidebarMenuButton size="lg" asChild className="hover:bg-transparent shadow-none border-none bg-transparent flex-1">
               <Link href="/dashboard" prefetch>
                 <AppLogo />
               </Link>
             </SidebarMenuButton>
+            <BannerFondoButton className="mr-1 group-data-[collapsible=icon]:hidden shrink-0" />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="relative z-10">
         {activeGroups.map((group, index) => (
           <NavMain key={index} label={group.label} items={group.items} />
         ))}
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="relative z-10">
         {footerNavItems.length > 0 && (
           <NavFooter items={footerNavItems} className="mt-auto" />
         )}

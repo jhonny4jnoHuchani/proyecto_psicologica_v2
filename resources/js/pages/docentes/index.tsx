@@ -304,35 +304,41 @@ export default function DocentesIndex({ docentes }: Props) {
                         {docente.especialidad || "-"}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="icon" asChild>
+                        <div className="flex justify-end gap-1.5">
+                          <Button variant="outline" size="sm" className="h-8 text-xs gap-1" asChild>
                             <a href={`/docentes/${docente.id}`}>
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Ver</span>
                             </a>
                           </Button>
-
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
+                            className="h-8 text-xs gap-1"
                             onClick={() => openEdit(docente)}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>Editar</span>
                           </Button>
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
+                            className="h-8 text-xs gap-1"
                             onClick={() => openReset(docente)}
                             title="Resetear contraseña"
                           >
-                            <LockKeyhole className="h-4 w-4 text-amber-500" />
+                            <LockKeyhole className="h-3.5 w-3.5 text-amber-500" />
+                            <span>Clave</span>
                           </Button>
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
+                            className="h-8 text-xs gap-1 text-red-500 hover:text-red-600 hover:border-red-400"
                             onClick={() => openDelete(docente)}
                             title="Desactivar docente"
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                            <span>Eliminar</span>
                           </Button>
                         </div>
                       </td>

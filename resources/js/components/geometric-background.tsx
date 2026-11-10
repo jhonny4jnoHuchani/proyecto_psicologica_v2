@@ -16,6 +16,22 @@ export function GeometricFallingBackground() {
       className="fixed inset-0 overflow-hidden pointer-events-none z-0"
     >
       {/* ========================================================================= */}
+      {/* 0. PATRÓN DE PUNTOS SUTIL CON DESVANECIMIENTO EN LOS BORDES (MASK-IMAGE) */}
+      {/* ========================================================================= */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-15 dark:opacity-20"
+        style={{
+          backgroundImage:
+            "radial-gradient(var(--primary) 1.25px, transparent 1.25px)",
+          backgroundSize: "28px 28px",
+          maskImage:
+            "radial-gradient(ellipse at 50% 40%, black 45%, transparent 85%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse at 50% 40%, black 45%, transparent 85%)",
+        }}
+      />
+
+      {/* ========================================================================= */}
       {/* 1. AURAS AMBIENTALES DE LUZ (Derivadas de color primario y secundario)   */}
       {/* ========================================================================= */}
       <div

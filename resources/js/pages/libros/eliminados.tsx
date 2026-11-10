@@ -152,12 +152,14 @@ export default function LibrosTrashed({ libros }: Props) {
                                                 <td className="px-6 py-4 text-xs text-neutral-600">{l.anio_lanzamiento || '—'}</td>
                                                 <td className="px-6 py-4 text-xs text-neutral-500">{formatoFecha(l.deleted_at)}</td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-2 opacity-70 transition-opacity group-hover:opacity-100">
-                                                        <Button variant="outline" size="icon" onClick={() => openRestore(l)} title="Restaurar">
-                                                            <RotateCcw className="h-4 w-4 text-emerald-500" />
+                                                    <div className="flex justify-end gap-1.5 opacity-90 transition-opacity group-hover:opacity-100">
+                                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1 text-emerald-600 hover:text-emerald-700 hover:border-emerald-400" onClick={() => openRestore(l)} title="Restaurar">
+                                                            <RotateCcw className="h-3.5 w-3.5 text-emerald-500" />
+                                                            <span>Restaurar</span>
                                                         </Button>
-                                                        <Button variant="outline" size="icon" onClick={() => openDeleteForever(l)} title="Eliminar permanentemente">
-                                                            <Trash2 className="h-4 w-4 text-rose-500" />
+                                                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1 text-rose-500 hover:text-rose-600 hover:border-rose-400" onClick={() => openDeleteForever(l)} title="Eliminar permanentemente">
+                                                            <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                                            <span>Eliminar</span>
                                                         </Button>
                                                     </div>
                                                 </td>

@@ -31,10 +31,21 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const currentPath = window.location.pathname;
-  const { auth } = usePage().props as {
-    auth?: { user?: { roles?: { name: string }[] } };
+  const { auth, rol } = usePage().props as {
+    auth?: {
+      user?: {
+        roles?: (string | { name: string })[];
+      };
+      roles?: string[];
+    };
+    rol?: string;
   };
-  const isAdmin = auth?.user?.roles?.some((r) => r.name === "admin");
+  const isAdmin =
+    auth?.roles?.includes("admin") ||
+    auth?.user?.roles?.some((r) =>
+      typeof r === "string" ? r === "admin" : r?.name === "admin"
+    ) ||
+    rol === "admin";
 
   const menuItems = [...sidebarNavItems];
 

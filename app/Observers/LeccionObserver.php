@@ -25,6 +25,7 @@ class LeccionObserver
             $fechaEntrega = $leccion->fecha_entrega ? $leccion->fecha_entrega->format('d/m/Y H:i') : null;
             $leccionKey = $leccion->getRouteKey();
 
+            // de todo el curso con unos 30 obtieno los que es su user_id para que se cree la notigicacion
             foreach ($curso->estudiantes as $estudiante) {
                 $user = $estudiante->user;
                 if ($user) {

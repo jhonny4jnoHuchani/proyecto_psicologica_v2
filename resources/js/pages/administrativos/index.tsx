@@ -259,20 +259,24 @@ export default function AdministrativosIndex({
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
+                            className="h-8 text-xs gap-1"
                             onClick={() => openEdit(user)}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>Editar</span>
                           </Button>
                           <Button
                             variant="outline"
-                            size="icon"
+                            size="sm"
+                            className="h-8 text-xs gap-1 text-red-500 hover:text-red-600 hover:border-red-400"
                             onClick={() => openDelete(user)}
                           >
-                            <Trash2 className="h-4 w-4 text-red-500" />
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                            <span>Eliminar</span>
                           </Button>
                         </div>
                       </td>

@@ -1,15 +1,17 @@
 import { Head, router } from "@inertiajs/react";
 import {
   AlertCircle,
+  Award,
   CheckCircle2,
+  ClipboardCheck,
   Clock,
   Eye,
+  FileCheck2,
   Filter,
   LoaderCircle,
   RefreshCw,
   Search,
   Sparkles,
-  Star,
   UserX,
   Wand2,
 } from "lucide-react";
@@ -143,11 +145,20 @@ export default function EntregasDocente({
   const nombreCompleto = (u: EstudianteData["user"]) =>
     `${u.apellido_paterno} ${u.apellido_materno}, ${u.nombre}`;
 
-  const filtrar = () => {
-    if (leccionId) {
-      router.get(`/entregas/docente?leccion_id=${leccionId}`);
+  const handleLeccionChange = (nuevaLeccionId: string) => {
+    setLeccionId(nuevaLeccionId === "none" ? "" : nuevaLeccionId);
+    if (nuevaLeccionId && nuevaLeccionId !== "none") {
+      router.get(
+        `/entregas/docente?leccion_id=${nuevaLeccionId}`,
+        {},
+        { preserveState: true, preserveScroll: true },
+      );
     } else {
-      router.get("/entregas/docente");
+      router.get(
+        "/entregas/docente",
+        {},
+        { preserveState: true, preserveScroll: true },
+      );
     }
   };
 
@@ -404,285 +415,213 @@ export default function EntregasDocente({
           ]}
         />
 
-        {/* Filtro por lección */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-              <div className="space-y-1 flex-1">
-                <Label>Filtrar por Lección o Tarea</Label>
-                <Select value={leccionId} onValueChange={setLeccionId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Todas las lecciones" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Todas las lecciones</SelectItem>
-                    {lecciones.map((l) => (
-                      <SelectItem key={l.id} value={String(l.id)}>
-                        {l.materia?.codigo} - {l.titulo}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        {/* BARRA DE FILTRADO DINÁMICA (EN TIEMPO REAL) */}
+        <div className="bg-card/90 backdrop-blur-md border border-primary/20 rounded-3xl p-5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-primary" />
+                <Label className="text-xs font-bold text-foreground">Filtrar por Lección o Tarea</Label>
+                {leccionId && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                    Filtrado instantáneo
+                  </span>
+                )}
               </div>
-              <Button onClick={filtrar} variant="outline">
-                <Search className="h-4 w-4 mr-2" />
-                Filtrar
-              </Button>
+              <Select value={leccionId || "none"} onValueChange={handleLeccionChange}>
+                <SelectTrigger className="h-10 text-xs rounded-xl bg-background border-border/80 focus:ring-primary shadow-2xs">
+                  <SelectValue placeholder="Todas las lecciones y tareas" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="none">Todas las lecciones y tareas</SelectItem>
+                  {lecciones.map((l) => (
+                    <SelectItem key={l.id} value={String(l.id)}>
+                      {l.materia?.codigo} - {l.titulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Selector de Pestañas / Estados */}
-        <div className="flex flex-wrap items-center gap-2 border-b pb-2">
-          <Button
-            type="button"
-            variant={tabEstado === "todos" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setTabEstado("todos")}
-            className="rounded-full"
-          >
-            Todas las Entregas ({entregas?.length || 0})
-          </Button>
-          <Button
-            type="button"
-            variant={tabEstado === "pendientes" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setTabEstado("pendientes")}
-            className={`rounded-full ${pendientesCount > 0 && tabEstado !== "pendientes" ? "text-amber-600 font-semibold" : ""}`}
-          >
-            <Clock className="h-3.5 w-3.5 mr-1.5" />
-            Por Calificar ({pendientesCount})
-          </Button>
-          <Button
-            type="button"
-            variant={tabEstado === "calificados" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setTabEstado("calificados")}
-            className="rounded-full"
-          >
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-            Calificadas ({calificadasCount})
-          </Button>
-          {filtroLeccionId && (
-            <Button
-              type="button"
-              variant={tabEstado === "sin_entregar" ? "destructive" : "ghost"}
-              size="sm"
-              onClick={() => setTabEstado("sin_entregar")}
-              className={`rounded-full ${sinEntregarCount > 0 && tabEstado !== "sin_entregar" ? "text-rose-600 font-semibold" : ""}`}
-            >
-              <UserX className="h-3.5 w-3.5 mr-1.5" />
-              Sin Entregar ({sinEntregarCount})
-            </Button>
-          )}
+          </div>
         </div>
 
-        {/* Vista Sin Entregar */}
-        {tabEstado === "sin_entregar" && filtroLeccionId ? (
-          <Card>
-            <CardHeader className="border-b bg-rose-50/40 dark:bg-rose-950/20">
-              <CardTitle className="text-base font-semibold flex items-center text-rose-700 dark:text-rose-400">
-                <UserX className="h-4 w-4 mr-2" />
-                Estudiantes que aún no han entregado ({sinEntregarCount})
-              </CardTitle>
+        {/* VISTA EN 2 CARDS LADO A LADO: COMPLETADO Y PENDIENTE */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* CARD 1: ESTUDIANTES CON ENTREGA (COMPLETADOS) */}
+          <Card className="rounded-3xl border border-emerald-500/25 bg-card/90 backdrop-blur-md shadow-sm overflow-hidden flex flex-col justify-between">
+            <CardHeader className="border-b border-border/80 bg-gradient-to-r from-emerald-500/[0.06] to-transparent px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm sm:text-base font-bold text-foreground">
+                      Entregas Recibidas (Completado)
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {entregas?.length || 0} estudiante(s) han enviado su tarea
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-xs font-bold text-emerald-600 border-emerald-500/30 bg-emerald-500/10">
+                  {entregas?.length || 0} entregados
+                </Badge>
+              </div>
             </CardHeader>
-            <CardContent className="pt-4">
-              {sinEntregarCount === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-2 opacity-80" />
-                  <p className="font-medium text-emerald-700 dark:text-emerald-400">
-                    ¡Excelente!
-                  </p>
-                  <p className="text-sm">
-                    Todos los estudiantes inscritos han presentado su entrega
-                    para esta lección.
-                  </p>
+            <CardContent className="p-4 sm:p-5 flex-1 space-y-3">
+              {(!entregas || entregas.length === 0) ? (
+                <div className="py-14 text-center text-muted-foreground">
+                  <Clock className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
+                  <p className="text-sm font-semibold">Aún no hay entregas registradas</p>
+                  <p className="text-xs text-muted-foreground">Los envíos de los estudiantes aparecerán aquí.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-muted-foreground">
-                        <th className="py-3 px-4 font-medium">Estudiante</th>
-                        <th className="py-3 px-4 font-medium">Estado</th>
-                        <th className="py-3 px-4 font-medium">Observación</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {estudiantesSinEntregar?.map((est) => (
-                        <tr
-                          key={est.id}
-                          className="border-b hover:bg-muted/40 transition-colors"
-                        >
-                          <td className="py-3 px-4 font-medium text-foreground">
-                            {nombreCompleto(est.user)}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge
-                              variant="destructive"
-                              className="font-normal text-xs"
+                entregas.map((e) => (
+                  <div
+                    key={e.id}
+                    className="p-4 rounded-2xl border border-border/80 bg-background/50 hover:bg-background hover:border-emerald-500/40 hover:shadow-sm transition-all space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-bold text-foreground">
+                          {nombreCompleto(e.estudiante.user)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {e.leccion?.materia?.codigo} · {e.leccion?.titulo}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {e.calificacion ? (
+                          <Badge
+                            variant={e.calificacion.nota >= 70 ? "success" : "warning"}
+                            className="text-xs font-black px-2.5 py-0.5"
+                          >
+                            Nota: {e.calificacion.nota}/100
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/30 bg-amber-500/10 font-bold">
+                            Pendiente de calificar
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        {e.fecha_entrega ? formatoFechaHora(e.fecha_entrega) : "Entregado"}
+                      </span>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {e.archivos_enviado?.map((a, i) => (
+                          <a key={i} href={`/storage/${a}`} target="_blank" rel="noreferrer">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1.5 rounded-lg border-border hover:border-primary/40 text-foreground"
+                              title="Ver archivo adjunto de la entrega"
                             >
-                              Sin entrega
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-xs text-muted-foreground">
-                            Pendiente de envío por el estudiante
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              <Eye className="h-3.5 w-3.5 text-primary" />
+                              <span>Ver Entrega</span>
+                            </Button>
+                          </a>
+                        ))}
+
+                        {e.calificacion && e.calificacion.nota < 75 && !e.refuerzo && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => abrirRefuerzoManual(e)}
+                            className="h-7 text-xs gap-1.5 rounded-lg text-primary border-primary/30 hover:bg-primary/10"
+                            title="Generar preguntas de refuerzo IA"
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>Refuerzo IA</span>
+                          </Button>
+                        )}
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20 font-bold"
+                          onClick={() => openCalificar(e)}
+                          title="Calificar y evaluar entrega"
+                        >
+                          <ClipboardCheck className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>{e.calificacion ? "Editar Nota" : "Calificar"}</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
-        ) : (
-          /* Tabla de entregas enviadas */
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base font-semibold">
-                {tabEstado === "pendientes" &&
-                  `Entregas pendientes de calificar (${entregasFiltradas.length})`}
-                {tabEstado === "calificados" &&
-                  `Entregas ya calificadas (${entregasFiltradas.length})`}
-                {tabEstado === "todos" &&
-                  `Listado de entregas (${entregasFiltradas.length})`}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-3 px-4 font-medium">Estudiante</th>
-                      <th className="py-3 px-4 font-medium">Lección</th>
-                      <th className="py-3 px-4 font-medium">Materia</th>
-                      <th className="py-3 px-4 font-medium">Estado Entrega</th>
-                      <th className="py-3 px-4 font-medium">Calificación</th>
-                      <th className="py-3 px-4 text-right font-medium">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entregasFiltradas.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="py-12 text-center text-muted-foreground"
-                        >
-                          No se encontraron entregas en esta sección.
-                        </td>
-                      </tr>
-                    ) : (
-                      entregasFiltradas.map((e) => (
-                        <tr
-                          key={e.id}
-                          className="border-b hover:bg-muted/50 transition-colors"
-                        >
-                          <td className="py-3 px-4 text-xs font-medium">
-                            {nombreCompleto(e.estudiante.user)}
-                          </td>
-                          <td className="py-3 px-4 text-xs">
-                            {e.leccion?.titulo}
-                          </td>
-                          <td className="py-3 px-4 text-xs">
-                            {e.leccion?.materia?.codigo}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge
-                              variant={
-                                e.estado_entrega === "entregado"
-                                  ? "default"
-                                  : "destructive"
-                              }
-                            >
-                              {e.estado_entrega}
-                            </Badge>
-                            {e.fecha_entrega && (
-                              <p className="text-[11px] text-muted-foreground mt-1">
-                                {formatoFechaHora(e.fecha_entrega)}
-                              </p>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-xs">
-                            {e.calificacion ? (
-                              <div>
-                                <span
-                                  className={`font-bold ${e.calificacion.nota >= 75 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
-                                >
-                                  {e.calificacion.nota}/100
-                                </span>
-                                {e.refuerzo && (
-                                  <div className="mt-1">
-                                    <Badge
-                                      variant="outline"
-                                      className="text-[10px] text-purple-600 border-purple-300"
-                                    >
-                                      {e.refuerzo.completado
-                                        ? "Refuerzo completado"
-                                        : "Refuerzo activo"}
-                                    </Badge>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">
-                                Pendiente
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex justify-end gap-2">
-                              {e.archivos_enviado?.map((a, i) => (
-                                <a
-                                  key={i}
-                                  href={`/storage/${a}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    title="Ver archivo"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </a>
-                              ))}
-                              {e.calificacion &&
-                                e.calificacion.nota < 75 &&
-                                !e.refuerzo && (
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => abrirRefuerzoManual(e)}
-                                    title="Generar preguntas de refuerzo IA"
-                                    className="text-primary border-primary-border hover:bg-primary-light"
-                                  >
-                                    <Sparkles className="h-4 w-4" />
-                                  </Button>
-                                )}
 
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => openCalificar(e)}
-                                title="Calificar"
-                              >
-                                <Star className="h-4 w-4 text-yellow-500" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+          {/* CARD 2: ESTUDIANTES PENDIENTES (SIN ENTREGAR) */}
+          <Card className="rounded-3xl border border-rose-500/25 bg-card/90 backdrop-blur-md shadow-sm overflow-hidden flex flex-col justify-between">
+            <CardHeader className="border-b border-border/80 bg-gradient-to-r from-rose-500/[0.06] to-transparent px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-bold">
+                    <UserX className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm sm:text-base font-bold text-foreground">
+                      Estudiantes Pendientes (Sin Entregar)
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {filtroLeccionId ? `${sinEntregarCount} estudiante(s) faltan por enviar` : "Selecciona una lección para ver la lista exacta"}
+                    </p>
+                  </div>
+                </div>
+                {filtroLeccionId && (
+                  <Badge variant="outline" className="text-xs font-bold text-rose-600 border-rose-500/30 bg-rose-500/10">
+                    {sinEntregarCount} pendientes
+                  </Badge>
+                )}
               </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-5 flex-1 space-y-3">
+              {!filtroLeccionId ? (
+                <div className="py-14 text-center text-muted-foreground space-y-2">
+                  <Search className="h-10 w-10 text-muted-foreground/40 mx-auto mb-1" />
+                  <p className="text-sm font-semibold text-foreground">Elige una lección específica en el filtro superior</p>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Al seleccionar una tarea específica, el sistema cruzará la lista completa de inscritos y te mostrará exactamente quiénes no han enviado su trabajo.
+                  </p>
+                </div>
+              ) : sinEntregarCount === 0 ? (
+                <div className="py-14 text-center text-muted-foreground">
+                  <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-2 opacity-90" />
+                  <p className="font-bold text-sm text-emerald-700 dark:text-emerald-400">¡100% de Cumplimiento!</p>
+                  <p className="text-xs text-muted-foreground">Todos los estudiantes inscritos han presentado su entrega para esta lección.</p>
+                </div>
+              ) : (
+                estudiantesSinEntregar?.map((est) => (
+                  <div
+                    key={est.id}
+                    className="p-3.5 rounded-2xl border border-border/80 bg-background/50 hover:bg-background hover:border-rose-500/30 transition-all flex items-center justify-between gap-3"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-foreground">
+                        {nombreCompleto(est.user)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Código: {est.codigo_estudiante || "Inscrito"}
+                      </p>
+                    </div>
+                    <Badge variant="destructive" className="text-xs font-semibold px-2.5 py-0.5">
+                      Sin entrega
+                    </Badge>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
-        )}
+        </div>
 
         {/* Modal Calificar */}
         <Dialog open={modalCalificar} onOpenChange={setModalCalificar}>

@@ -166,15 +166,24 @@ export default function EntregasEstudiante({
           ]}
         />
 
-        {/* Pendientes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5" />
-              Tareas Pendientes ({leccionesPendientes?.length || 0})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* DISTRIBUCIÓN LADO A LADO: TAREAS PENDIENTES Y ENTREGAS REALIZADAS */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          {/* Card 1: Pendientes */}
+          <Card className="rounded-3xl border border-amber-500/25 bg-card/90 backdrop-blur-md shadow-sm overflow-hidden">
+            <CardHeader className="border-b border-border/80 bg-gradient-to-r from-amber-500/[0.06] to-transparent px-6 py-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2.5 text-base font-bold text-foreground">
+                  <div className="h-8 w-8 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  Tareas Pendientes ({leccionesPendientes?.length || 0})
+                </CardTitle>
+                <Badge variant="outline" className="text-xs font-bold text-amber-600 border-amber-500/30 bg-amber-500/10">
+                  Por presentar
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-5 space-y-3">
             {(!leccionesPendientes || leccionesPendientes.length === 0) && (
               <p className="text-muted-foreground text-sm">
                 No tienes tareas pendientes.
@@ -243,14 +252,21 @@ export default function EntregasEstudiante({
         </Card>
 
         {/* Entregas Realizadas - AGRUPADAS POR MATERIA */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Entregas Realizadas ({entregas?.length || 0})
-            </CardTitle>
+        <Card className="rounded-3xl border border-emerald-500/25 bg-card/90 backdrop-blur-md shadow-sm overflow-hidden">
+          <CardHeader className="border-b border-border/80 bg-gradient-to-r from-emerald-500/[0.06] to-transparent px-6 py-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2.5 text-base font-bold text-foreground">
+                <div className="h-8 w-8 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center">
+                  <FileText className="h-4 w-4" />
+                </div>
+                Entregas Realizadas ({entregas?.length || 0})
+              </CardTitle>
+              <Badge variant="outline" className="text-xs font-bold text-emerald-600 border-emerald-500/30 bg-emerald-500/10">
+                Historial enviado
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="p-4 sm:p-5 space-y-5">
             {(!entregas || entregas.length === 0) && (
               <p className="text-muted-foreground text-sm">
                 No has realizado ninguna entrega.
@@ -460,6 +476,7 @@ export default function EntregasEstudiante({
             )}
           </CardContent>
         </Card>
+      </div>
 
         {/* Modal Subir */}
         <Dialog open={modalSubir} onOpenChange={setModalSubir}>

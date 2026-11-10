@@ -26,6 +26,7 @@ use App\Http\Controllers\TemaController;
 use App\Models\Autoridad;
 use App\Models\Configuracion;
 use App\Models\Convocatoria;
+use App\Models\Libro;
 use App\Models\Portada;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -37,6 +38,7 @@ Route::get('/', function () {
         'portadas' => Portada::activas()->get(),
         'autoridades' => Autoridad::ordenadas()->get(),
         'convocatorias' => Convocatoria::activas()->get(),
+        'libros' => Libro::with('materia')->whereNull('deleted_at')->latest()->get(),
         'user' => auth()->user(),
     ]);
 })->name('home');

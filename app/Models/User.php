@@ -14,7 +14,13 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
-    // use HasRoles; ← Se activa cuando instalemos Spatie
+
+    /**
+     * The relationships that should always be loaded.
+     *
+     * @var list<string>
+     */
+    protected $with = ['roles'];
 
     /**
      * Departamentos de Bolivia para el expedido de Cédula de Identidad (SEGIP)

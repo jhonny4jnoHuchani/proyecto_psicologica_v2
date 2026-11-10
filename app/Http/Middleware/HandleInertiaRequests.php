@@ -20,13 +20,19 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+        if ($user) {
+            $user->loadMissing('roles');
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
-                'notificaciones' => $request->user() ? $request->user()->notificaciones()->noLeidas()->recientes(10)->get() : [],
+                'user' => $user,
+                'roles' => $user ? $user->getRoleNames()->all() : [],
+                'notificaciones' => $user ? $user->notificaciones()->noLeidas()->recientes(10)->get() : [],
             ],
             'config' => Configuracion::first(),  // ← NUEVO
             'flash' => [

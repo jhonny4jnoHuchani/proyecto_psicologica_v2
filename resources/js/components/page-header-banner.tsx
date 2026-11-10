@@ -1,6 +1,7 @@
 import React from 'react';
-import { type LucideIcon, Sparkles } from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PolygonCollisionsRain } from './polygon-collisions-rain';
 
 interface StatItem {
     label: string;
@@ -11,7 +12,7 @@ interface StatItem {
 
 interface PageHeaderBannerProps {
     title: string;
-    subtitle: string;
+    subtitle?: string;
     icon?: LucideIcon;
     badgeText?: string;
     actions?: React.ReactNode;
@@ -37,15 +38,21 @@ export function PageHeaderBanner({
                 border: '1px solid var(--primary-border, rgba(255,255,255,0.15))',
             }}
         >
+            {/* Lluvia y Choque Dinámico de Polígonos Reactivos con Colores Institucionales */}
+            <PolygonCollisionsRain
+                count={30}
+                className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-80"
+            />
+
             {/* Auras y destellos decorativos en esquinas */}
             <div
-                className="absolute -right-24 -top-24 w-80 h-80 rounded-full blur-3xl opacity-30 pointer-events-none"
+                className="absolute -right-24 -top-24 w-80 h-80 rounded-full blur-3xl opacity-30 pointer-events-none z-0"
                 style={{
                     background: 'radial-gradient(circle, var(--secondary, #06b6d4) 0%, transparent 70%)',
                 }}
             />
             <div
-                className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full blur-3xl opacity-25 pointer-events-none"
+                className="absolute -left-20 -bottom-20 w-72 h-72 rounded-full blur-3xl opacity-25 pointer-events-none z-0"
                 style={{
                     background: 'radial-gradient(circle, var(--primary, #4f46e5) 0%, transparent 70%)',
                 }}
@@ -59,8 +66,7 @@ export function PageHeaderBanner({
                             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                             {badgeText}
                         </span>
-                        <span className="text-xs font-medium text-white/70 flex items-center gap-1">
-                            <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                        <span className="text-xs font-medium text-white/80">
                             Psicología UPEA
                         </span>
                     </div>
@@ -75,9 +81,11 @@ export function PageHeaderBanner({
                             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-md">
                                 {title}
                             </h1>
-                            <p className="mt-1 text-xs sm:text-sm text-white/80 leading-relaxed font-normal">
-                                {subtitle}
-                            </p>
+                            {subtitle && (
+                                <p className="mt-1 text-xs sm:text-sm text-white/80 leading-relaxed font-normal">
+                                    {subtitle}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

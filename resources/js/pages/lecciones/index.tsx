@@ -9,12 +9,14 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Clock,
   ExternalLink,
   Eye,
   FileCheck,
   FileSpreadsheet,
   FileText,
+  Filter,
   LoaderCircle,
   Paperclip,
   Pencil,
@@ -32,7 +34,7 @@ import InputError from "@/components/input-error";
 import { PageHeaderBanner } from "@/components/page-header-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -383,9 +385,7 @@ export default function LeccionesIndex({
   const [processingTema, setProcessingTema] = useState(false);
 
   // Asistente IA para creación y resumen de tema
-  const [modoCreacionTema, setModoCreacionTema] = useState<
-    "pdf" | "texto" | "manual"
-  >("pdf");
+  const [modoCreacionTema, setModoCreacionTema] = useState<"pdf" | "manual">("manual");
   const [temaPdfFile, setTemaPdfFile] = useState<File | null>(null);
   const [temaTextoBruto, setTemaTextoBruto] = useState<string>("");
   const [generandoResumenIA, setGenerandoResumenIA] = useState<boolean>(false);
@@ -421,6 +421,25 @@ export default function LeccionesIndex({
     filtros.materia_id ? String(filtros.materia_id) : "",
   );
 
+  // Filtrado instantáneo (al momento): al cambiar curso o materia se filtra sin pulsar botón
+  const handleCursoChange = (val: string) => {
+    const nuevoCurso = val === "none" ? "" : val;
+    setFiltroCurso(nuevoCurso);
+    const params = new URLSearchParams();
+    if (nuevoCurso) params.set("curso_id", nuevoCurso);
+    if (filtroMateria && filtroMateria !== "none") params.set("materia_id", filtroMateria);
+    router.get(`/lecciones?${params.toString()}`, {}, { preserveState: true, preserveScroll: true });
+  };
+
+  const handleMateriaChange = (val: string) => {
+    const nuevaMateria = val === "none" ? "" : val;
+    setFiltroMateria(nuevaMateria);
+    const params = new URLSearchParams();
+    if (filtroCurso && filtroCurso !== "none") params.set("curso_id", filtroCurso);
+    if (nuevaMateria) params.set("materia_id", nuevaMateria);
+    router.get(`/lecciones?${params.toString()}`, {}, { preserveState: true, preserveScroll: true });
+  };
+
   const resetForm = () => {
     setForm(initialForm);
     setArchivo(null);
@@ -429,14 +448,33 @@ export default function LeccionesIndex({
   };
 
   const toggleTema = (key: string) => {
-    setTemasAbiertos((prev) => ({ ...prev, [key]: !prev[key] }));
+    setTemasAbiertos((prev) => {
+      const isCurrentlyOpen = !!prev[key];
+      // Si ya está abierto, lo minimiza. Si se despliega, minimiza los demás para enfocar los detalles de este tema
+      if (isCurrentlyOpen) {
+        return { ...prev, [key]: false };
+      }
+      return { [key]: true };
+    });
+  };
+
+  const [todosExpandidos, setTodosExpandidos] = useState(false);
+  const toggleTodosTemas = () => {
+    const nuevo = !todosExpandidos;
+    setTodosExpandidos(nuevo);
+    const nuevoMapa: Record<string, boolean> = {};
+    temasFiltrados.forEach((t) => {
+      nuevoMapa[String(t.id)] = nuevo;
+    });
+    nuevoMapa["sin-tema"] = nuevo;
+    setTemasAbiertos(nuevoMapa);
   };
 
   const aplicarFiltros = () => {
     const params = new URLSearchParams();
-    if (filtroCurso) params.set("curso_id", filtroCurso);
-    if (filtroMateria) params.set("materia_id", filtroMateria);
-    router.get(`/lecciones?${params.toString()}`);
+    if (filtroCurso && filtroCurso !== "none") params.set("curso_id", filtroCurso);
+    if (filtroMateria && filtroMateria !== "none") params.set("materia_id", filtroMateria);
+    router.get(`/lecciones?${params.toString()}`, {}, { preserveState: true, preserveScroll: true });
   };
 
   // Abre el modal para crear con valores precargados (curso, materia, tema)
@@ -786,7 +824,7 @@ export default function LeccionesIndex({
           title="Lecciones y Actividades de Aula"
           subtitle="Planificación pedagógica, material didáctico, publicación de tareas y seguimiento de entregas."
           icon={BookOpen}
-          badgeText="AULA VIRTUAL"
+          badgeText="GESTIÓN PEDAGÓGICA"
           stats={[
             { label: "Lecciones", value: lecciones?.length || 0 },
           ]}
@@ -825,76 +863,112 @@ export default function LeccionesIndex({
           }
         />
 
+        {/* 3 TARJETAS KPI DE LECCIONES CON IDENTIDAD INSTITUCIONAL */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Card className="border-none bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-sm">
-            <CardContent className="flex items-center justify-between py-5">
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/85 backdrop-blur-md p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <div className="absolute top-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 rounded-t-2xl" />
+            <div className="absolute -top-10 -left-10 w-24 h-24 bg-primary/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide opacity-90">
-                  Total
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Total Lecciones
                 </p>
-                <p className="mt-1 text-3xl font-bold">{stats.total}</p>
-                <p className="text-xs opacity-90">lecciones registradas</p>
+                <p className="mt-1 text-3xl font-black text-foreground">{stats.total}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">planificadas en el sistema</p>
               </div>
-              <BookOpen className="h-9 w-9 opacity-80" />
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm">
-            <CardContent className="flex items-center justify-between py-5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md shadow-primary/25 group-hover:scale-110 transition-transform">
+                <BookOpen className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/85 backdrop-blur-md p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <div className="absolute top-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-secondary to-primary transition-all duration-500 rounded-t-2xl" />
+            <div className="absolute -top-10 -left-10 w-24 h-24 bg-secondary/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Activas
                 </p>
-                <p className="mt-1 text-3xl font-bold text-emerald-600">
-                  {stats.activas}
-                </p>
-                <p className="text-xs text-neutral-500">en curso ahora</p>
+                <p className="mt-1 text-3xl font-black text-primary">{stats.activas}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">en curso ahora mismo</p>
               </div>
-              <CheckCircle2 className="h-9 w-9 text-emerald-200" />
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm">
-            <CardContent className="flex items-center justify-between py-5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-secondary to-primary flex items-center justify-center text-white shadow-md shadow-secondary/25 group-hover:scale-110 transition-transform">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/85 backdrop-blur-md p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+            <div className="absolute top-0 left-0 h-1 w-0 group-hover:w-full bg-gradient-to-r from-amber-500 to-primary transition-all duration-500 rounded-t-2xl" />
+            <div className="absolute -top-10 -left-10 w-24 h-24 bg-amber-500/10 rounded-full blur-xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                  Próximas 7 días
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Próximos 7 días
                 </p>
-                <p className="mt-1 text-3xl font-bold text-amber-600">
-                  {stats.proximas}
-                </p>
-                <p className="text-xs text-neutral-500">entregas por vencer</p>
+                <p className="mt-1 text-3xl font-black text-amber-500">{stats.proximas}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">entregas por vencer</p>
               </div>
-              <CalendarClock className="h-9 w-9 text-amber-200" />
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-primary flex items-center justify-center text-white shadow-md shadow-amber-500/25 group-hover:scale-110 transition-transform">
+                <CalendarClock className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* FILTROS + BOTONES PDF/EXCEL */}
-        <Card className="shadow-sm">
-          <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-neutral-500">Curso</Label>
-              <Select value={filtroCurso} onValueChange={setFiltroCurso}>
-                <SelectTrigger>
+        {/* BARRA DE FILTRADO DINÁMICA E INSTANTÁNEA (AL MOMENTO) */}
+        <div className="bg-gradient-to-r from-primary/[0.04] via-card to-secondary/[0.04] border border-primary/20 rounded-3xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-border/70">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-xs shrink-0">
+                <Filter className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Filtro de Contenidos del Aula</h3>
+                <p className="text-xs text-muted-foreground">Al elegir curso o materia se filtra automáticamente al instante</p>
+              </div>
+            </div>
+            {(filtroCurso || filtroMateria) && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25 shadow-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                Filtro activo al momento
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                <span>Curso / Paralelo</span>
+                {filtroCurso && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+              </Label>
+              <Select value={filtroCurso || "none"} onValueChange={handleCursoChange}>
+                <SelectTrigger className="bg-card border-border/80 focus:ring-primary focus:border-primary/50 text-xs h-10 rounded-xl shadow-xs">
                   <SelectValue placeholder="Todos los cursos" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Todos</SelectItem>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="none">Todos los cursos</SelectItem>
                   {(cursos || []).map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
-                      {c.gestion?.año} - {c.gestion?.etapa} | P.{c.paralelo}
+                      {c.gestion?.año} - {c.gestion?.etapa} | Paralelo {c.paralelo}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-neutral-500">Materia</Label>
-              <Select value={filtroMateria} onValueChange={setFiltroMateria}>
-                <SelectTrigger>
+
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                <span>Materia Académica</span>
+                {filtroMateria && <span className="h-1.5 w-1.5 rounded-full bg-secondary" />}
+              </Label>
+              <Select value={filtroMateria || "none"} onValueChange={handleMateriaChange}>
+                <SelectTrigger className="bg-card border-border/80 focus:ring-primary focus:border-primary/50 text-xs h-10 rounded-xl shadow-xs">
                   <SelectValue placeholder="Todas las materias" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Todas</SelectItem>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="none">Todas las materias</SelectItem>
                   {(materias || []).map((m) => (
                     <SelectItem key={m.id} value={String(m.id)}>
                       {m.codigo} - {m.nombre}
@@ -903,133 +977,199 @@ export default function LeccionesIndex({
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              onClick={aplicarFiltros}
-              variant="outline"
-              className="sm:w-auto"
-            >
-              <Eye className="mr-2 h-4 w-4" />
-              Filtrar
-            </Button>
+
             {isDocente && filtroCurso && filtroMateria && (
-              <>
+              <div className="flex items-center gap-2 shrink-0">
                 <a
                   href={`/reportes/pdf?curso_id=${filtroCurso}&materia_id=${filtroMateria}`}
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                    className="h-10 px-3.5 text-xs text-rose-600 border-rose-500/30 hover:bg-rose-500/10 rounded-xl shadow-xs"
                   >
-                    <FileText className="mr-1 h-4 w-4" />
+                    <FileText className="mr-1.5 h-3.5 w-3.5" />
                     PDF
                   </Button>
                 </a>
                 <a
                   href={`/reportes/excel?curso_id=${filtroCurso}&materia_id=${filtroMateria}`}
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300"
+                    className="h-10 px-3.5 text-xs text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10 rounded-xl shadow-xs"
                   >
-                    <FileSpreadsheet className="mr-1 h-4 w-4" />
+                    <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
                     Excel
                   </Button>
                 </a>
-              </>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <Card className="shadow-sm lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Listado por temas</CardTitle>
+          <Card className="bg-card/90 backdrop-blur-md border border-primary/20 shadow-sm rounded-3xl overflow-hidden lg:col-span-2 flex flex-col">
+            <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 bg-gradient-to-r from-primary/[0.04] via-transparent to-secondary/[0.04] px-6 py-4.5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-xs shrink-0">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-bold text-foreground">Listado por Temas</CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    {lecciones?.length ?? 0} lección{lecciones?.length !== 1 ? "es" : ""} • {temasFiltrados.length} tema{temasFiltrados.length !== 1 ? "s" : ""}
+                  </CardDescription>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-neutral-400">
-                  {lecciones?.length ?? 0} lección
-                  {lecciones?.length !== 1 ? "es" : ""}
-                </span>
                 {!isDocente && (
                   <Badge
                     variant="outline"
-                    className="text-[10px] text-primary border-primary-border"
+                    className="text-[10px] text-primary border-primary/30 bg-primary/5 font-semibold"
                   >
-                    {temasFiltrados.length} tema
-                    {temasFiltrados.length !== 1 ? "s" : ""} con tareas
+                    {temasFiltrados.length} con tareas
                   </Badge>
                 )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleTodosTemas}
+                  className="h-8 text-xs font-semibold rounded-xl border-border/80 hover:border-primary/40 text-foreground bg-card shadow-2xs"
+                >
+                  {todosExpandidos ? (
+                    <>
+                      <ChevronUp className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                      Minimizar todos
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3.5 w-3.5 mr-1.5 text-primary" />
+                      Desplegar todos
+                    </>
+                  )}
+                </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y">
-                {temasFiltrados.length === 0 &&
-                  (leccionesPorTema["sin-tema"]?.length ?? 0) === 0 && (
-                    <div className="py-14 text-center">
-                      <div className="flex flex-col items-center gap-2 text-neutral-400">
-                        <Sparkles className="h-8 w-8 text-neutral-400 dark:text-neutral-500" />
-                        <p className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
-                          {!isDocente
-                            ? "No tienes tareas ni lecciones asignadas en este momento"
-                            : "No hay temas en esta materia"}
-                        </p>
-                        {!isDocente && (
-                          <p className="text-xs text-neutral-400 max-w-sm">
-                            Los temas aparecerán aquí tan pronto como tus
-                            docentes asignen lecciones o actividades a tu curso.
-                          </p>
-                        )}
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              {temasFiltrados.length === 0 &&
+                (leccionesPorTema["sin-tema"]?.length ?? 0) === 0 && (
+                  <div className="py-14 text-center rounded-2xl border border-dashed border-border/70 bg-muted/15">
+                    <div className="flex flex-col items-center gap-2.5 text-muted-foreground">
+                      <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                        <Sparkles className="h-6 w-6" />
                       </div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {!isDocente
+                          ? "No tienes tareas ni lecciones asignadas en este momento"
+                          : "No hay temas registrados en esta materia"}
+                      </p>
+                      {!isDocente && (
+                        <p className="text-xs text-muted-foreground max-w-sm">
+                          Los temas aparecerán aquí tan pronto como tus docentes asignen lecciones o actividades a tu curso.
+                        </p>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                {temasFiltrados.map((tema) => {
-                  const key = String(tema.id);
-                  const abierto = !!temasAbiertos[key];
-                  const leccionesTema = leccionesPorTema[key] ?? [];
-                  const materiaDelTema = materias.find(
-                    (m) => m.id === tema.materia_id,
-                  );
-                  const color = colorForMateria(materiaDelTema?.codigo);
+              {temasFiltrados.map((tema) => {
+                const key = String(tema.id);
+                const abierto = !!temasAbiertos[key];
+                const leccionesTema = leccionesPorTema[key] ?? [];
+                const recursosTema = (recursos || []).filter((r) => r.tema_id === tema.id);
+                const totalElementos = leccionesTema.length + recursosTema.length;
+                const materiaDelTema = materias.find(
+                  (m) => m.id === tema.materia_id,
+                );
+                const color = colorForMateria(materiaDelTema?.codigo);
+                const tareasPendientesTema = isDocente
+                  ? []
+                  : leccionesTema.filter(
+                      (l) => !l.entregas || l.entregas.length === 0,
+                    );
+                const tienePendientesEstudiante =
+                  !isDocente && tareasPendientesTema.length > 0;
+                const tieneTareas = leccionesTema.length > 0;
 
+                if (!abierto) {
                   return (
-                    <div key={tema.id}>
-                      {/* ENCABEZADO DEL TEMA */}
-                      <div className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
+                    <div
+                      key={tema.id}
+                      className={`group rounded-2xl border transition-all duration-200 overflow-hidden shadow-2xs ${
+                        tienePendientesEstudiante
+                          ? "border-amber-500/50 bg-gradient-to-r from-amber-500/[0.06] via-card to-card ring-1 ring-amber-500/20 hover:border-amber-500"
+                          : "border-border/75 bg-card/60 hover:bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between px-3.5 py-2.5 sm:px-4 sm:py-2.5 gap-2">
                         <button
                           type="button"
                           onClick={() => toggleTema(key)}
-                          className="flex flex-1 items-center gap-2 text-left"
+                          className="flex flex-1 items-center gap-2.5 text-left min-w-0"
                         >
-                          <ChevronDown
-                            className={`h-4 w-4 text-neutral-400 transition-transform ${abierto ? "" : "-rotate-90"}`}
-                          />
-                          <span
-                            className={`h-2 w-2 rounded-full ${color.dot}`}
-                          />
-                          <span className="font-medium text-sm">
+                          <div
+                            className={`h-6 w-6 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                              tienePendientesEstudiante
+                                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                                : "bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
+                            }`}
+                          >
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </div>
+                          <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${color.dot} shadow-2xs`} />
+                          <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
                             {tema.orden}. {tema.nombre}
                           </span>
-                          <Badge variant="outline" className="ml-2 text-[10px]">
-                            {leccionesTema.length} lección
-                            {leccionesTema.length !== 1 ? "es" : ""}
-                          </Badge>
+
+                          {/* BADGES NOTORIOS DE ESTADO DE TAREAS */}
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                            {!isDocente ? (
+                              tienePendientesEstudiante ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-xs flex items-center gap-1 animate-pulse">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  <span>
+                                    {tareasPendientesTema.length}{" "}
+                                    {tareasPendientesTema.length === 1 ? "tarea pendiente" : "tareas pendientes"}
+                                  </span>
+                                </span>
+                              ) : tieneTareas ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  <span>Tareas al día</span>
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground">
+                                  Sin tareas
+                                </span>
+                              )
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25">
+                                {leccionesTema.length} {leccionesTema.length === 1 ? "tarea" : "tareas"}
+                              </span>
+                            )}
+                            {recursosTema.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/70 text-muted-foreground hidden sm:inline-flex">
+                                {recursosTema.length} {recursosTema.length === 1 ? "recurso" : "recursos"}
+                              </span>
+                            )}
+                          </div>
                         </button>
 
                         {isDocente && (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                              onClick={() =>
-                                openCreateRecursoInTema(
-                                  tema.materia_id,
-                                  tema.id,
-                                )
-                              }
-                              title="Subir material de estudio (PDF o Enlace web)"
+                              className="h-7 px-2 text-[11px] text-primary border-primary/25 hover:bg-primary/10 rounded-lg"
+                              onClick={() => openCreateRecursoInTema(tema.materia_id, tema.id)}
+                              title="Subir material de estudio"
                             >
                               <Plus className="mr-1 h-3 w-3" />
                               Recurso
@@ -1037,11 +1177,9 @@ export default function LeccionesIndex({
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-primary border-primary-border hover:bg-primary-light"
-                              onClick={() =>
-                                openCreateInTema(tema.materia_id, tema.id)
-                              }
-                              title="Crear nueva tarea o práctica evaluativa"
+                              className="h-7 px-2 text-[11px] text-secondary border-secondary/25 hover:bg-secondary/10 rounded-lg"
+                              onClick={() => openCreateInTema(tema.materia_id, tema.id)}
+                              title="Crear tarea o práctica evaluativa"
                             >
                               <Plus className="mr-1 h-3 w-3" />
                               Tarea
@@ -1049,438 +1187,496 @@ export default function LeccionesIndex({
                           </div>
                         )}
                       </div>
+                    </div>
+                  );
+                }
 
-                      {/* LECCIONES DEL TEMA */}
-                      {abierto && (
-                        <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
-                          {/* SINOPSIS / RECURSOS DEL TEMA */}
-                          {(tema.resumen ||
-                            tema.archivo_pdf ||
-                            tema.paginas_libro) && (
-                            <div className="mb-3 rounded-lg border bg-white dark:bg-neutral-900/60 p-3 shadow-xs space-y-1.5">
-                              <div className="flex flex-wrap items-center justify-between gap-2">
-                                <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                                  <BookOpen className="h-3.5 w-3.5 text-primary" />
-                                  Sinopsis del Tema
+                return (
+                  <div
+                    key={tema.id}
+                    className={`rounded-2xl border-2 p-4 sm:p-5 shadow-md transition-all duration-300 space-y-4 ${
+                      tienePendientesEstudiante
+                        ? "border-amber-500/50 bg-gradient-to-b from-amber-500/[0.04] via-card to-card ring-2 ring-amber-500/20"
+                        : "border-primary/40 bg-gradient-to-b from-primary/[0.03] via-card to-card ring-2 ring-primary/10"
+                    }`}
+                  >
+                    {/* HEADER DEL TEMA EXPANDIDO */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-primary/15">
+                      <button
+                        type="button"
+                        onClick={() => toggleTema(key)}
+                        className="flex items-center gap-3 text-left group min-w-0 flex-1"
+                      >
+                        <div
+                          className={`h-8 w-8 rounded-xl flex items-center justify-center text-white shadow-xs shrink-0 ${
+                            tienePendientesEstudiante
+                              ? "bg-gradient-to-tr from-amber-500 to-rose-500 shadow-amber-500/30"
+                              : "bg-gradient-to-tr from-primary to-secondary shadow-primary/20"
+                          }`}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-primary/15 text-primary border border-primary/25">
+                              Tema #{tema.orden}
+                            </span>
+                            {!isDocente ? (
+                              tienePendientesEstudiante ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-xs flex items-center gap-1 animate-pulse">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  <span>
+                                    {tareasPendientesTema.length} {tareasPendientesTema.length === 1 ? "tarea por entregar" : "tareas por entregar"}
+                                  </span>
                                 </span>
-                                <div className="flex items-center gap-2">
-                                  {tema.paginas_libro && (
-                                    <span className="text-[11px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                                      📖 {tema.paginas_libro}
-                                    </span>
-                                  )}
-                                  {tema.archivo_pdf && (
-                                    <a
-                                      href={`/storage/${tema.archivo_pdf}`}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline bg-primary/10 px-2 py-0.5 rounded border border-primary/20"
+                              ) : tieneTareas ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  <span>Tareas al día</span>
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-muted-foreground">Sin tareas</span>
+                              )
+                            ) : (
+                              <span className="text-[11px] font-medium text-muted-foreground">
+                                {leccionesTema.length} {leccionesTema.length === 1 ? "tarea" : "tareas"} • {recursosTema.length} {recursosTema.length === 1 ? "recurso" : "recursos"}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-bold text-sm sm:text-base text-foreground mt-0.5 group-hover:text-primary transition-colors">
+                            {tema.nombre}
+                          </h3>
+                        </div>
+                      </button>
+
+                      {isDocente && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs font-semibold text-primary border-primary/30 hover:bg-primary/10 rounded-xl shadow-2xs"
+                            onClick={() => openCreateRecursoInTema(tema.materia_id, tema.id)}
+                            title="Subir material de estudio (PDF o Enlace web)"
+                          >
+                            <Plus className="mr-1 h-3.5 w-3.5" />
+                            Recurso
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs font-semibold bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90 rounded-xl shadow-2xs"
+                            onClick={() => openCreateInTema(tema.materia_id, tema.id)}
+                            title="Crear nueva tarea o práctica evaluativa"
+                          >
+                            <Plus className="mr-1 h-3.5 w-3.5" />
+                            Tarea
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* SINOPSIS / RESUMEN DEL TEMA */}
+                    {(tema.resumen || tema.archivo_pdf || tema.paginas_libro) && (
+                      <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-3.5 shadow-2xs space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                            <BookOpen className="h-3.5 w-3.5" />
+                            Sinopsis del Tema
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {tema.paginas_libro && (
+                              <span className="text-[11px] font-medium text-muted-foreground bg-card px-2.5 py-0.5 rounded-md border border-border/80">
+                                📖 {tema.paginas_libro}
+                              </span>
+                            )}
+                            {tema.archivo_pdf && (
+                              <a
+                                href={`/storage/${tema.archivo_pdf}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline bg-card px-2.5 py-0.5 rounded-md border border-primary/30"
+                              >
+                                <FileText className="h-3 w-3" />
+                                Ver Recurso PDF
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        {tema.resumen && (
+                          <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-line">
+                            {tema.resumen}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* RECURSOS DE ESTUDIO */}
+                    {recursosTema.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 px-0.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            📚 Recursos de Estudio ({recursosTema.length})
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {recursosTema.map((r) => {
+                            const esYoutube =
+                              r.enlace_url &&
+                              (r.enlace_url.includes("youtube.com") || r.enlace_url.includes("youtu.be"));
+                            const href = r.tipo === "enlace" ? r.enlace_url : `/storage/${r.archivo}`;
+                            return (
+                              <div
+                                key={r.id}
+                                className="group flex items-center justify-between gap-2.5 rounded-xl border border-border/80 bg-card p-2.5 hover:border-primary/40 hover:shadow-2xs transition-all"
+                              >
+                                <a
+                                  href={href || "#"}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2.5 min-w-0 flex-1 hover:text-primary transition-colors"
+                                >
+                                  <div className="shrink-0 p-2 rounded-lg bg-muted text-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                    {r.tipo === "enlace" ? (
+                                      esYoutube ? (
+                                        <Youtube className="h-4 w-4 text-red-500" />
+                                      ) : (
+                                        <ExternalLink className="h-4 w-4 text-emerald-500" />
+                                      )
+                                    ) : (
+                                      <FileText className="h-4 w-4 text-primary" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-xs font-semibold truncate text-foreground">
+                                        {r.titulo}
+                                      </span>
+                                    </div>
+                                    {r.descripcion && (
+                                      <p className="text-[11px] text-muted-foreground truncate">
+                                        {r.descripcion}
+                                      </p>
+                                    )}
+                                  </div>
+                                </a>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <a
+                                    href={href || "#"}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs font-semibold text-primary hover:underline px-2.5 py-1 rounded-md bg-primary/10 hover:bg-primary/20 transition-colors inline-flex items-center gap-1"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                    <span>Abrir</span>
+                                  </a>
+                                  {isDocente && (
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-rose-500 rounded-lg"
+                                      onClick={() => handleDeleteRecurso(r.id)}
+                                      title="Eliminar recurso"
                                     >
-                                      <FileText className="h-3 w-3" />
-                                      Ver Recurso PDF
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                      <span>Eliminar</span>
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* LISTADO DE TAREAS / LECCIONES */}
+                    {leccionesTema.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-muted-foreground border border-dashed border-border/80 rounded-xl bg-muted/20">
+                        No hay tareas o lecciones en este tema todavía.
+                        {isDocente && ' Usa el botón "+ Tarea" para crear una.'}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {leccionesTema.map((l) => {
+                          const restantes = diasRestantes(l.fecha_entrega);
+                          const miEntrega = l.entregas?.[0];
+                          const yaEntregado = !!miEntrega;
+                          const estaCalificado =
+                            miEntrega?.estado_calificacion === "calificado" &&
+                            miEntrega?.calificacion?.nota !== undefined;
+                          const tieneRefuerzo = !!miEntrega?.refuerzo && !miEntrega.refuerzo.completado;
+
+                          return (
+                            <div
+                              key={l.id}
+                              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/80 bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  {isDocente ? (
+                                    <a
+                                      href={`/entregas/docente?leccion_id=${l.id}`}
+                                      className="text-sm font-bold text-foreground leading-tight hover:text-primary transition-colors"
+                                    >
+                                      {l.titulo}
+                                    </a>
+                                  ) : (
+                                    <a
+                                      href={`/lecciones/${l.hash_id || l.id}`}
+                                      className="text-sm font-bold text-foreground leading-tight hover:text-primary transition-colors"
+                                    >
+                                      {l.titulo}
                                     </a>
                                   )}
                                 </div>
-                              </div>
-                              {tema.resumen && (
-                                <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed whitespace-pre-line">
-                                  {tema.resumen}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          {/* 📚 RECURSOS DE ESTUDIO DEL TEMA */}
-                          {(() => {
-                            const recursosTema = (recursos || []).filter(
-                              (r) => r.tema_id === tema.id,
-                            );
-                            if (recursosTema.length === 0) return null;
-                            return (
-                              <div className="mb-3 space-y-1.5">
-                                <div className="flex items-center gap-1.5 px-0.5">
-                                  <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                                    📚 Recursos de Estudio (
-                                    {recursosTema.length})
+                                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {l.fecha_entrega ? formatoFechaCorta(l.fecha_entrega) : "Sin fecha límite"}
                                   </span>
-                                </div>
-                                <div className="space-y-1.5">
-                                  {recursosTema.map((r) => {
-                                    const esYoutube =
-                                      r.enlace_url &&
-                                      (r.enlace_url.includes("youtube.com") ||
-                                        r.enlace_url.includes("youtu.be"));
-                                    const href =
-                                      r.tipo === "enlace"
-                                        ? r.enlace_url
-                                        : `/storage/${r.archivo}`;
-                                    return (
-                                      <div
-                                        key={r.id}
-                                        className="group flex items-center justify-between gap-3 rounded-lg border border-neutral-200/80 bg-white dark:bg-neutral-900/50 p-2.5 hover:border-primary/40 hover:shadow-xs transition-all"
-                                      >
-                                        <a
-                                          href={href || "#"}
-                                          target="_blank"
-                                          rel="noreferrer"
-                                          className="flex items-center gap-2.5 min-w-0 flex-1 hover:text-primary transition-colors"
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    {l.curso?.gestion?.año} · P.{l.curso?.paralelo}
+                                  </span>
+                                  {l.docente && (
+                                    <span className="flex items-center gap-1" title={nombreCompleto(l.docente.user)}>
+                                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[8px] font-bold text-primary">
+                                        {iniciales(l.docente.user)}
+                                      </span>
+                                      <span className="truncate max-w-[120px]">{nombreCompleto(l.docente.user)}</span>
+                                    </span>
+                                  )}
+                                  {l.imagen && (
+                                    <span className="flex items-center gap-1 font-semibold text-primary">
+                                      <Paperclip className="h-3 w-3" />
+                                      PDF adjunto
+                                    </span>
+                                  )}
+
+                                  {/* Estado para Estudiantes */}
+                                  {!isDocente && (
+                                    <>
+                                      {estaCalificado && (
+                                        <Badge
+                                          variant={miEntrega!.calificacion!.nota >= 70 ? "success" : "warning"}
+                                          className="text-[10px] gap-1 font-bold"
                                         >
-                                          <div className="shrink-0 p-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                            {r.tipo === "enlace" ? (
-                                              esYoutube ? (
-                                                <Youtube className="h-4 w-4 text-red-600" />
-                                              ) : (
-                                                <ExternalLink className="h-4 w-4 text-emerald-600" />
-                                              )
-                                            ) : (
-                                              <FileText className="h-4 w-4 text-blue-600" />
-                                            )}
-                                          </div>
-                                          <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-xs font-semibold truncate">
-                                                {r.titulo}
-                                              </span>
-                                              <Badge
-                                                variant="outline"
-                                                className="text-[10px] py-0 px-1.5 capitalize"
-                                              >
-                                                {r.tipo === "enlace"
-                                                  ? esYoutube
-                                                    ? "Video YouTube"
-                                                    : "Enlace Web"
-                                                  : "Documento / PDF"}
-                                              </Badge>
-                                            </div>
-                                            {r.descripcion && (
-                                              <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                                                {r.descripcion}
-                                              </p>
-                                            )}
-                                          </div>
-                                        </a>
-                                        <div className="flex items-center gap-1 shrink-0">
-                                          <a
-                                            href={href || "#"}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-xs font-medium text-primary hover:underline px-2 py-1 rounded bg-primary/5 hover:bg-primary/10"
-                                          >
-                                            Abrir
-                                          </a>
-                                          {isDocente && (
-                                            <Button
-                                              size="icon"
-                                              variant="ghost"
-                                              className="h-7 w-7 text-neutral-400 hover:text-red-500"
-                                              onClick={() =>
-                                                handleDeleteRecurso(r.id)
-                                              }
-                                              title="Eliminar recurso"
-                                            >
-                                              <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
+                                          <Award className="h-3 w-3" />
+                                          Nota: {miEntrega!.calificacion!.nota}/100
+                                        </Badge>
+                                      )}
+                                      {yaEntregado && !estaCalificado && (
+                                        <Badge variant="info" className="text-[10px] gap-1">
+                                          <CheckCircle2 className="h-3 w-3" />
+                                          Entregado
+                                        </Badge>
+                                      )}
+                                      {!yaEntregado && (
+                                        <Badge
+                                          variant={restantes !== null && restantes < 0 ? "destructive" : "warning"}
+                                          className="text-[10px]"
+                                        >
+                                          {restantes !== null && restantes < 0 ? "Sin entregar (Vencida)" : "Pendiente de entrega"}
+                                        </Badge>
+                                      )}
+                                      {tieneRefuerzo && (
+                                        <Badge variant="purple" className="text-[10px] gap-1">
+                                          <Sparkles className="h-3 w-3" />
+                                          Refuerzo IA
+                                        </Badge>
+                                      )}
+                                    </>
+                                  )}
+
+                                  {/* Estado para Docentes */}
+                                  {isDocente && (
+                                    <>
+                                      {restantes !== null && restantes >= 0 && restantes <= 3 && (
+                                        <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px]">
+                                          {restantes === 0 ? "Vence Hoy" : `Vence en ${restantes}d`}
+                                        </Badge>
+                                      )}
+                                      {restantes !== null && restantes < 0 && l.estado === "activo" && (
+                                        <Badge className="bg-rose-500/10 text-rose-600 border border-rose-500/20 text-[10px]">
+                                          Vencida
+                                        </Badge>
+                                      )}
+                                      <span
+                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                          l.estado === "activo" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" : "bg-muted text-muted-foreground"
+                                        }`}
+                                      >
+                                        <span
+                                          className={`h-1.5 w-1.5 rounded-full ${l.estado === "activo" ? "bg-emerald-500" : "bg-neutral-400"}`}
+                                        />
+                                        {l.estado === "activo" ? "Activo" : "Inactivo"}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          })()}
 
-                          {leccionesTema.length === 0 ? (
-                            <div className="py-6 text-center text-xs text-neutral-400">
-                              No hay lecciones en este tema todavía.
-                              {isDocente &&
-                                ' Usa el botón "Añadir" para crear la primera.'}
-                            </div>
-                          ) : (
-                            <div className="space-y-2">
-                              {leccionesTema.map((l) => {
-                                const restantes = diasRestantes(
-                                  l.fecha_entrega,
-                                );
-                                const miEntrega = l.entregas?.[0];
-                                const yaEntregado = !!miEntrega;
-                                const estaCalificado =
-                                  miEntrega?.estado_calificacion ===
-                                    "calificado" &&
-                                  miEntrega?.calificacion?.nota !== undefined;
-                                const tieneRefuerzo =
-                                  !!miEntrega?.refuerzo &&
-                                  !miEntrega.refuerzo.completado;
-
-                                return (
-                                  <div
-                                    key={l.id}
-                                    className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all"
-                                  >
-                                    <div className="min-w-0 flex-1">
-                                      {isDocente ? (
-                                        <a
-                                          href={`/entregas/docente?leccion_id=${l.id}`}
-                                          className="text-sm font-medium leading-tight hover:text-primary transition-colors"
-                                        >
-                                          {l.titulo}
-                                        </a>
-                                      ) : (
-                                        <a
-                                          href={`/lecciones/${l.hash_id || l.id}`}
-                                          className="text-sm font-medium leading-tight hover:text-primary transition-colors"
-                                        >
-                                          {l.titulo}
-                                        </a>
-                                      )}
-                                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
-                                        <span className="flex items-center gap-1">
-                                          <Clock className="h-3 w-3" />
-                                          {l.fecha_entrega
-                                            ? formatoFechaCorta(l.fecha_entrega)
-                                            : "Sin fecha límite"}
-                                        </span>
-
-                                        <span className="flex items-center gap-1">
-                                          <Users className="h-3 w-3" />
-                                          {l.curso?.gestion?.año} · P.
-                                          {l.curso?.paralelo}
-                                        </span>
-
-                                        {l.docente && (
-                                          <span
-                                            className="flex items-center gap-1"
-                                            title={nombreCompleto(
-                                              l.docente.user,
-                                            )}
-                                          >
-                                            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
-                                              {iniciales(l.docente.user)}
-                                            </span>
-                                            <span className="truncate max-w-[120px]">
-                                              {nombreCompleto(l.docente.user)}
-                                            </span>
-                                          </span>
-                                        )}
-
-                                        {l.imagen && (
-                                          <span className="flex items-center gap-1 font-medium text-primary">
-                                            <Paperclip className="h-3 w-3" />
-                                            PDF adjunto
-                                          </span>
-                                        )}
-
-                                        {/* Estado de entrega del Estudiante */}
-                                        {!isDocente && (
-                                          <>
-                                            {estaCalificado && (
-                                              <Badge
-                                                variant={
-                                                  miEntrega!.calificacion!
-                                                    .nota >= 70
-                                                    ? "success"
-                                                    : "warning"
-                                                }
-                                                className="text-[10px] gap-1 font-bold"
-                                              >
-                                                <Award className="h-3 w-3" />
-                                                Nota:{" "}
-                                                {miEntrega!.calificacion!.nota}
-                                                /100
-                                              </Badge>
-                                            )}
-                                            {yaEntregado && !estaCalificado && (
-                                              <Badge
-                                                variant="info"
-                                                className="text-[10px] gap-1"
-                                              >
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                Entregado
-                                              </Badge>
-                                            )}
-                                            {!yaEntregado && (
-                                              <Badge
-                                                variant={
-                                                  restantes !== null &&
-                                                  restantes < 0
-                                                    ? "destructive"
-                                                    : "warning"
-                                                }
-                                                className="text-[10px]"
-                                              >
-                                                {restantes !== null &&
-                                                restantes < 0
-                                                  ? "Sin entregar (Vencida)"
-                                                  : "Pendiente de entrega"}
-                                              </Badge>
-                                            )}
-                                            {tieneRefuerzo && (
-                                              <Badge
-                                                variant="purple"
-                                                className="text-[10px] gap-1"
-                                              >
-                                                <Sparkles className="h-3 w-3" />
-                                                Refuerzo IA
-                                              </Badge>
-                                            )}
-                                          </>
-                                        )}
-
-                                        {isDocente && (
-                                          <>
-                                            {restantes !== null &&
-                                              restantes >= 0 &&
-                                              restantes <= 3 && (
-                                                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
-                                                  {restantes === 0
-                                                    ? "Vence Hoy"
-                                                    : `Vence en ${restantes}d`}
-                                                </Badge>
-                                              )}
-                                            {restantes !== null &&
-                                              restantes < 0 &&
-                                              l.estado === "activo" && (
-                                                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">
-                                                  Vencida
-                                                </Badge>
-                                              )}
-                                            <span
-                                              className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${l.estado === "activo" ? "bg-emerald-50 text-emerald-700" : "bg-neutral-100 text-neutral-500"}`}
-                                            >
-                                              <span
-                                                className={`h-1 w-1 rounded-full ${l.estado === "activo" ? "bg-emerald-500" : "bg-neutral-400"}`}
-                                              />
-                                              {l.estado === "activo"
-                                                ? "Activo"
-                                                : "Inactivo"}
-                                            </span>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="flex shrink-0 items-center gap-1.5 opacity-80 transition-opacity group-hover:opacity-100">
-                                      {!isDocente ? (
-                                        <a
-                                          href={`/lecciones/${l.hash_id || l.id}`}
-                                        >
-                                          <Button
-                                            size="sm"
-                                            className={`shadow-xs h-7 text-xs font-semibold ${
-                                              estaCalificado
-                                                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                                                : yaEntregado
-                                                  ? "bg-secondary text-secondary-foreground hover:bg-secondary-hover"
-                                                  : "bg-primary hover:bg-primary-hover text-primary-foreground"
-                                            }`}
-                                          >
-                                            {estaCalificado ? (
-                                              <>
-                                                <Eye className="mr-1 h-3 w-3" />
-                                                Ver Nota
-                                              </>
-                                            ) : yaEntregado ? (
-                                              <>
-                                                <CheckCircle2 className="mr-1 h-3 w-3" />
-                                                Ver Entrega
-                                              </>
-                                            ) : (
-                                              <>
-                                                <Send className="mr-1 h-3 w-3" />
-                                                Entregar Tarea
-                                              </>
-                                            )}
-                                          </Button>
-                                        </a>
+                              <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-center">
+                                {!isDocente ? (
+                                  <a href={`/lecciones/${l.hash_id || l.id}`}>
+                                    <Button
+                                      size="sm"
+                                      className={`h-8 text-xs font-semibold rounded-xl shadow-2xs ${
+                                        estaCalificado
+                                          ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                          : yaEntregado
+                                            ? "bg-secondary text-secondary-foreground hover:bg-secondary-hover"
+                                            : "bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90"
+                                      }`}
+                                    >
+                                      {estaCalificado ? (
+                                        <>
+                                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                          Ver Nota
+                                        </>
+                                      ) : yaEntregado ? (
+                                        <>
+                                          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                                          Ver Entrega
+                                        </>
                                       ) : (
                                         <>
-                                          <a
-                                            href={`/entregas/docente?leccion_id=${l.id}`}
-                                          >
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              className="h-7 text-xs gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
-                                              title="Revisar y calificar entregas"
-                                            >
-                                              <FileCheck className="h-3.5 w-3.5 text-blue-600" />
-                                              Entregas
-                                            </Button>
-                                          </a>
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() => openEdit(l)}
-                                            title="Editar lección"
-                                          >
-                                            <Pencil className="h-3.5 w-3.5" />
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            onClick={() => openDelete(l)}
-                                            title="Eliminar lección"
-                                          >
-                                            <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                          </Button>
+                                          <Send className="mr-1.5 h-3.5 w-3.5" />
+                                          Entregar Tarea
                                         </>
                                       )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                                    </Button>
+                                  </a>
+                                ) : (
+                                  <>
+                                    <a href={`/entregas/docente?leccion_id=${l.id}`}>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 text-xs gap-1.5 border-primary/25 text-primary hover:bg-primary/10 rounded-xl"
+                                        title="Revisar y calificar entregas"
+                                      >
+                                        <FileCheck className="h-3.5 w-3.5 text-primary" />
+                                        Entregas
+                                      </Button>
+                                    </a>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground hover:text-primary transition-colors"
+                                      onClick={() => openEdit(l)}
+                                      title="Editar lección"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5 text-blue-500" />
+                                      <span>Editar</span>
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-rose-400 text-muted-foreground hover:text-rose-500 transition-colors"
+                                      onClick={() => openDelete(l)}
+                                      title="Eliminar lección"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                      <span>Eliminar</span>
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
-                {/* PANEL SIN TEMA */}
-                {(() => {
-                  const recursosSinTema = (recursos || []).filter(
-                    (r) => !r.tema_id,
-                  );
-                  const totalSinTema =
-                    (leccionesPorTema["sin-tema"]?.length ?? 0) +
-                    recursosSinTema.length;
-                  if (totalSinTema === 0) return null;
+              {/* PANEL SIN TEMA */}
+              {(() => {
+                const leccionesSinTema = leccionesPorTema["sin-tema"] ?? [];
+                const recursosSinTema = (recursos || []).filter((r) => !r.tema_id);
+                const totalSinTema =
+                  leccionesSinTema.length + recursosSinTema.length;
+                if (totalSinTema === 0) return null;
+                const abierto = !!temasAbiertos["sin-tema"];
+                const tareasPendientesSinTema = isDocente
+                  ? []
+                  : leccionesSinTema.filter(
+                      (l) => !l.entregas || l.entregas.length === 0,
+                    );
+                const tienePendientesEstudiante =
+                  !isDocente && tareasPendientesSinTema.length > 0;
+                const tieneTareas = leccionesSinTema.length > 0;
 
+                if (!abierto) {
                   return (
-                    <div>
-                      <div className="flex items-center justify-between px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
+                    <div
+                      className={`group rounded-2xl border transition-all duration-200 overflow-hidden shadow-2xs ${
+                        tienePendientesEstudiante
+                          ? "border-amber-500/50 bg-gradient-to-r from-amber-500/[0.06] via-card to-card ring-1 ring-amber-500/20 hover:border-amber-500"
+                          : "border-border/75 bg-card/60 hover:bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between px-3.5 py-2.5 sm:px-4 sm:py-2.5 gap-2">
                         <button
                           type="button"
                           onClick={() => toggleTema("sin-tema")}
-                          className="flex flex-1 items-center gap-2 text-left"
+                          className="flex flex-1 items-center gap-2.5 text-left min-w-0"
                         >
-                          <ChevronDown
-                            className={`h-4 w-4 text-neutral-400 transition-transform ${temasAbiertos["sin-tema"] ? "" : "-rotate-90"}`}
-                          />
-                          <span className="h-2 w-2 rounded-full bg-neutral-300" />
-                          <span className="font-medium text-sm text-neutral-600 dark:text-neutral-300">
+                          <div
+                            className={`h-6 w-6 rounded-lg flex items-center justify-center transition-colors shrink-0 ${
+                              tienePendientesEstudiante
+                                ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                                : "bg-muted text-muted-foreground group-hover:text-primary group-hover:bg-primary/10"
+                            }`}
+                          >
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="h-2.5 w-2.5 rounded-full shrink-0 bg-muted-foreground/40 shadow-2xs" />
+                          <span className="font-semibold text-xs sm:text-sm text-foreground truncate">
                             Sin tema específico (General)
                           </span>
-                          <Badge variant="outline" className="ml-2 text-[10px]">
-                            {totalSinTema} elemento
-                            {totalSinTema !== 1 ? "s" : ""}
-                          </Badge>
+
+                          <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                            {!isDocente ? (
+                              tienePendientesEstudiante ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-xs flex items-center gap-1 animate-pulse">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  <span>
+                                    {tareasPendientesSinTema.length}{" "}
+                                    {tareasPendientesSinTema.length === 1 ? "tarea pendiente" : "tareas pendientes"}
+                                  </span>
+                                </span>
+                              ) : tieneTareas ? (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  <span>Tareas al día</span>
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-muted-foreground">
+                                  Sin tareas
+                                </span>
+                              )
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/25">
+                                {leccionesSinTema.length} {leccionesSinTema.length === 1 ? "tarea" : "tareas"}
+                              </span>
+                            )}
+                            {recursosSinTema.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/70 text-muted-foreground hidden sm:inline-flex">
+                                {recursosSinTema.length} {recursosSinTema.length === 1 ? "recurso" : "recursos"}
+                              </span>
+                            )}
+                          </div>
                         </button>
                         {isDocente && (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950/40"
-                              onClick={() =>
-                                openCreateRecursoInTema(
-                                  materias[0]?.id || 0,
-                                  null,
-                                )
-                              }
-                              title="Subir material de estudio general"
+                              className="h-7 px-2 text-[11px] text-primary border-primary/25 hover:bg-primary/10 rounded-lg"
+                              onClick={() => openCreateRecursoInTema(materias[0]?.id || 0, null)}
+                              title="Subir material general"
                             >
                               <Plus className="mr-1 h-3 w-3" />
                               Recurso
@@ -1488,11 +1684,9 @@ export default function LeccionesIndex({
                             <Button
                               size="sm"
                               variant="outline"
-                              className="h-7 text-xs text-primary border-primary-border hover:bg-primary-light"
-                              onClick={() =>
-                                openCreateInTema(materias[0]?.id || 0, 0)
-                              }
-                              title="Crear nueva tarea general"
+                              className="h-7 px-2 text-[11px] text-secondary border-secondary/25 hover:bg-secondary/10 rounded-lg"
+                              onClick={() => openCreateInTema(materias[0]?.id || 0, 0)}
+                              title="Crear tarea general"
                             >
                               <Plus className="mr-1 h-3 w-3" />
                               Tarea
@@ -1500,170 +1694,210 @@ export default function LeccionesIndex({
                           </div>
                         )}
                       </div>
+                    </div>
+                  );
+                }
 
-                      {temasAbiertos["sin-tema"] && (
-                        <div className="bg-neutral-50/50 px-4 pb-3 pt-1">
-                          <div className="space-y-2">
-                            {leccionesPorTema["sin-tema"].map((l) => {
-                              const restantes = diasRestantes(l.fecha_entrega);
-                              return (
-                                <div
-                                  key={l.id}
-                                  className="group flex items-start justify-between gap-3 rounded-lg border bg-white p-3 hover:shadow-sm transition-all"
-                                >
-                                  <div className="min-w-0 flex-1">
-                                    {isDocente ? (
-                                      <a
-                                        href={`/lecciones/${l.hash_id || l.id}/entregas`}
-                                        className="text-sm font-medium leading-tight hover:text-primary transition-colors"
-                                      >
-                                        {l.titulo}
-                                      </a>
-                                    ) : (
-                                      <a
-                                        href={`/lecciones/${l.hash_id || l.id}`}
-                                        className="text-sm font-medium leading-tight hover:text-primary transition-colors"
-                                      >
-                                        {l.titulo}
-                                      </a>
-                                    )}
-                                    <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-neutral-500">
-                                      <span className="flex items-center gap-1">
-                                        <Clock className="h-3 w-3" />
-                                        {l.fecha_entrega
-                                          ? formatoFechaCorta(l.fecha_entrega)
-                                          : "Sin fecha"}
-                                      </span>
-                                      <span className="flex items-center gap-1">
-                                        <Users className="h-3 w-3" />
-                                        {l.curso?.gestion?.año} · P.
-                                        {l.curso?.paralelo}
-                                      </span>
-                                      {l.docente && (
-                                        <span
-                                          className="flex items-center gap-1"
-                                          title={nombreCompleto(l.docente.user)}
-                                        >
-                                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-200 text-[8px] font-semibold text-neutral-700">
-                                            {iniciales(l.docente.user)}
-                                          </span>
-                                          <span className="truncate max-w-[120px]">
-                                            {nombreCompleto(l.docente.user)}
-                                          </span>
-                                        </span>
-                                      )}
-                                      {l.imagen && (
-                                        <span className="flex items-center gap-1 font-medium text-primary">
-                                          <Paperclip className="h-3 w-3" />
-                                          PDF adjunto
-                                        </span>
-                                      )}
-                                      {restantes !== null &&
-                                        restantes >= 0 &&
-                                        restantes <= 3 && (
-                                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">
-                                            {restantes === 0
-                                              ? "Hoy"
-                                              : `${restantes}d`}
-                                          </Badge>
-                                        )}
-                                      {restantes !== null &&
-                                        restantes < 0 &&
-                                        l.estado === "activo" && (
-                                          <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100 text-[10px]">
-                                            Vencida
-                                          </Badge>
-                                        )}
-                                      <span
-                                        className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
-                                          l.estado === "activo"
-                                            ? "bg-emerald-50 text-emerald-700"
-                                            : "bg-neutral-100 text-neutral-500"
-                                        }`}
-                                      >
-                                        <span
-                                          className={`h-1 w-1 rounded-full ${l.estado === "activo" ? "bg-emerald-500" : "bg-neutral-400"}`}
-                                        />
-                                        {l.estado === "activo"
-                                          ? "Activo"
-                                          : "Inactivo"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="flex shrink-0 items-center gap-1.5 opacity-70 transition-opacity group-hover:opacity-100">
-                                    {isDocente && (
-                                      <>
-                                        <a
-                                          href={`/lecciones/${l.hash_id || l.id}/entregas`}
-                                        >
-                                          <Button
-                                            variant="outline"
-                                            size="icon"
-                                            className="h-7 w-7"
-                                            title="Ver entregas"
-                                          >
-                                            <Users className="h-3.5 w-3.5 text-blue-500" />
-                                          </Button>
-                                        </a>
-                                        <Button
-                                          variant="outline"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => openEdit(l)}
-                                        >
-                                          <Pencil className="h-3.5 w-3.5" />
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="icon"
-                                          className="h-7 w-7"
-                                          onClick={() => openDelete(l)}
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                return (
+                  <div className="rounded-2xl border-2 border-primary/40 bg-gradient-to-b from-primary/[0.03] via-card to-card p-4 sm:p-5 ring-2 ring-primary/10 shadow-md transition-all duration-300 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-primary/15">
+                      <button
+                        type="button"
+                        onClick={() => toggleTema("sin-tema")}
+                        className="flex items-center gap-3 text-left group min-w-0 flex-1"
+                      >
+                        <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-xs shrink-0">
+                          <ChevronUp className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[11px] font-medium text-muted-foreground">
+                            {totalSinTema} {totalSinTema === 1 ? "elemento general" : "elementos generales"}
+                          </span>
+                          <h3 className="font-bold text-sm sm:text-base text-foreground mt-0.5 group-hover:text-primary transition-colors">
+                            Sin tema específico (General)
+                          </h3>
+                        </div>
+                      </button>
+                      {isDocente && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs font-semibold text-primary border-primary/30 hover:bg-primary/10 rounded-xl shadow-2xs"
+                            onClick={() => openCreateRecursoInTema(materias[0]?.id || 0, null)}
+                            title="Subir material de estudio general"
+                          >
+                            <Plus className="mr-1 h-3.5 w-3.5" />
+                            Recurso
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs font-semibold bg-gradient-to-r from-primary to-secondary text-white hover:opacity-90 rounded-xl shadow-2xs"
+                            onClick={() => openCreateInTema(materias[0]?.id || 0, 0)}
+                            title="Crear nueva tarea general"
+                          >
+                            <Plus className="mr-1 h-3.5 w-3.5" />
+                            Tarea
+                          </Button>
                         </div>
                       )}
                     </div>
-                  );
-                })()}
-              </div>
+
+                    <div className="space-y-2">
+                      {leccionesPorTema["sin-tema"].map((l) => {
+                        const restantes = diasRestantes(l.fecha_entrega);
+                        return (
+                          <div
+                            key={l.id}
+                            className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-border/80 bg-card p-3.5 hover:border-primary/40 hover:shadow-sm transition-all"
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                {isDocente ? (
+                                  <a
+                                    href={`/lecciones/${l.hash_id || l.id}/entregas`}
+                                    className="text-sm font-bold text-foreground leading-tight hover:text-primary transition-colors"
+                                  >
+                                    {l.titulo}
+                                  </a>
+                                ) : (
+                                  <a
+                                    href={`/lecciones/${l.hash_id || l.id}`}
+                                    className="text-sm font-bold text-foreground leading-tight hover:text-primary transition-colors"
+                                  >
+                                    {l.titulo}
+                                  </a>
+                                )}
+                              </div>
+                              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {l.fecha_entrega ? formatoFechaCorta(l.fecha_entrega) : "Sin fecha"}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {l.curso?.gestion?.año} · P.{l.curso?.paralelo}
+                                </span>
+                                {l.docente && (
+                                  <span className="flex items-center gap-1" title={nombreCompleto(l.docente.user)}>
+                                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[8px] font-bold text-primary">
+                                      {iniciales(l.docente.user)}
+                                    </span>
+                                    <span className="truncate max-w-[120px]">{nombreCompleto(l.docente.user)}</span>
+                                  </span>
+                                )}
+                                {l.imagen && (
+                                  <span className="flex items-center gap-1 font-semibold text-primary">
+                                    <Paperclip className="h-3 w-3" />
+                                    PDF adjunto
+                                  </span>
+                                )}
+                                {restantes !== null && restantes >= 0 && restantes <= 3 && (
+                                  <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px]">
+                                    {restantes === 0 ? "Hoy" : `${restantes}d`}
+                                  </Badge>
+                                )}
+                                {restantes !== null && restantes < 0 && l.estado === "activo" && (
+                                  <Badge className="bg-rose-500/10 text-rose-600 border border-rose-500/20 text-[10px]">
+                                    Vencida
+                                  </Badge>
+                                )}
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                    l.estado === "activo" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" : "bg-muted text-muted-foreground"
+                                  }`}
+                                >
+                                  <span
+                                    className={`h-1.5 w-1.5 rounded-full ${l.estado === "activo" ? "bg-emerald-500" : "bg-neutral-400"}`}
+                                  />
+                                  {l.estado === "activo" ? "Activo" : "Inactivo"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-1.5 self-end sm:self-center">
+                              {isDocente && (
+                                <>
+                                  <a href={`/lecciones/${l.hash_id || l.id}/entregas`}>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-8 text-xs gap-1.5 border-primary/25 text-primary hover:bg-primary/10 rounded-xl"
+                                      title="Ver entregas"
+                                    >
+                                      <Users className="h-3.5 w-3.5 text-primary" />
+                                      Entregas
+                                    </Button>
+                                  </a>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground hover:text-primary transition-colors"
+                                    onClick={() => openEdit(l)}
+                                    title="Editar lección"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 text-blue-500" />
+                                    <span>Editar</span>
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-rose-400 text-muted-foreground hover:text-rose-500 transition-colors"
+                                    onClick={() => openDelete(l)}
+                                    title="Eliminar lección"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                    <span>Eliminar</span>
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
+
+          {/* COLUMNA LATERAL: CALENDARIO Y PRÓXIMAS ENTREGAS */}
           <div className="space-y-6">
-            <Card className="shadow-sm">
-              <CardContent className="pt-5">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-sm font-semibold">
-                    <CalendarDays className="h-4 w-4 text-primary" />
-                    {meses[mes]} {año}
+            {/* CALENDARIO ACADÉMICO */}
+            <Card className="shadow-sm border border-primary/20 rounded-3xl bg-card/90 backdrop-blur-md overflow-hidden">
+              <CardContent className="p-5">
+                <div className="mb-4 flex items-center justify-between pb-3 border-b border-border/70">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-2xs">
+                      <CalendarDays className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground capitalize">
+                        {meses[mes]} {año}
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground">Calendario de actividades</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => cambiarMes(-1)}
-                      className="rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                      className="rounded-lg p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => cambiarMes(1)}
-                      className="rounded p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                      className="rounded-lg p-1.5 hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-7 gap-y-1 text-center">
+                <div className="grid grid-cols-7 gap-y-1.5 text-center">
                   {diasSemana.map((d, i) => (
                     <div
                       key={i}
-                      className="text-[10px] font-medium text-neutral-400"
+                      className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80 py-1"
                     >
                       {d}
                     </div>
@@ -1675,18 +1909,18 @@ export default function LeccionesIndex({
                     >
                       {dia && (
                         <div
-                          className={`flex h-7 w-7 flex-col items-center justify-center rounded-full text-xs transition-colors
-                                                    ${esHoy(dia) ? "bg-primary font-semibold text-primary-foreground" : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}
+                          className={`flex h-7 w-7 flex-col items-center justify-center rounded-full text-xs transition-all
+                            ${esHoy(dia) ? "bg-gradient-to-tr from-primary to-secondary font-bold text-white shadow-md shadow-primary/30 ring-2 ring-primary/20" : "text-foreground hover:bg-primary/10 hover:text-primary"}`}
                         >
                           {dia}
                           {esFechaEntrega(dia) && !esHoy(dia) && (
-                            <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-amber-500" />
+                            <span className="absolute bottom-0.5 h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
                           )}
                         </div>
                       )}
                       {dia && esFechaEntrega(dia) && (
-                        <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 hidden -translate-x-1/2 group-hover:block">
-                          <div className="max-w-[180px] truncate rounded bg-neutral-800 px-2 py-1 text-[10px] text-white shadow-lg">
+                        <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-1.5 hidden -translate-x-1/2 group-hover:block">
+                          <div className="max-w-[200px] truncate rounded-xl bg-popover border border-border px-2.5 py-1 text-[11px] text-popover-foreground shadow-lg font-medium">
                             {leccionesDelDia(dia)
                               .map((l) => l.titulo)
                               .join(", ")}
@@ -1696,9 +1930,9 @@ export default function LeccionesIndex({
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 flex items-center justify-center gap-4 border-t pt-3 text-[11px] text-neutral-500">
+                <div className="mt-4 flex items-center justify-center gap-4 border-t border-border/70 pt-3 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />{" "}
+                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />{" "}
                     Entrega
                   </span>
                   <span className="flex items-center gap-1.5">
@@ -1708,39 +1942,50 @@ export default function LeccionesIndex({
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-1.5 text-sm">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  Próximas entregas
+            {/* PRÓXIMAS ENTREGAS */}
+            <Card className="shadow-sm border border-secondary/20 rounded-3xl bg-card/90 backdrop-blur-md overflow-hidden">
+              <CardHeader className="pb-3 border-b border-border/70 bg-gradient-to-r from-secondary/[0.04] to-transparent px-5 pt-4">
+                <CardTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+                  <div className="h-7 w-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500">
+                    <AlertCircle className="h-4 w-4" />
+                  </div>
+                  Próximas Entregas
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 pt-0">
+              <CardContent className="space-y-2.5 p-5 pt-3">
                 {proximasEntregas.length === 0 && (
-                  <p className="py-4 text-center text-xs text-neutral-400">
-                    No hay entregas próximas.
-                  </p>
+                  <div className="py-6 text-center text-xs text-muted-foreground border border-dashed border-border/70 rounded-xl bg-muted/20">
+                    No hay entregas próximas pendientes.
+                  </div>
                 )}
                 {proximasEntregas.map((l) => {
                   const color = colorForMateria(l.materia?.codigo);
                   const restantes = diasRestantes(l.fecha_entrega);
                   return (
-                    <div key={l.id} className="flex items-center gap-2.5">
+                    <div
+                      key={l.id}
+                      className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border/75 bg-card/60 hover:bg-card hover:border-primary/30 transition-all shadow-2xs"
+                    >
                       <span
-                        className={`h-2 w-2 shrink-0 rounded-full ${color.dot}`}
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${color.dot}`}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium">
+                        <p className="truncate text-xs font-semibold text-foreground">
                           {l.titulo}
                         </p>
-                        <p className="text-[11px] text-neutral-400">
-                          {l.materia?.codigo} ·{" "}
-                          {formatoFechaCorta(l.fecha_entrega)}
+                        <p className="text-[11px] text-muted-foreground">
+                          {l.materia?.codigo} · {formatoFechaCorta(l.fecha_entrega)}
                         </p>
                       </div>
-                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                      <span
+                        className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          restantes === 0
+                            ? "bg-rose-500/15 text-rose-600 border border-rose-500/30"
+                            : "bg-primary/10 text-primary border border-primary/25"
+                        }`}
+                      >
                         {restantes === 0 ? "Hoy" : `${restantes}d`}
-                      </Badge>
+                      </span>
                     </div>
                   );
                 })}
@@ -2136,127 +2381,84 @@ export default function LeccionesIndex({
             </DialogHeader>
 
             {/* SELECTOR DE MODO DE INGESTA */}
-            <div className="flex rounded-lg bg-neutral-100 dark:bg-neutral-800 p-1 text-xs font-medium">
+            <div className="flex rounded-xl bg-muted/60 p-1 text-xs font-semibold border border-border/70">
               <button
                 type="button"
-                className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition-colors ${
-                  modoCreacionTema === "pdf"
-                    ? "bg-white dark:bg-neutral-900 shadow-xs text-primary font-semibold"
-                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
-                }`}
-                onClick={() => setModoCreacionTema("pdf")}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                Cargar PDF
-              </button>
-              <button
-                type="button"
-                className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition-colors ${
-                  modoCreacionTema === "texto"
-                    ? "bg-white dark:bg-neutral-900 shadow-xs text-primary font-semibold"
-                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
-                }`}
-                onClick={() => setModoCreacionTema("texto")}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                Pegar Texto
-              </button>
-              <button
-                type="button"
-                className={`flex-1 py-1.5 px-2 rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+                className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
                   modoCreacionTema === "manual"
-                    ? "bg-white dark:bg-neutral-900 shadow-xs text-primary font-semibold"
-                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900"
+                    ? "bg-card shadow-xs text-primary font-bold border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 onClick={() => setModoCreacionTema("manual")}
               >
-                <Pencil className="h-3.5 w-3.5" />
-                Manual
+                <Pencil className="h-4 w-4" />
+                Creación Manual
+              </button>
+              <button
+                type="button"
+                className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
+                  modoCreacionTema === "pdf"
+                    ? "bg-card shadow-xs text-primary font-bold border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setModoCreacionTema("pdf")}
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+                Cargar PDF (con IA)
               </button>
             </div>
 
-            {/* SECCIÓN DE IA CUANDO SE USA PDF O TEXTO */}
-            {modoCreacionTema !== "manual" && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2.5">
+            {/* SECCIÓN DE IA CUANDO SE USA PDF */}
+            {modoCreacionTema === "pdf" && (
+              <div className="rounded-2xl border border-primary/25 bg-gradient-to-r from-primary/[0.04] to-secondary/[0.04] p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-primary flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5" />
+                  <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4" />
                     Asistente de Resumen y Estructuración IA
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {modoCreacionTema === "pdf"
-                      ? "Lector de PDF inteligente"
-                      : "Sintetizador de texto"}
+                  <span className="text-[10px] font-medium text-muted-foreground bg-card px-2 py-0.5 rounded-md border border-border">
+                    Lector de PDF inteligente
                   </span>
                 </div>
 
-                {modoCreacionTema === "pdf" && (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-neutral-700 dark:text-neutral-300">
-                      Archivo PDF del tema o capítulo (máx. 20MB)
-                    </Label>
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setTemaPdfFile(file);
-                        setIaMensajeError(null);
-                      }}
-                      className="h-8 text-xs file:text-xs file:h-6"
-                    />
-                    {temaPdfFile && (
-                      <p className="text-[11px] text-primary flex items-center gap-1">
-                        <Paperclip className="h-3 w-3" />
-                        Archivo seleccionado:{" "}
-                        <strong>{temaPdfFile.name}</strong> (
-                        {(temaPdfFile.size / 1024).toFixed(0)} KB)
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {modoCreacionTema === "texto" && (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-neutral-700 dark:text-neutral-300">
-                      Texto base, notas o extracto del tema
-                    </Label>
-                    <textarea
-                      value={temaTextoBruto}
-                      onChange={(e) => {
-                        setTemaTextoBruto(e.target.value);
-                        setIaMensajeError(null);
-                      }}
-                      className="w-full rounded-md border p-2 text-xs bg-white dark:bg-neutral-900"
-                      rows={3}
-                      placeholder="Pega aquí los apuntes, transcripción o fragmento del libro..."
-                    />
-                  </div>
-                )}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-foreground">
+                    Archivo PDF del tema o capítulo (máx. 20MB)
+                  </Label>
+                  <Input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setTemaPdfFile(file);
+                      setIaMensajeError(null);
+                    }}
+                    className="h-9 text-xs file:text-xs file:h-7 file:rounded-md file:bg-primary/10 file:text-primary file:border-0 hover:file:bg-primary/20 cursor-pointer"
+                  />
+                  {temaPdfFile && (
+                    <p className="text-[11px] text-primary font-medium flex items-center gap-1.5 pt-1">
+                      <Paperclip className="h-3.5 w-3.5" />
+                      Archivo seleccionado: <strong>{temaPdfFile.name}</strong> ({(temaPdfFile.size / 1024).toFixed(0)} KB)
+                    </p>
+                  )}
+                </div>
 
                 <Button
                   type="button"
                   size="sm"
-                  variant="default"
-                  disabled={
-                    generandoResumenIA ||
-                    (modoCreacionTema === "pdf" && !temaPdfFile) ||
-                    (modoCreacionTema === "texto" && !temaTextoBruto.trim())
-                  }
+                  disabled={generandoResumenIA || !temaPdfFile}
                   onClick={handleGenerarResumenIA}
-                  className="w-full h-8 text-xs font-semibold gap-1.5"
+                  className="w-full h-9 text-xs font-bold gap-2 bg-gradient-to-r from-primary to-secondary text-white shadow-xs hover:opacity-90"
                 >
                   {generandoResumenIA ? (
                     <>
-                      <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                      Analizando documento y redactando resumen...
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                      Analizando documento y redactando resumen con IA...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-3.5 w-3.5" />
-                      {modoCreacionTema === "pdf"
-                        ? "Extraer y Redactar Resumen con IA"
-                        : "Generar Resumen con IA"}
+                      <Sparkles className="h-4 w-4" />
+                      Extraer y Redactar Resumen con IA
                     </>
                   )}
                 </Button>

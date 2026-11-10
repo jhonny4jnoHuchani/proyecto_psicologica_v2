@@ -2,14 +2,20 @@ import { Head, router } from "@inertiajs/react";
 import {
   Archive,
   BookOpen,
+  Calendar,
   Eye,
+  FileText,
   Filter,
+  LayoutGrid,
   Library,
+  List,
   LoaderCircle,
   Pencil,
   Plus,
+  Search,
   Sparkles,
   Trash2,
+  User,
 } from "lucide-react";
 import { FormEventHandler, useMemo, useState } from "react";
 
@@ -138,9 +144,8 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [processing, setProcessing] = useState(false);
 
-  const [filtroMateria, setFiltroMateria] = useState(
-    filtros.materia_id ? String(filtros.materia_id) : "",
-  );
+  const [vistaModo, setVistaModo] = useState<"grid" | "table">("grid");
+  const [busqueda, setBusqueda] = useState("");
 
   const resetForm = () => {
     setForm(initialForm);
@@ -149,15 +154,21 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
     setErrors({});
   };
 
-  const aplicarFiltros = () => {
-    const params = new URLSearchParams();
-    if (filtroMateria) params.set("materia_id", filtroMateria);
-    router.get(`/libros?${params.toString()}`);
-  };
+  const librosFiltrados = useMemo(() => {
+    if (!busqueda.trim()) return libros || [];
+    const q = busqueda.toLowerCase();
+    return (libros || []).filter(
+      (l) =>
+        l.nombre.toLowerCase().includes(q) ||
+        (l.autor && l.autor.toLowerCase().includes(q)) ||
+        (l.materia?.nombre && l.materia.nombre.toLowerCase().includes(q)) ||
+        (l.materia?.codigo && l.materia.codigo.toLowerCase().includes(q)),
+    );
+  }, [libros, busqueda]);
 
   const openCreate = () => {
     resetForm();
-    setForm({ ...initialForm, materia_id: filtroMateria });
+    setForm({ ...initialForm, materia_id: "" });
     setModalCreate(true);
   };
 
@@ -278,182 +289,296 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
           }
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Card className="border-none bg-gradient-to-br from-primary to-primary-hover text-primary-foreground shadow-sm">
-            <CardContent className="flex items-center justify-between py-5">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide opacity-90">
-                  Total
-                </p>
-                <p className="mt-1 text-3xl font-bold">{stats.total}</p>
-                <p className="text-xs opacity-90">libros registrados</p>
-              </div>
-              <BookOpen className="h-9 w-9 opacity-80" />
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm">
-            <CardContent className="flex items-center justify-between py-5">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-                  Materias
-                </p>
-                <p className="mt-1 text-3xl font-bold text-emerald-600">
-                  {stats.materias}
-                </p>
-                <p className="text-xs text-neutral-500">con libros asignados</p>
-              </div>
-              <Sparkles className="h-9 w-9 text-emerald-200" />
-            </CardContent>
-          </Card>
+        {/* BARRA DE BÚSQUEDA Y CONTROL DE VISTA */}
+        <div className="bg-card/80 backdrop-blur-md border border-border/80 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por título, autor o materia..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="pl-9 h-10 rounded-xl bg-background border-border/80 text-xs focus:ring-primary"
+            />
+            {busqueda && (
+              <button
+                type="button"
+                onClick={() => setBusqueda("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                Limpiar
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3">
+            <span className="text-xs font-medium text-muted-foreground">
+              {librosFiltrados.length} {librosFiltrados.length === 1 ? "libro disponible" : "libros disponibles"}
+            </span>
+
+            <div className="flex rounded-xl bg-muted/60 p-1 border border-border/70">
+              <button
+                type="button"
+                onClick={() => setVistaModo("grid")}
+                className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  vistaModo === "grid"
+                    ? "bg-card shadow-xs text-primary font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+                <span>Galería</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVistaModo("table")}
+                className={`py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  vistaModo === "table"
+                    ? "bg-card shadow-xs text-primary font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <List className="h-3.5 w-3.5" />
+                <span>Lista</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        <Card className="shadow-sm">
-          <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-end">
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs text-neutral-500">Materia</Label>
-              <Select value={filtroMateria} onValueChange={setFiltroMateria}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas las materias" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Todas</SelectItem>
-                  {(materias || []).map((m) => (
-                    <SelectItem key={m.id} value={String(m.id)}>
-                      {m.codigo} - {m.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {/* CONTENIDO PRINCIPAL: GALERÍA DE PORTADAS O TABLA */}
+        {librosFiltrados.length === 0 ? (
+          <div className="bg-card/80 backdrop-blur-md rounded-3xl p-12 text-center border border-dashed border-border flex flex-col items-center justify-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <BookOpen className="h-7 w-7" />
             </div>
-            <Button
-              onClick={aplicarFiltros}
-              variant="outline"
-              className="sm:w-auto"
-            >
-              <Filter className="mr-2 h-4 w-4" />
-              Filtrar
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Listado de libros</CardTitle>
-            <span className="text-xs text-neutral-400">
-              {libros?.length ?? 0} resultado(s)
-            </span>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-neutral-50/70 text-left text-xs uppercase tracking-wide text-neutral-500">
-                    <th className="px-6 py-4 font-medium">Libro</th>
-                    <th className="px-6 py-4 font-medium">Materia</th>
-                    <th className="px-6 py-4 font-medium">Autor</th>
-                    <th className="px-6 py-4 font-medium">Año</th>
-                    <th className="px-6 py-4 text-right font-medium">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(!libros || libros.length === 0) && (
-                    <tr>
-                      <td colSpan={5} className="py-14 text-center">
-                        <div className="flex flex-col items-center gap-2 text-neutral-400">
-                          <Sparkles className="h-8 w-8" />
-                          <p className="text-sm font-medium text-neutral-500">
-                            Todavía no hay libros aquí
-                          </p>
-                          <p className="text-xs">
-                            Crea el primer libro con el botón "Nuevo libro".
-                          </p>
+            <h4 className="font-bold text-base text-foreground">No se encontraron libros</h4>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              {busqueda
+                ? "No hay resultados para tu búsqueda. Intenta con otro término."
+                : 'Todavía no hay libros registrados. Agrega el primero con el botón "Nuevo Libro".'}
+            </p>
+          </div>
+        ) : vistaModo === "grid" ? (
+          /* MODO GALERÍA / BOOKSHELF MODERNO */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {librosFiltrados.map((l) => {
+              const color = colorForMateria(l.materia?.codigo);
+              return (
+                <div
+                  key={l.id}
+                  className="group bg-card/90 backdrop-blur-md rounded-3xl border border-border/80 hover:border-primary/50 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                >
+                  <div>
+                    {/* PORTADA DEL LIBRO */}
+                    <div className="relative h-60 w-full bg-gradient-to-br from-primary/10 via-muted to-secondary/10 flex items-center justify-center overflow-hidden border-b border-border/70">
+                      {l.portada ? (
+                        <img
+                          src={`/storage/${l.portada}`}
+                          alt={l.nombre}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-muted-foreground/60 p-4 text-center">
+                          <BookOpen className="h-16 w-16 opacity-50" />
+                          <span className="text-[11px] font-medium uppercase tracking-wider">Sin portada</span>
                         </div>
-                      </td>
-                    </tr>
-                  )}
-                  {libros?.map((l) => {
-                    const color = colorForMateria(l.materia?.codigo);
-                    return (
-                      <tr
-                        key={l.id}
-                        className="group border-b transition-colors last:border-b-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/60"
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold shadow-xs ${color.bg} ${color.text} border border-border/50 backdrop-blur-md`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} />
+                          {l.materia?.codigo}
+                        </span>
+                      </div>
+                      {l.anio_lanzamiento && (
+                        <div className="absolute top-3 right-3 bg-black/60 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md">
+                          {l.anio_lanzamiento}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* METADATOS DEL LIBRO */}
+                    <div className="p-5 space-y-2.5">
+                      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                        {l.materia?.nombre}
+                      </p>
+                      <h4 className="font-bold text-sm text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                        {l.nombre}
+                      </h4>
+                      {l.autor && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          <span className="truncate">{l.autor}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ACCIONES DEL LIBRO (CON DESCRIPCIÓN VISIBLE) */}
+                  <div className="p-4 pt-0 border-t border-border/70 mt-3 pt-3 flex items-center gap-1.5">
+                    <a href={`/libros/${l.id}`} className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-xs gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground hover:text-primary"
+                        title="Ver detalle del libro"
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-start gap-3">
-                            <span
-                              className={`mt-1 h-full min-h-8 w-1 rounded-full ${color.dot}`}
-                            />
-                            {l.portada && (
-                              <img
-                                src={`/storage/${l.portada}`}
-                                alt={l.nombre}
-                                className="h-14 w-11 object-cover rounded shadow-sm"
-                              />
-                            )}
-                            <div>
-                              <p className="font-medium leading-tight">
-                                {l.nombre}
-                              </p>
+                        <Eye className="h-3.5 w-3.5 text-primary" />
+                        <span>Ver</span>
+                      </Button>
+                    </a>
+                    {l.archivo && (
+                      <a
+                        href={`/storage/${l.archivo}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Ver o descargar PDF"
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs gap-1.5 rounded-xl border-border/80 hover:border-blue-400 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>PDF</span>
+                        </Button>
+                      </a>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground hover:text-primary"
+                      onClick={() => openEdit(l)}
+                      title="Editar libro"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Editar</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs gap-1.5 rounded-xl border-border/80 hover:border-rose-400 text-muted-foreground hover:text-rose-500"
+                      onClick={() => openDelete(l)}
+                      title="Eliminar libro"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                      <span>Eliminar</span>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* MODO TABLA DETALLADA */
+          <Card className="shadow-sm border border-border/80 rounded-3xl overflow-hidden bg-card/90 backdrop-blur-md">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-border/80 bg-gradient-to-r from-primary/[0.04] to-transparent px-6 py-4">
+              <CardTitle className="text-base font-bold text-foreground">Catálogo de Libros</CardTitle>
+              <span className="text-xs text-muted-foreground">
+                {librosFiltrados.length} resultado(s)
+              </span>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                      <th className="px-6 py-3.5 font-bold">Libro</th>
+                      <th className="px-6 py-3.5 font-bold">Materia</th>
+                      <th className="px-6 py-3.5 font-bold">Autor</th>
+                      <th className="px-6 py-3.5 font-bold">Año</th>
+                      <th className="px-6 py-3.5 text-right font-bold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {librosFiltrados.map((l) => {
+                      const color = colorForMateria(l.materia?.codigo);
+                      return (
+                        <tr
+                          key={l.id}
+                          className="group border-b border-border/60 transition-colors last:border-b-0 hover:bg-muted/40"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {l.portada ? (
+                                <img
+                                  src={`/storage/${l.portada}`}
+                                  alt={l.nombre}
+                                  className="h-14 w-11 object-cover rounded-lg shadow-xs"
+                                />
+                              ) : (
+                                <div className="h-14 w-11 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+                                  <BookOpen className="h-5 w-5 opacity-60" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="font-bold text-sm text-foreground leading-tight">
+                                  {l.nombre}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}
-                          >
-                            {l.materia?.codigo}
-                          </span>
-                          <p className="text-xs text-neutral-500 mt-1">
-                            {l.materia?.nombre}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4 text-xs text-neutral-600">
-                          {l.autor || (
-                            <span className="text-neutral-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-xs text-neutral-600">
-                          {l.anio_lanzamiento || (
-                            <span className="text-neutral-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2 opacity-70 transition-opacity group-hover:opacity-100">
-                            <a href={`/libros/${l.id}`}>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${color.bg} ${color.text} border border-border/50`}
+                            >
+                              {l.materia?.codigo}
+                            </span>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {l.materia?.nombre}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4 text-xs text-foreground font-medium">
+                            {l.autor || <span className="text-muted-foreground">—</span>}
+                          </td>
+                          <td className="px-6 py-4 text-xs text-foreground font-medium">
+                            {l.anio_lanzamiento || <span className="text-muted-foreground">—</span>}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <a href={`/libros/${l.id}`}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground hover:text-primary"
+                                  title="Ver detalle del libro"
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-primary" />
+                                  <span>Ver</span>
+                                </Button>
+                              </a>
                               <Button
                                 variant="outline"
-                                size="icon"
-                                title="Ver detalle"
+                                size="sm"
+                                className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground hover:text-primary"
+                                onClick={() => openEdit(l)}
+                                title="Editar libro"
                               >
-                                <Eye className="h-4 w-4 text-blue-500" />
+                                <Pencil className="h-3.5 w-3.5 text-amber-500" />
+                                <span>Editar</span>
                               </Button>
-                            </a>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => openEdit(l)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => openDelete(l)}
-                            >
-                              <Trash2 className="h-4 w-4 text-rose-500" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-border/80 hover:border-rose-400 text-muted-foreground hover:text-rose-500"
+                                onClick={() => openDelete(l)}
+                                title="Eliminar libro"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                <span>Eliminar</span>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Modal Crear */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>

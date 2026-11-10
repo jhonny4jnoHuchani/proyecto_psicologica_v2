@@ -164,7 +164,7 @@ const Sidebar = React.forwardRef<
                 <SheetContent
                     data-sidebar="sidebar"
                     data-mobile="true"
-                    className="w-(--sidebar-width) bg-white/60 dark:bg-slate-900/65 backdrop-blur-2xl p-0 text-sidebar-foreground [&>button]:hidden border-r border-white/30 dark:border-white/10"
+                    className="w-(--sidebar-width) relative overflow-hidden bg-white/20 dark:bg-slate-950/30 backdrop-blur-md p-0 text-sidebar-foreground [&>button]:hidden border-r border-white/30 dark:border-white/10"
                     style={
                         {
                             '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -215,7 +215,7 @@ const Sidebar = React.forwardRef<
             >
                 <div
                     data-sidebar="sidebar"
-                    className="flex h-full w-full flex-col bg-white/40 dark:bg-slate-900/45 backdrop-blur-2xl group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:border group-data-[variant=floating]:border-white/40 group-data-[variant=floating]:dark:border-white/10 group-data-[variant=floating]:shadow-2xl group-data-[variant=inset]:rounded-2xl group-data-[variant=inset]:border group-data-[variant=inset]:border-white/40 group-data-[variant=inset]:dark:border-white/10 group-data-[variant=inset]:shadow-xl"
+                    className="relative overflow-hidden flex h-full w-full flex-col bg-transparent group-data-[variant=floating]:rounded-2xl group-data-[variant=floating]:border group-data-[variant=floating]:border-white/40 group-data-[variant=floating]:dark:border-white/15 group-data-[variant=floating]:shadow-2xl group-data-[variant=inset]:rounded-2xl group-data-[variant=inset]:border group-data-[variant=inset]:border-white/40 group-data-[variant=inset]:dark:border-white/15 group-data-[variant=inset]:shadow-xl"
                 >
                     {children}
                 </div>
@@ -281,8 +281,8 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<'main
         <main
             ref={ref}
             className={cn(
-                'relative flex min-h-svh flex-1 flex-col bg-white/20 dark:bg-slate-950/25 backdrop-blur-xs',
-                'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-white/30 md:peer-data-[variant=inset]:dark:border-white/10 md:peer-data-[variant=inset]:shadow-sm',
+                'relative flex min-h-svh flex-1 flex-col bg-slate-50/40 dark:bg-slate-950/40 backdrop-blur-xs',
+                'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/60 md:peer-data-[variant=inset]:shadow-sm',
                 className,
             )}
             {...props}
@@ -304,12 +304,12 @@ const SidebarInput = React.forwardRef<React.ElementRef<typeof Input>, React.Comp
 SidebarInput.displayName = 'SidebarInput';
 
 const SidebarHeader = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(({ className, ...props }, ref) => {
-    return <div ref={ref} data-sidebar="header" className={cn('flex flex-col gap-2 p-2', className)} {...props} />;
+    return <div ref={ref} data-sidebar="header" className={cn('relative z-10 flex flex-col gap-2 p-2', className)} {...props} />;
 });
 SidebarHeader.displayName = 'SidebarHeader';
 
 const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(({ className, ...props }, ref) => {
-    return <div ref={ref} data-sidebar="footer" className={cn('flex flex-col gap-2 p-2', className)} {...props} />;
+    return <div ref={ref} data-sidebar="footer" className={cn('relative z-10 flex flex-col gap-2 p-2', className)} {...props} />;
 });
 SidebarFooter.displayName = 'SidebarFooter';
 
@@ -325,7 +325,7 @@ const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<'di
         <div
             ref={ref}
             data-sidebar="content"
-            className={cn('flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden', className)}
+            className={cn('relative z-10 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden group-data-[collapsible=icon]:overflow-hidden custom-sidebar-scroll', className)}
             {...props}
         />
     );
@@ -346,7 +346,7 @@ const SidebarGroupLabel = React.forwardRef<HTMLDivElement, React.ComponentProps<
                 ref={ref}
                 data-sidebar="group-label"
                 className={cn(
-                    'flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 outline-hidden ring-sidebar-ring transition-[margin,opa] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+                    'flex h-7 shrink-0 items-center px-2 text-[10px] tracking-[0.15em] font-bold uppercase text-slate-500 dark:text-slate-400 opacity-80 outline-hidden ring-sidebar-ring transition-[margin,opa] duration-200 ease-linear',
                     'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0',
                     className,
                 )}
@@ -385,7 +385,7 @@ const SidebarGroupContent = React.forwardRef<HTMLDivElement, React.ComponentProp
 SidebarGroupContent.displayName = 'SidebarGroupContent';
 
 const SidebarMenu = React.forwardRef<HTMLUListElement, React.ComponentProps<'ul'>>(({ className, ...props }, ref) => (
-    <ul ref={ref} data-sidebar="menu" className={cn('flex w-full min-w-0 flex-col gap-1', className)} {...props} />
+    <ul ref={ref} data-sidebar="menu" className={cn('flex w-full min-w-0 flex-col gap-1.5', className)} {...props} />
 ));
 SidebarMenu.displayName = 'SidebarMenu';
 
@@ -395,17 +395,17 @@ const SidebarMenuItem = React.forwardRef<HTMLLIElement, React.ComponentProps<'li
 SidebarMenuItem.displayName = 'SidebarMenuItem';
 
 const sidebarMenuButtonVariants = cva(
-    'peer/menu-button flex w-full items-center gap-2.5 overflow-hidden rounded-xl p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-all text-slate-700 dark:text-slate-200 hover:bg-white/60 dark:hover:bg-white/10 hover:backdrop-blur-md focus-visible:ring-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-primary/25 data-[active=true]:backdrop-blur-md data-[active=true]:text-primary data-[active=true]:font-bold data-[active=true]:border data-[active=true]:border-primary/40 data-[active=true]:shadow-md data-[active=true]:shadow-primary/20 data-[active=true]:[&>svg]:text-primary dark:data-[active=true]:bg-primary/30 dark:data-[active=true]:text-white dark:data-[active=true]:border-primary/50 data-[state=open]:hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0',
+    'peer/menu-button relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-3 py-2 text-left text-sm font-semibold outline-hidden ring-sidebar-ring transition-all duration-200 select-none cursor-pointer bg-white/50 hover:bg-white/85 dark:bg-slate-950/50 dark:hover:bg-slate-900/85 border border-white/60 hover:border-primary/50 dark:border-white/15 dark:hover:border-primary/50 shadow-xs hover:shadow-md hover:shadow-primary/10 backdrop-blur-xs text-slate-800 dark:text-slate-100 hover:text-slate-950 dark:hover:text-white before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-0 before:bg-primary before:rounded-r-full before:transition-all before:duration-250 hover:before:h-3/5 hover:before:shadow-[0_0_10px_var(--primary)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary data-[active=true]:to-secondary data-[active=true]:text-white! data-[active=true]:font-bold data-[active=true]:border data-[active=true]:border-white/30 data-[active=true]:shadow-lg data-[active=true]:shadow-primary/30 data-[active=true]:before:h-3/5 data-[active=true]:before:bg-white data-[active=true]:before:shadow-[0_0_8px_white] data-[active=true]:[&>svg]:text-white! data-[active=true]:hover:before:h-3/5 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>span:last-child]:transition-transform [&>span:last-child]:duration-200 hover:[&>span:last-child]:translate-x-1 [&>svg]:size-4.5 [&>svg]:shrink-0 [&>svg]:text-slate-700 dark:[&>svg]:text-slate-300 [&>svg]:transition-all [&>svg]:duration-200 hover:[&>svg]:text-secondary hover:[&>svg]:scale-110 hover:[&>svg]:-rotate-3',
     {
         variants: {
             variant: {
-                default: 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                default: '',
                 outline:
                     'bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]',
             },
             size: {
-                default: 'h-9 text-sm',
-                sm: 'h-7 text-xs',
+                default: 'h-10 text-sm',
+                sm: 'h-8 text-xs',
                 lg: 'h-12 text-sm group-data-[collapsible=icon]:p-0!',
             },
         },

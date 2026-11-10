@@ -17,7 +17,7 @@ class Notificacion extends Model
         'url',
         'leida',
         'leida_at',
-        'enviada_telegram',
+        'enviada_telegram', // trueb o false
         'enviada_telegram_at',
         'telegram_error',
     ];

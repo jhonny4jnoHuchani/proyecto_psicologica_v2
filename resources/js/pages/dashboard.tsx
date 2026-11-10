@@ -32,6 +32,7 @@ import {
   UserCheck,
   Users,
   Wand2,
+  X,
   Zap,
 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
@@ -49,6 +50,7 @@ import {
 } from "recharts";
 
 import { GeometricFallingBackground } from "@/components/geometric-background";
+import { PolygonCollisionsRain } from "@/components/polygon-collisions-rain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -304,6 +306,7 @@ export default function Dashboard({
 }: Props) {
   const pageProps = usePage<SharedData>().props;
   const user = pageProps.auth?.user;
+  const [drawerTareasAbierto, setDrawerTareasAbierto] = useState(false);
 
   // Saludo dinámico según la hora local
   const saludo = useMemo(() => {
@@ -365,35 +368,45 @@ export default function Dashboard({
       <Head title="Dashboard" />
 
       <div className="relative min-h-[calc(100vh-4rem)]">
-        <div className="relative z-10 p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto">
+        <div className="relative z-10 p-4 sm:p-6 lg:p-7 space-y-6 max-w-7xl mx-auto">
           {/* ========================================================================= */}
           {/* HERO BANNER DINÁMICO (MATICES VIVOS CON COLOR PRIMARIO Y SECUNDARIO)      */}
           {/* ========================================================================= */}
           <div
-            className="relative overflow-hidden rounded-3xl text-white shadow-2xl p-6 sm:p-8 border border-white/15 transition-all duration-500"
+            className="relative overflow-hidden rounded-3xl text-white shadow-2xl p-5 sm:p-6 lg:py-5 lg:px-7 border border-white/20 transition-all duration-500"
             style={{
               background:
                 "var(--brand-hero-bg, linear-gradient(135deg, hsl(243, 75%, 20%), hsl(220, 60%, 15%)))",
             }}
           >
+            {/* Lluvia y Choque Dinámico de Polígonos Reactivos con Colores Institucionales */}
+            <PolygonCollisionsRain
+              count={32}
+              className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-75"
+            />
+
             {/* Luces y auras de fondo difuminadas según la paleta institucional */}
             <div
-              className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-40 transition-all duration-700"
+              className="absolute -top-24 -right-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-40 transition-all duration-700 z-0"
               style={{
                 background:
                   "radial-gradient(circle, var(--secondary) 0%, transparent 70%)",
               }}
             />
             <div
-              className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-35 transition-all duration-700"
+              className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-35 transition-all duration-700 z-0"
               style={{
                 background:
                   "radial-gradient(circle, var(--primary) 0%, transparent 70%)",
               }}
             />
 
+            {/* Anillos orbitales decorativos institucionales en el Hero */}
+            <div className="absolute -right-16 -bottom-16 w-80 h-80 rounded-full border border-white/10 pointer-events-none animate-[spin_50s_linear_infinite] z-0" />
+            <div className="absolute -right-8 -bottom-8 w-60 h-60 rounded-full border border-dashed border-white/10 pointer-events-none animate-[spin_35s_linear_infinite_reverse] z-0" />
+
             <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-sm">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
@@ -416,7 +429,7 @@ export default function Dashboard({
                       className="bg-clip-text text-transparent font-extrabold"
                       style={{
                         backgroundImage:
-                          "var(--brand-gradient, linear-gradient(135deg, #f472b6, #fde047))",
+                          "linear-gradient(135deg, #ffffff 25%, var(--secondary) 100%)",
                       }}
                     >
                       {user?.nombre || "Bienvenido"}!
@@ -428,14 +441,14 @@ export default function Dashboard({
                     {rol === "docente" &&
                       "Espacio pedagógico central: supervisa tus materias, atiende revisiones pendientes e impulsa el aprendizaje con IA."}
                     {rol === "estudiante" &&
-                      "Tu aula virtual activa: entrega tus tareas a tiempo, practica tus refuerzos interactivos y monitorea tu progreso."}
+                      "Entrega tus tareas a tiempo, practica tus refuerzos interactivos y monitorea tu progreso académico."}
                   </p>
                 </div>
               </div>
 
               {/* Widget de Cristal Rápido en el Hero */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="bg-white/10 backdrop-blur-md p-3.5 px-5 rounded-2xl border border-white/15 flex items-center gap-4 shadow-inner">
+                <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md p-3.5 px-5 rounded-2xl border border-white/15 hover:border-secondary/60 hover:shadow-lg hover:shadow-secondary/25 transition-all duration-300 flex items-center gap-4 shadow-inner group/capsule">
                   <div className="text-center border-r border-white/15 pr-4">
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                       Rol Actual
@@ -449,7 +462,7 @@ export default function Dashboard({
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                         Gestión
                       </p>
-                      <p className="text-sm font-black text-cyan-300">
+                      <p className="text-sm font-black text-secondary group-hover/capsule:scale-105 transition-transform">
                         {stats?.gestiones_activas || 1} Activa
                       </p>
                     </div>
@@ -459,27 +472,35 @@ export default function Dashboard({
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                         Por Revisar
                       </p>
-                      <p className="text-sm font-black text-amber-300">
+                      <p className="text-sm font-black text-amber-300 group-hover/capsule:scale-105 transition-transform">
                         {docente_stats?.entregas_pendientes || 0}
                       </p>
                     </div>
                   )}
                   {rol === "estudiante" && (
-                    <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setDrawerTareasAbierto(true)}
+                      className="text-center cursor-pointer hover:opacity-80 transition-opacity"
+                      title="Ver panel de tareas pendientes"
+                    >
                       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                         Pendientes
                       </p>
-                      <p className="text-sm font-black text-pink-300">
-                        {resumen?.tareas_pendientes_count || 0}
+                      <p className="text-sm font-black text-amber-300 group-hover/capsule:scale-105 transition-transform flex items-center justify-center gap-1">
+                        <span>{resumen?.tareas_pendientes_count || 0}</span>
+                        {(resumen?.tareas_pendientes_count || 0) > 0 && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
+                        )}
                       </p>
-                    </div>
+                    </button>
                   )}
                 </div>
 
                 <button
                   type="button"
                   onClick={dispararConfeti}
-                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-md border border-white/15 transition-all shadow-sm flex items-center justify-center cursor-pointer group"
+                  className="p-3.5 rounded-2xl bg-white/10 hover:bg-white/20 active:scale-95 text-white backdrop-blur-md border border-white/15 transition-all shadow-sm flex items-center justify-center cursor-pointer group hover:border-primary/50"
                   title="Celebrar logro del día"
                 >
                   <PartyPopper className="h-5 w-5 text-amber-300 group-hover:rotate-12 transition-transform" />
@@ -489,14 +510,14 @@ export default function Dashboard({
           </div>
 
         {/* ========================================================================= */}
-        {/* VISTA 1: ADMINISTRADOR (MÉTRICAS FLOTANTES ESTILO CREATIVE TIM + RECHARTS) */}
+        {/* VISTA 1: ADMINISTRADOR (MÉTRICAS FLOTANTES VINCULADAS A COLOR INSTITUCIONAL) */}
         {/* ========================================================================= */}
         {rol === "admin" && stats && (
           <div className="space-y-8">
             {/* 1. ROW DE ACCIONES RÁPIDAS DINÁMICAS */}
-            <div className="bg-card/90 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-card/85 backdrop-blur-md rounded-2xl p-4 shadow-sm border border-border/80 hover:border-primary/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-400 flex items-center justify-center text-white shadow-md shadow-pink-500/30">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md shadow-primary/30">
                   <Zap className="h-4 w-4" />
                 </div>
                 <div>
@@ -526,7 +547,7 @@ export default function Dashboard({
                         );
                       }}
                     >
-                      <SelectTrigger className="h-8.5 w-44 text-xs bg-card/75 backdrop-blur-md border-border/80 shadow-xs">
+                      <SelectTrigger className="h-8.5 w-44 text-xs bg-card/75 backdrop-blur-md border-border/80 shadow-xs focus:ring-primary">
                         <SelectValue placeholder="Todas las gestiones" />
                       </SelectTrigger>
                       <SelectContent>
@@ -543,28 +564,28 @@ export default function Dashboard({
                 )}
 
                 <Link href="/estudiantes">
-                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                    <Plus className="h-3.5 w-3.5 text-blue-500" />
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary hover:text-primary hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                    <Plus className="h-3.5 w-3.5 text-primary" />
                     <span>Estudiante</span>
                   </Button>
                 </Link>
 
                 <Link href="/estudiantes/importar/plantilla">
-                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" />
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary hover:text-primary hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
                     <span>Importar Excel</span>
                   </Button>
                 </Link>
 
                 <Link href="/cursos">
-                  <Button variant="outline" size="sm" className="text-xs gap-1.5">
-                    <Plus className="h-3.5 w-3.5 text-indigo-500" />
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary hover:text-primary hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                    <Plus className="h-3.5 w-3.5 text-primary" />
                     <span>Nuevo Curso</span>
                   </Button>
                 </Link>
 
                 <Link href="/reportes">
-                  <Button variant="gradient" size="sm" className="text-xs gap-1.5">
+                  <Button variant="gradient" size="sm" className="text-xs gap-1.5 shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-0.5 active:translate-y-0 transition-all">
                     <BarChart3 className="h-3.5 w-3.5" />
                     <span>Ver Reportes</span>
                   </Button>
@@ -572,12 +593,15 @@ export default function Dashboard({
               </div>
             </div>
 
-            {/* 2. TARJETAS FLOTANTES DE KPIs SUPERIORES (FIRMA CREATIVE TIM / MATERIAL DASHBOARD) */}
+            {/* 2. TARJETAS FLOTANTES DE KPIs SUPERIORES VINCULADAS AL COLOR INSTITUCIONAL */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-5">
-              {/* CARD 1: GESTIONES (AZUL) */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 group-hover:scale-105 transition-transform">
+              {/* CARD 1: GESTIONES */}
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--primary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <LayoutGrid className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -589,18 +613,21 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-blue-500 font-bold flex items-center gap-1">
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-primary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-primary font-bold flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" /> Activas
                   </span>
                   <span className="text-muted-foreground text-[11px]">En curso</span>
                 </div>
               </div>
 
-              {/* CARD 2: CURSOS (ÍNDIGO) */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/35 group-hover:scale-105 transition-transform">
+              {/* CARD 2: CURSOS */}
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-secondary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-secondary to-primary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--secondary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--secondary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-secondary to-primary flex items-center justify-center text-white shadow-lg shadow-secondary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <School className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -612,16 +639,19 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-indigo-500 font-bold">Paralelos</span>
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-secondary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-secondary font-bold">Paralelos</span>
                   <span className="text-muted-foreground text-[11px]">Activos</span>
                 </div>
               </div>
 
-              {/* CARD 3: DOCENTES (PÚRPURA) */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
+              {/* CARD 3: DOCENTES */}
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-primary via-primary to-secondary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--primary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary via-primary/85 to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <GraduationCap className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -633,16 +663,19 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-purple-500 font-bold">100% Asignados</span>
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-primary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-primary font-bold">100% Asignados</span>
                   <span className="text-muted-foreground text-[11px]">En aula</span>
                 </div>
               </div>
 
-              {/* CARD 4: ESTUDIANTES (ESMERALDA) */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-500/35 group-hover:scale-105 transition-transform">
+              {/* CARD 4: ESTUDIANTES */}
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-secondary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-secondary via-secondary to-primary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--secondary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--secondary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-secondary via-secondary/85 to-primary flex items-center justify-center text-white shadow-lg shadow-secondary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <Users className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -654,16 +687,19 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-emerald-500 font-bold">Matriculados</span>
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-secondary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-secondary font-bold">Matriculados</span>
                   <span className="text-muted-foreground text-[11px]">Activos</span>
                 </div>
               </div>
 
-              {/* CARD 5: LECCIONES (ÁMBAR) */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1.5 group col-span-1 sm:col-span-2 lg:col-span-1">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-amber-500/35 group-hover:scale-105 transition-transform">
+              {/* CARD 5: LECCIONES */}
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-4 sm:p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1.5 group col-span-1 sm:col-span-2 lg:col-span-1 overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--primary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -675,8 +711,8 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-amber-500 font-bold">Publicadas</span>
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-primary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-primary font-bold">Publicadas</span>
                   <span className="text-muted-foreground text-[11px]">Tareas</span>
                 </div>
               </div>
@@ -691,7 +727,7 @@ export default function Dashboard({
               <div className="lg:col-span-2 bg-card/90 backdrop-blur-md rounded-3xl p-6 shadow-md border border-border/80 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/30">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md shadow-primary/30">
                       <BarChart3 className="h-5 w-5" />
                     </div>
                     <div>
@@ -858,7 +894,7 @@ export default function Dashboard({
               <div className="bg-card/90 backdrop-blur-md rounded-3xl p-6 shadow-md border border-border/80 flex flex-col justify-between space-y-6">
                 <div>
                   <div className="flex items-center gap-3 pb-4 border-b border-border">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-500/30">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md shadow-primary/30">
                       <Sparkles className="h-5 w-5" />
                     </div>
                     <div>
@@ -867,12 +903,12 @@ export default function Dashboard({
                     </div>
                   </div>
 
-                  <div className="mt-5 p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent border border-purple-500/20 space-y-3">
+                  <div className="mt-5 p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-secondary/5 to-transparent border border-primary/20 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                      <span className="text-xs font-bold uppercase tracking-wider text-primary">
                         Generados por IA
                       </span>
-                      <span className="text-3xl font-black text-purple-600 dark:text-purple-400">
+                      <span className="text-3xl font-black text-primary dark:text-secondary">
                         <AnimatedNumber value={totalRefuerzos} />
                       </span>
                     </div>
@@ -895,7 +931,7 @@ export default function Dashboard({
                     <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
                       <div
                         style={{ width: `${tasaRefuerzosCompletados}%` }}
-                        className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 transition-all duration-700"
+                        className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-700"
                       />
                     </div>
                     <div className="flex justify-between text-xs text-muted-foreground pt-1">
@@ -978,9 +1014,12 @@ export default function Dashboard({
             {/* 4 KPIs FLOTANTES DEL DOCENTE */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-5">
               {/* KPI 1: ENTREGAS POR CALIFICAR */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-amber-500/35 group-hover:scale-105 transition-transform">
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-primary to-secondary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--primary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <Inbox className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -992,8 +1031,8 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-amber-500 font-bold">
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-primary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-primary font-bold">
                     {(docente_stats?.entregas_pendientes ?? 0) === 0
                       ? "Al día"
                       : "Requieren revisión"}
@@ -1011,9 +1050,12 @@ export default function Dashboard({
               </div>
 
               {/* KPI 2: LECCIONES ASIGNADAS */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/35 group-hover:scale-105 transition-transform">
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-secondary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-secondary to-primary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--secondary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--secondary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-secondary to-primary flex items-center justify-center text-white shadow-lg shadow-secondary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <BookOpen className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -1025,16 +1067,19 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-blue-500 font-bold">Publicadas</span>
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-secondary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-secondary font-bold">Publicadas</span>
                   <span className="text-muted-foreground text-[11px]">En tus cursos</span>
                 </div>
               </div>
 
               {/* KPI 3: REFUERZOS IA */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-primary/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-primary via-primary/85 to-secondary transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_var(--primary)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, var(--primary) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary via-primary/85 to-secondary flex items-center justify-center text-white shadow-lg shadow-primary/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -1046,16 +1091,19 @@ export default function Dashboard({
                     </h3>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-purple-500 font-bold">Adaptativos</span>
+                <div className="mt-4 pt-3 border-t border-border group-hover:border-primary/30 transition-colors flex items-center justify-between text-xs relative z-1">
+                  <span className="text-primary font-bold">Adaptativos</span>
                   <span className="text-muted-foreground text-[11px]">Generados</span>
                 </div>
               </div>
 
               {/* KPI 4: ALERTA DE REZAGO */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/35 group-hover:scale-105 transition-transform">
+              <div className="relative bg-card/85 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 hover:border-rose-500/40 transition-all duration-300 hover:-translate-y-1.5 group overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-rose-500 to-amber-400 transition-all duration-500 ease-out group-hover:w-full shadow-[0_0_10px_rgba(244,63,94,0.5)]" />
+                <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" style={{ background: "radial-gradient(circle, rgba(244,63,94,0.3) 0%, transparent 70%)" }} />
+
+                <div className="flex justify-between items-start relative z-1">
+                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/35 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-300">
                     <AlertTriangle className="h-6 w-6" />
                   </div>
                   <div className="text-right">
@@ -1150,23 +1198,23 @@ export default function Dashboard({
             {/* CURSOS Y MATERIAS ASIGNADAS */}
             <div className="space-y-4">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <School className="h-5 w-5 text-indigo-500" />
+                <School className="h-5 w-5 text-primary" />
                 Mis Cursos y Materias Asignadas
               </h3>
 
               {(!cursos || cursos.length === 0) ? (
-                <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground border border-dashed">
+                <div className="bg-card/85 backdrop-blur-md rounded-2xl p-8 text-center text-muted-foreground border border-dashed">
                   No tienes cursos asignados en la gestión activa.
                 </div>
               ) : (
                 cursos.map((curso) => (
                   <div
                     key={curso.id}
-                    className="bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-4"
+                    className="bg-card/85 backdrop-blur-md rounded-3xl p-6 shadow-md border border-border/80 space-y-4"
                   >
                     <div className="flex items-center justify-between pb-3 border-b border-border">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-md shadow-primary/20">
                           <School className="h-5 w-5" />
                         </div>
                         <div>
@@ -1179,7 +1227,7 @@ export default function Dashboard({
                         </div>
                       </div>
                       <Link href={`/cursos/${curso.id}`}>
-                        <Button variant="outline" size="sm" className="text-xs gap-1.5">
+                        <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary/40 hover:text-primary">
                           <span>Ver Curso</span>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
@@ -1205,7 +1253,7 @@ export default function Dashboard({
                                 />
                               </div>
                             ) : (
-                              <div className="h-32 w-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 flex items-center justify-center text-white">
+                              <div className="h-32 w-full bg-gradient-to-br from-primary via-primary-light to-secondary flex items-center justify-center text-white">
                                 <BookOpen className="h-10 w-10 text-white/80 group-hover:scale-110 transition-transform" />
                               </div>
                             )}
@@ -1236,7 +1284,7 @@ export default function Dashboard({
                             }}
                             className={`absolute top-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md shadow-sm transition-all cursor-pointer ${
                               m.pivot?.ayuda_ia_activa
-                                ? "bg-purple-600 text-white shadow-purple-500/30 hover:bg-purple-700"
+                                ? "bg-primary text-primary-foreground shadow-primary/30 hover:opacity-90"
                                 : "bg-black/50 text-white hover:bg-black/70"
                             }`}
                           >
@@ -1285,208 +1333,330 @@ export default function Dashboard({
         {/* VISTA 3: ESTUDIANTE (AULA VIRTUAL, TAREAS Y REFUERZOS INTERACTIVOS)       */}
         {/* ========================================================================= */}
         {rol === "estudiante" && (
-          <div className="space-y-8">
-            {/* 3 KPIs FLOTANTES DEL ESTUDIANTE */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-5">
-              {/* KPI 1: TAREAS PENDIENTES */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
+          <div className="space-y-6">
+            {/* 3 RESUMEN COMPACTO HORIZONTAL DEL ESTUDIANTE (MENOS ESPACIO VERTICAL, FOCO EN MATERIAS) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* STAT 1: TAREAS PENDIENTES (CLIC ABRE DRAWER DESLIZABLE) */}
+              <div
+                onClick={() => setDrawerTareasAbierto(true)}
+                className={`relative bg-card/90 backdrop-blur-md rounded-2xl p-3 px-4 shadow-xs hover:shadow-md border transition-all duration-300 hover:-translate-y-0.5 cursor-pointer group flex items-center justify-between gap-3 ${
+                  (resumen?.tareas_pendientes_count || 0) > 0
+                    ? "border-amber-500/50 hover:border-amber-500 bg-amber-500/[0.03]"
+                    : "border-border/80 hover:border-primary/40"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className={`-mt-8 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:scale-105 transition-transform ${
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:scale-105 ${
                       (resumen?.tareas_pendientes_count || 0) > 0
-                        ? "bg-gradient-to-tr from-amber-500 to-rose-400 shadow-amber-500/35"
-                        : "bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-emerald-500/35"
+                        ? "bg-gradient-to-tr from-amber-500 via-amber-600 to-rose-500 text-white shadow-amber-500/30"
+                        : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                     }`}
                   >
-                    <Clock className="h-6 w-6" />
+                    <Clock className="h-4.5 w-4.5" />
                   </div>
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                       Tareas Pendientes
                     </p>
-                    <h3 className="text-2xl font-black text-foreground mt-0.5">
-                      <AnimatedNumber value={resumen?.tareas_pendientes_count || 0} />
-                    </h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span
+                        className={`text-lg font-black leading-none ${
+                          (resumen?.tareas_pendientes_count || 0) > 0
+                            ? "text-amber-500 dark:text-amber-400"
+                            : "text-foreground"
+                        }`}
+                      >
+                        <AnimatedNumber value={resumen?.tareas_pendientes_count || 0} />
+                      </span>
+                      {(resumen?.tareas_pendientes_count || 0) > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500/20 to-rose-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-90" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500" />
+                          </span>
+                          <span>Por entregar</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>Al día</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span
-                    className={`font-bold ${
-                      (resumen?.tareas_pendientes_count || 0) > 0
-                        ? "text-amber-500"
-                        : "text-emerald-500"
-                    }`}
-                  >
-                    {(resumen?.tareas_pendientes_count || 0) === 0
-                      ? "¡Estás al día!"
-                      : "Por presentar"}
-                  </span>
-                  <Link href="/entregas" className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1">
-                    <span>Ver tareas</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
+
+                <div className="text-xs font-bold text-primary group-hover:underline flex items-center gap-1 shrink-0 group-hover:translate-x-0.5 transition-transform">
+                  <span className="hidden sm:inline">Deslizar</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
 
-              {/* KPI 2: REFUERZOS CON IA */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/35 group-hover:scale-105 transition-transform">
-                    <Sparkles className="h-6 w-6" />
+              {/* STAT 2: REFUERZOS CON IA */}
+              <Link
+                href="/refuerzos"
+                className="relative bg-card/90 backdrop-blur-md rounded-2xl p-3 px-4 shadow-xs hover:shadow-md border border-border/80 hover:border-primary/50 transition-all duration-300 hover:-translate-y-0.5 group flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center shrink-0 shadow-sm shadow-primary/25 group-hover:scale-105 transition-transform">
+                    <Sparkles className="h-4.5 w-4.5" />
                   </div>
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                       Refuerzos con IA
                     </p>
-                    <h3 className="text-2xl font-black text-foreground mt-0.5">
-                      <AnimatedNumber value={resumen?.refuerzos_pendientes_count || 0} />
-                    </h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-lg font-black text-foreground leading-none">
+                        <AnimatedNumber value={resumen?.refuerzos_pendientes_count || 0} />
+                      </span>
+                      <span className="text-[11px] font-medium text-secondary truncate">
+                        {(resumen?.refuerzos_pendientes_count || 0) === 0
+                          ? "Completados"
+                          : "Disponibles"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-purple-500 font-bold">
-                    {(resumen?.refuerzos_pendientes_count || 0) === 0
-                      ? "Completados"
-                      : "Actividades de afianzamiento"}
-                  </span>
-                  <Link href="/refuerzos" className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1">
-                    <span>Ir a refuerzos</span>
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </div>
-              </div>
 
-              {/* KPI 3: PROMEDIO ACADÉMICO */}
-              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-5 pt-3 shadow-md hover:shadow-xl border border-border/80 transition-all duration-300 hover:-translate-y-1 group">
-                <div className="flex justify-between items-start">
-                  <div className="-mt-8 w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/35 group-hover:scale-105 transition-transform">
-                    <Award className="h-6 w-6" />
+                <div className="text-xs font-bold text-primary group-hover:underline flex items-center gap-1 shrink-0 group-hover:translate-x-0.5 transition-transform">
+                  <span className="hidden sm:inline">Practicar</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </Link>
+
+              {/* STAT 3: PROMEDIO ACADÉMICO */}
+              <div className="relative bg-card/90 backdrop-blur-md rounded-2xl p-3 px-4 shadow-xs hover:shadow-md border border-border/80 hover:border-secondary/50 transition-all duration-300 hover:-translate-y-0.5 group flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-secondary to-primary text-white flex items-center justify-center shrink-0 shadow-sm shadow-secondary/25 group-hover:scale-105 transition-transform">
+                    <Award className="h-4.5 w-4.5" />
                   </div>
-                  <div className="text-right">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
                       Rendimiento General
                     </p>
-                    <h3 className="text-2xl font-black text-foreground mt-0.5">
-                      {resumen?.promedio_general !== null && resumen?.promedio_general !== undefined ? (
-                        <>
-                          <AnimatedNumber value={resumen.promedio_general} />
-                          <span className="text-xs font-normal text-muted-foreground ml-1">/100</span>
-                        </>
-                      ) : (
-                        "--"
-                      )}
-                    </h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-lg font-black text-foreground leading-none">
+                        {resumen?.promedio_general !== null && resumen?.promedio_general !== undefined ? (
+                          <>
+                            <AnimatedNumber value={resumen.promedio_general} />
+                            <span className="text-xs font-normal text-muted-foreground ml-0.5">/100</span>
+                          </>
+                        ) : (
+                          "--"
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs">
-                  <span className="text-cyan-500 font-bold">
-                    {resumen?.total_materias || 0} Materias inscritas
-                  </span>
-                  <span className="text-muted-foreground text-[11px]">
-                    {resumen?.promedio_general && resumen.promedio_general >= 70
-                      ? "Buen nivel"
-                      : "En proceso"}
-                  </span>
-                </div>
+
+                <span className="text-[11px] font-semibold text-secondary shrink-0 px-2 py-0.5 rounded-full bg-secondary/10 border border-secondary/20">
+                  {resumen?.total_materias || 0} materias
+                </span>
               </div>
             </div>
 
-            {/* SECCIÓN 1: TAREAS PENDIENTES POR ENTREGAR */}
+            {/* SECCIÓN PRINCIPAL: MIS MATERIAS Y AULAS VIRTUALES (FOCO TOTAL) */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-amber-500" />
-                  Tareas Pendientes de Entrega ({tareas_pendientes?.length || 0})
-                </h3>
-                <Link
-                  href="/entregas"
-                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                >
-                  <span>Ver todas mis tareas</span>
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-border/60">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white shadow-xs">
+                    <BookOpen className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-foreground tracking-tight flex items-center gap-2">
+                      <span>Mis Materias y Asignaturas</span>
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Accede a tus asignaturas inscritas, contenidos pedagógicos y entregas
+                    </p>
+                  </div>
+                </div>
+
+                {/* DETALLE CONTEXTUAL DEL CURSO DEL ESTUDIANTE */}
+                {cursos && cursos.length > 0 && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border/80 text-xs text-muted-foreground shadow-xs self-start sm:self-auto">
+                    <School className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="font-bold text-foreground">
+                      {cursos[0].gestion?.año} - {cursos[0].gestion?.etapa}
+                    </span>
+                    <span className="text-muted-foreground/60">·</span>
+                    <span className="capitalize">Turno {cursos[0].turno}</span>
+                    <span className="text-muted-foreground/60">·</span>
+                    <Badge variant="outline" className="text-[10px] py-0 px-2 font-black border-primary/40 text-primary bg-primary/5">
+                      Paralelo {cursos[0].paralelo}
+                    </Badge>
+                  </div>
+                )}
               </div>
 
-              {!tareas_pendientes || tareas_pendientes.length === 0 ? (
-                <div className="bg-card rounded-3xl p-8 text-center border border-dashed border-border flex flex-col items-center justify-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
-                    <CheckCircle2 className="h-6 w-6" />
-                  </div>
-                  <h4 className="font-bold text-sm text-foreground">¡Estás al día con tus entregas!</h4>
-                  <p className="text-xs text-muted-foreground max-w-sm">
-                    No tienes tareas pendientes por entregar en este momento. Revisa tus materias para
-                    consultar contenidos y guías pedagógicas.
-                  </p>
+              {!cursos || cursos.length === 0 ? (
+                <div className="bg-card/85 backdrop-blur-md rounded-2xl p-8 text-center text-muted-foreground border border-dashed">
+                  No estás inscrito en ningún curso actualmente.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tareas_pendientes.map((tarea) => {
-                    const estadoVenc = obtenerEstadoVencimiento(tarea.fecha_entrega);
-                    return (
-                      <div
-                        key={tarea.id}
-                        className="bg-card rounded-2xl p-5 shadow-sm border border-border hover:border-primary/50 hover:shadow-lg transition-all flex flex-col justify-between space-y-4 group"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <Badge variant="outline" className="text-[10px] font-bold">
-                              {tarea.materia?.codigo} · {tarea.materia?.nombre}
-                            </Badge>
-                            {estadoVenc && (
-                              <Badge
-                                variant={
-                                  estadoVenc.vencido
-                                    ? "destructive"
-                                    : estadoVenc.esHoy
-                                      ? "warning"
-                                      : "info"
-                                }
-                                className="text-[10px]"
-                              >
-                                {estadoVenc.textoBadge}
-                              </Badge>
-                            )}
-                          </div>
-
-                          <h4 className="text-sm font-bold text-foreground mt-3 leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                            {tarea.titulo}
-                          </h4>
-                          {tarea.descripcion && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                              {tarea.descripcion}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="pt-3 border-t border-border space-y-3">
-                          <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5 text-amber-500" />
-                            <span>Límite: {formatoFechaHora(tarea.fecha_entrega)}</span>
-                          </div>
-
-                          <Link
-                            href={`/lecciones/${tarea.hash_id || tarea.id}`}
-                            className="block w-full"
-                          >
-                            <Button variant="gradient" className="w-full text-xs justify-center gap-2">
-                              <Send className="h-3.5 w-3.5" />
-                              <span>Entregar Tarea</span>
-                            </Button>
-                          </Link>
-                        </div>
+                cursos.map((curso) => (
+                  <div key={curso.id} className="space-y-3">
+                    {cursos.length > 1 && (
+                      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground pt-2">
+                        <School className="h-4 w-4 text-primary" />
+                        <span>
+                          {curso.gestion?.año} - {curso.gestion?.etapa} · Turno {curso.turno} · Paralelo {curso.paralelo}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {curso.materias?.map((m) => {
+                        const tareasDeMateria = (tareas_pendientes || []).filter(
+                          (t) => t.materia?.id === m.id || t.materia_id === m.id,
+                        );
+                        const tieneTareas = tareasDeMateria.length > 0;
+
+                        return (
+                          <div
+                            key={m.id}
+                            className={`relative rounded-3xl overflow-hidden transition-all duration-300 group flex flex-col justify-between bg-card/95 backdrop-blur-md ${
+                              tieneTareas
+                                ? "border-2 border-amber-500/60 hover:border-amber-500 shadow-md hover:shadow-xl shadow-amber-500/15 ring-2 ring-amber-500/20 hover:-translate-y-1"
+                                : "border border-border/80 hover:border-primary/60 shadow-sm hover:shadow-lg hover:-translate-y-1"
+                            }`}
+                          >
+                            {/* Barra superior de acento con gradiente */}
+                            <div
+                              className={`h-1.5 w-full ${
+                                tieneTareas
+                                  ? "bg-gradient-to-r from-amber-500 via-rose-500 to-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)]"
+                                  : "bg-gradient-to-r from-emerald-500/70 to-primary/70"
+                              }`}
+                            />
+
+                            <Link
+                              href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
+                              className="block flex-1"
+                            >
+                              {/* PORTADA / CABECERA CON BADGES Y DECORACIONES */}
+                              <div className="relative h-36 w-full overflow-hidden bg-muted">
+                                {m.pivot?.imagen ? (
+                                  <img
+                                    src={`/storage/${m.pivot.imagen}`}
+                                    alt={m.nombre}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                ) : (
+                                  <div
+                                    className="h-full w-full flex items-center justify-center text-white relative overflow-hidden"
+                                    style={{
+                                      background:
+                                        "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
+                                    }}
+                                  >
+                                    <div className="absolute inset-0 bg-black/15" />
+                                    <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full border border-white/20 bg-white/5" />
+                                    <BookOpen className="h-12 w-12 text-white/90 group-hover:scale-110 transition-transform relative z-10" />
+                                  </div>
+                                )}
+
+                                {/* Overlay degradado para legibilidad */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+
+                                {/* Código de materia */}
+                                <div className="absolute top-2.5 left-2.5 z-10">
+                                  <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-black/65 text-white border border-white/25 backdrop-blur-md shadow-xs flex items-center gap-1.5">
+                                    <BookOpen className="h-3 w-3 text-secondary" />
+                                    <span>{m.codigo}</span>
+                                  </span>
+                                </div>
+
+                                {/* BADGE NOTORIO DECORATIVO DE TAREAS */}
+                                <div className="absolute top-2.5 right-2.5 z-10">
+                                  {tieneTareas ? (
+                                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-500 via-rose-500 to-amber-600 text-white shadow-lg shadow-amber-500/50 backdrop-blur-md animate-pulse border border-white/25">
+                                      <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90" />
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                                      </span>
+                                      <span>
+                                        {tareasDeMateria.length}{" "}
+                                        {tareasDeMateria.length === 1 ? "tarea pendiente" : "tareas pendientes"}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/90 text-white backdrop-blur-md shadow-xs border border-white/20">
+                                      <CheckCircle2 className="h-3 w-3" />
+                                      <span>Al día</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Nombre rápido en la portada */}
+                                <div className="absolute bottom-2.5 left-3 right-3 z-10">
+                                  <p className="text-white font-extrabold text-sm line-clamp-1 drop-shadow-sm">
+                                    {m.nombre}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* CUERPO DE LA TARJETA */}
+                              <div className="p-4 space-y-2.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <h5 className="font-extrabold text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                                    {m.nombre}
+                                  </h5>
+                                  {m.pivot?.ayuda_ia_activa && (
+                                    <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                      <Sparkles className="h-3 w-3" />
+                                      <span>Tutor IA</span>
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Indicador claro de estado y botón al pie de la materia */}
+                                <div
+                                  className={`mt-2 pt-2.5 border-t flex items-center justify-between text-xs ${
+                                    tieneTareas
+                                      ? "border-amber-500/25"
+                                      : "border-border/70"
+                                  }`}
+                                >
+                                  {tieneTareas ? (
+                                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                      <Clock className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
+                                      <span>
+                                        {tareasDeMateria.length === 1
+                                          ? "1 entrega requerida"
+                                          : `${tareasDeMateria.length} entregas requeridas`}
+                                      </span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                      <span>Sin entregas pendientes</span>
+                                    </span>
+                                  )}
+
+                                  <span className="px-2.5 py-1 rounded-xl text-xs font-bold bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-200 flex items-center gap-1 shadow-2xs">
+                                    <span>Entrar al Aula</span>
+                                    <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                                  </span>
+                                </div>
+                              </div>
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
 
             {/* SECCIÓN 2: REFUERZOS PEDAGÓGICOS CON IA ASIGNADOS */}
             {refuerzos_pendientes && refuerzos_pendientes.length > 0 && (
-              <div className="bg-gradient-to-br from-purple-500/10 via-card to-card rounded-3xl p-6 shadow-md border border-purple-500/20 space-y-4">
+              <div className="bg-gradient-to-br from-primary/[0.07] via-card to-card rounded-3xl p-6 shadow-md border border-primary/20 space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-border">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
                       <Sparkles className="h-4 w-4" />
                     </div>
                     <div>
@@ -1500,7 +1670,7 @@ export default function Dashboard({
                   </div>
                   <Link
                     href="/refuerzos"
-                    className="text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
                   >
                     <span>Ver todos</span>
                     <ArrowRight className="h-3 w-3" />
@@ -1515,7 +1685,7 @@ export default function Dashboard({
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <Badge variant="purple" className="text-[10px]">
+                          <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
                             {refuerzo.entrega?.leccion?.materia?.codigo || "Refuerzo"}
                           </Badge>
                           <span className="text-xs font-bold text-foreground">
@@ -1539,7 +1709,7 @@ export default function Dashboard({
                         href={`/refuerzos/${refuerzo.hash_id || refuerzo.id}`}
                         className="shrink-0"
                       >
-                        <Button variant="purple" size="sm" className="text-xs gap-1.5">
+                        <Button variant="gradient" size="sm" className="text-xs gap-1.5">
                           <Sparkles className="h-3.5 w-3.5" />
                           <span>Resolver Refuerzo</span>
                           <ArrowRight className="h-3.5 w-3.5" />
@@ -1556,7 +1726,7 @@ export default function Dashboard({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                    <Award className="h-5 w-5 text-blue-500" />
+                    <Award className="h-5 w-5 text-secondary" />
                     Últimas Calificaciones y Retroalimentación
                   </h3>
                   <Link
@@ -1574,7 +1744,7 @@ export default function Dashboard({
                     return (
                       <div
                         key={cal.id}
-                        className="bg-card rounded-2xl p-5 shadow-sm border border-border hover:border-primary/50 transition-all space-y-3"
+                        className="bg-card/85 backdrop-blur-md rounded-2xl p-5 shadow-sm border border-border hover:border-primary/50 transition-all space-y-3"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
@@ -1615,82 +1785,147 @@ export default function Dashboard({
                 </div>
               </div>
             )}
+          </div>
+        )}
 
-            {/* SECCIÓN 4: MIS MATERIAS Y AULAS VIRTUALES */}
-            <div className="space-y-4">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-emerald-500" />
-                Mis Materias y Aulas Virtuales
-              </h3>
-
-              {!cursos || cursos.length === 0 ? (
-                <div className="bg-card rounded-2xl p-8 text-center text-muted-foreground border border-dashed">
-                  No estás inscrito en ningún curso actualmente.
-                </div>
-              ) : (
-                cursos.map((curso) => (
-                  <div
-                    key={curso.id}
-                    className="bg-card rounded-3xl p-6 shadow-md border border-border/80 space-y-4"
-                  >
-                    <div className="flex items-center justify-between pb-3 border-b border-border">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md">
-                          <School className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h4 className="text-base font-bold text-foreground">
-                            {curso.gestion?.año} - {curso.gestion?.etapa}
-                          </h4>
-                          <span className="text-xs text-muted-foreground capitalize">
-                            Turno: {curso.turno} · Paralelo {curso.paralelo}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        Paralelo {curso.paralelo}
-                      </Badge>
+        {/* ========================================================================= */}
+        {/* SLIDE-OVER SIDEBAR DE TAREAS PENDIENTES DEL ESTUDIANTE (DESLIZA DERECHA) */}
+        {/* ========================================================================= */}
+        {rol === "estudiante" && drawerTareasAbierto && (
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+              onClick={() => setDrawerTareasAbierto(false)}
+            />
+            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10 pointer-events-none">
+              <div className="w-screen max-w-md sm:max-w-lg bg-card/95 backdrop-blur-2xl border-l border-border/80 shadow-2xl flex flex-col p-6 overflow-hidden pointer-events-auto animate-in slide-in-from-right duration-300">
+                <div className="flex items-center justify-between pb-4 border-b border-border">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                      <Clock className="h-5 w-5" />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-                      {curso.materias?.map((m) => (
-                        <Link
-                          key={m.id}
-                          href={`/lecciones?curso_id=${curso.id}&materia_id=${m.id}`}
-                          className="border border-border rounded-2xl overflow-hidden hover:border-emerald-500 hover:shadow-lg transition-all group bg-card flex flex-col justify-between"
-                        >
-                          {m.pivot?.imagen ? (
-                            <div className="h-28 w-full overflow-hidden bg-muted">
-                              <img
-                                src={`/storage/${m.pivot.imagen}`}
-                                alt={m.nombre}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                          ) : (
-                            <div className="h-28 w-full bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 flex items-center justify-center text-white">
-                              <BookOpen className="h-9 w-9 text-white/80 group-hover:scale-110 transition-transform" />
-                            </div>
-                          )}
-
-                          <div className="p-4">
-                            <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400">
-                              {m.codigo}
-                            </span>
-                            <h5 className="font-bold text-sm text-foreground truncate mt-0.5">
-                              {m.nombre}
-                            </h5>
-                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2 group-hover:text-primary transition-colors">
-                              <span>Ver lecciones y tareas</span>
-                              <ArrowRight className="h-3 w-3" />
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
+                    <div>
+                      <h3 className="text-base font-bold text-foreground">
+                        Tareas Pendientes ({tareas_pendientes?.length || 0})
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Panel deslizable de actividades
+                      </p>
                     </div>
                   </div>
-                ))
-              )}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDrawerTareasAbierto(false)}
+                    className="rounded-xl h-8 w-8 p-0 hover:bg-muted"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Listado de tareas */}
+                <div className="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
+                  {!tareas_pendientes || tareas_pendientes.length === 0 ? (
+                    <div className="py-16 text-center text-muted-foreground space-y-2">
+                      <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto" />
+                      <p className="font-semibold text-sm text-foreground">¡Estás al día!</p>
+                      <p className="text-xs">No tienes tareas pendientes por entregar en este momento.</p>
+                    </div>
+                  ) : (
+                    tareas_pendientes.map((tarea) => {
+                      const estadoVenc = obtenerEstadoVencimiento(tarea.fecha_entrega);
+                      const esUrgente = estadoVenc?.vencido || estadoVenc?.esHoy;
+                      return (
+                        <div
+                          key={tarea.id}
+                          className={`relative rounded-2xl p-4 border transition-all duration-300 shadow-sm hover:shadow-md space-y-3 overflow-hidden ${
+                            estadoVenc?.vencido
+                              ? "bg-card border-rose-500/40 border-l-4 border-l-rose-500 shadow-rose-500/5"
+                              : estadoVenc?.esHoy
+                                ? "bg-card border-amber-500/50 border-l-4 border-l-amber-500 shadow-amber-500/10 ring-1 ring-amber-500/15"
+                                : "bg-card border-border/80 border-l-4 border-l-primary hover:border-primary/50"
+                          }`}
+                        >
+                          {/* Forma geométrica decorativa en esquina */}
+                          <div
+                            className={`pointer-events-none absolute -right-4 -top-4 w-14 h-14 rounded-full blur-xs opacity-20 ${
+                              esUrgente ? "bg-amber-500" : "bg-primary"
+                            }`}
+                          />
+
+                          <div className="flex items-start justify-between gap-2 relative z-10">
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] font-black tracking-wide border-primary/30 text-primary bg-primary/5"
+                            >
+                              {tarea.materia?.codigo} · {tarea.materia?.nombre}
+                            </Badge>
+                            {estadoVenc && (
+                              <Badge
+                                variant={
+                                  estadoVenc.vencido
+                                    ? "destructive"
+                                    : estadoVenc.esHoy
+                                      ? "warning"
+                                      : "info"
+                                }
+                                className={`text-[10px] font-bold ${
+                                  estadoVenc.esHoy ? "animate-pulse" : ""
+                                }`}
+                              >
+                                {estadoVenc.textoBadge}
+                              </Badge>
+                            )}
+                          </div>
+
+                          <div className="relative z-10">
+                            <h4 className="text-sm font-bold text-foreground leading-snug">
+                              {tarea.titulo}
+                            </h4>
+                            {tarea.descripcion && (
+                              <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                                {tarea.descripcion}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="pt-2.5 border-t border-border/70 flex items-center justify-between text-xs relative z-10">
+                            <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                              <Clock
+                                className={`h-3.5 w-3.5 ${
+                                  esUrgente ? "text-amber-500 animate-pulse" : "text-primary"
+                                }`}
+                              />
+                              <span>{formatoFechaHora(tarea.fecha_entrega)}</span>
+                            </div>
+
+                            <Link href={`/lecciones/${tarea.hash_id || tarea.id}`}>
+                              <Button
+                                size="sm"
+                                variant="gradient"
+                                className="h-7 text-xs px-3 shadow-xs gap-1 font-bold"
+                              >
+                                <Send className="h-3 w-3" />
+                                <span>Entregar</span>
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <Link href="/entregas" className="w-full block">
+                    <Button variant="outline" className="w-full text-xs justify-center gap-1.5">
+                      <span>Ir a Bandeja de Entregas</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         )}

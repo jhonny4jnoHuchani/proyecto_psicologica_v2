@@ -84,7 +84,7 @@ export default function Login({ status, config, portadas = [] }: LoginProps) {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#051329] text-white flex items-center justify-center font-sans select-none">
-      <Head title="Iniciar sesión - Aula Virtual" />
+      <Head title="Iniciar sesión - Psicología UPEA" />
 
       {/* ==================== FONDO TECNOLÓGICO Y CONSTELACIÓN ==================== */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -499,7 +499,7 @@ export default function Login({ status, config, portadas = [] }: LoginProps) {
                   <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-cyan-200">
                     <Sparkles className="w-16 h-16 mb-2 opacity-80" />
                     <span className="text-xs uppercase font-semibold tracking-wider">
-                      AULA VIRTUAL
+                      SISTEMA ACADÉMICO
                     </span>
                   </div>
                 )}

@@ -192,18 +192,21 @@ export default function RolesIndex({ roles, permissions, flash }: Props) {
                                                 )}
                                             </td>
                                             <td className="py-3 px-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="icon" onClick={() => openEdit(role)} disabled={role.is_protected}>
-                                                        <Pencil className={`h-4 w-4 ${role.is_protected ? 'opacity-50' : ''}`} />
+                                                <div className="flex justify-end gap-1.5">
+                                                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => openEdit(role)} disabled={role.is_protected}>
+                                                        <Pencil className={`h-3.5 w-3.5 ${role.is_protected ? 'opacity-50' : ''}`} />
+                                                        <span>Editar</span>
                                                     </Button>
                                                     
                                                     <Button 
                                                         variant="outline" 
-                                                        size="icon" 
+                                                        size="sm" 
+                                                        className="h-8 text-xs gap-1 text-red-500 hover:text-red-600 hover:border-red-400"
                                                         onClick={() => openDelete(role)} 
                                                         disabled={role.is_protected}
                                                     >
-                                                        <Trash2 className={`h-4 w-4 ${role.is_protected ? 'opacity-50' : 'text-red-500'}`} />
+                                                        <Trash2 className={`h-3.5 w-3.5 ${role.is_protected ? 'opacity-50' : 'text-red-500'}`} />
+                                                        <span>Eliminar</span>
                                                     </Button>
                                                 </div>
                                             </td>

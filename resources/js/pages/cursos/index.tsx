@@ -230,10 +230,16 @@ export default function CursosIndex({ cursos, gestions, materias, docentes, doce
                                                 </Badge>
                                             </td>
                                             <td className="py-3 px-4 text-right">
-                                                <div className="flex justify-end gap-2">
-                                                    <Button variant="outline" size="icon" asChild><a href={`/cursos/${curso.id}`}><Eye className="h-4 w-4" /></a></Button>
-                                                    <Button variant="outline" size="icon" onClick={() => openEdit(curso)}><Pencil className="h-4 w-4" /></Button>
-                                                    <Button variant="outline" size="icon" onClick={() => openDelete(curso)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                                                <div className="flex justify-end gap-1.5">
+                                                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1" asChild>
+                                                        <a href={`/cursos/${curso.id}`}><Eye className="h-3.5 w-3.5" /><span>Ver</span></a>
+                                                    </Button>
+                                                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => openEdit(curso)}>
+                                                        <Pencil className="h-3.5 w-3.5" /><span>Editar</span>
+                                                    </Button>
+                                                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1 text-red-500 hover:text-red-600 hover:border-red-400" onClick={() => openDelete(curso)}>
+                                                        <Trash2 className="h-3.5 w-3.5 text-red-500" /><span>Eliminar</span>
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>
