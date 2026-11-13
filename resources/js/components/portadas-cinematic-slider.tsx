@@ -361,13 +361,13 @@ export function PortadasCinematicSlider({
                 )}
             </div>
 
-            {/* 3. Indicador de Efecto de Transición Activo (Píldora flotante elegante) */}
-            <div className="pointer-events-none absolute top-6 right-6 z-20 hidden items-center gap-2 rounded-full border border-white/15 bg-slate-950/70 px-3 py-1.5 text-xs text-white/90 shadow-xl backdrop-blur-md transition-all duration-300 sm:flex">
-                <Sparkles className="h-3.5 w-3.5" style={{ color: secondaryColor }} />
-                <span className="font-mono text-[11px] font-semibold tracking-wider">{currentMode.tag}</span>
+            {/* 3. Indicador de Efecto de Transición Activo (Píldora flotante elegante con alto contraste) */}
+            <div className="pointer-events-none absolute top-6 right-6 z-20 hidden items-center gap-2 rounded-full border border-white/25 bg-slate-900/85 px-4 py-1.5 text-xs text-white shadow-2xl backdrop-blur-md transition-all duration-300 sm:flex">
+                <Sparkles className="h-3.5 w-3.5 animate-pulse" style={{ color: secondaryColor }} />
+                <span className="font-mono text-[11px] font-bold tracking-wider text-slate-100">{currentMode.tag}</span>
             </div>
 
-            {/* 4. Título de la portada activa (si tiene) */}
+            {/* 4. Título de la portada activa (Tarjeta inferior izquierda con acento institucional) */}
             {currentPortada.titulo && (
                 <div className="pointer-events-none absolute bottom-16 left-6 z-20 max-w-md sm:left-12">
                     <motion.div
@@ -375,23 +375,43 @@ export function PortadasCinematicSlider({
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.3 }}
-                        className="rounded-2xl border border-white/20 bg-slate-950/75 p-3.5 text-white shadow-2xl backdrop-blur-md sm:p-4"
+                        className="rounded-2xl border border-white/25 bg-slate-900/85 p-4 text-white shadow-2xl backdrop-blur-md relative overflow-hidden"
+                        style={{
+                            boxShadow: `0 15px 35px -5px rgba(0,0,0,0.8), 0 0 20px -5px ${primaryColor}40`,
+                        }}
                     >
-                        <span className="mb-1 block text-[10px] font-bold tracking-widest text-slate-300 uppercase">
+                        <div
+                            className="absolute top-0 bottom-0 left-0 w-1"
+                            style={{ background: `linear-gradient(to bottom, ${primaryColor}, ${secondaryColor})` }}
+                        />
+                        <span className="mb-1 block text-[10px] font-bold tracking-widest text-slate-300 uppercase pl-1.5">
                             Portada Institucional {currentIndex + 1} de {total}
                         </span>
-                        <p className="text-sm font-bold text-white drop-shadow sm:text-base">{currentPortada.titulo}</p>
+                        <p className="text-sm font-extrabold text-white drop-shadow sm:text-base pl-1.5 leading-snug">
+                            {currentPortada.titulo}
+                        </p>
                     </motion.div>
                 </div>
             )}
 
-            {/* 5. Controles de Navegación Flechas (Anterior / Siguiente) */}
+            {/* 5. Controles de Navegación Flechas (Anterior / Siguiente con acento Primario) */}
             <div className="absolute inset-y-0 left-3 z-20 flex items-center sm:left-6">
                 <button
                     type="button"
                     onClick={goToPrev}
                     aria-label="Portada anterior"
-                    className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-slate-950/60 text-white shadow-2xl backdrop-blur-md transition-all hover:scale-110 hover:border-white/50 hover:bg-slate-900/90 active:scale-95 sm:h-12 sm:w-12"
+                    className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-slate-900/80 text-white shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-white/60 hover:bg-slate-900 active:scale-95 sm:h-12 sm:w-12"
+                    style={{
+                        boxShadow: `0 10px 25px rgba(0,0,0,0.6)`,
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = primaryColor;
+                        e.currentTarget.style.boxShadow = `0 0 20px ${primaryColor}80`;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                        e.currentTarget.style.boxShadow = `0 10px 25px rgba(0,0,0,0.6)`;
+                    }}
                 >
                     <ChevronLeft className="h-6 w-6 text-white transition-transform group-hover:-translate-x-0.5" />
                 </button>
@@ -402,7 +422,18 @@ export function PortadasCinematicSlider({
                     type="button"
                     onClick={goToNext}
                     aria-label="Siguiente portada"
-                    className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-slate-950/60 text-white shadow-2xl backdrop-blur-md transition-all hover:scale-110 hover:border-white/50 hover:bg-slate-900/90 active:scale-95 sm:h-12 sm:w-12"
+                    className="group flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-slate-900/80 text-white shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-110 hover:border-white/60 hover:bg-slate-900 active:scale-95 sm:h-12 sm:w-12"
+                    style={{
+                        boxShadow: `0 10px 25px rgba(0,0,0,0.6)`,
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = primaryColor;
+                        e.currentTarget.style.boxShadow = `0 0 20px ${primaryColor}80`;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                        e.currentTarget.style.boxShadow = `0 10px 25px rgba(0,0,0,0.6)`;
+                    }}
                 >
                     <ChevronRight className="h-6 w-6 text-white transition-transform group-hover:translate-x-0.5" />
                 </button>
@@ -410,7 +441,7 @@ export function PortadasCinematicSlider({
 
             {/* 6. Barra inferior con Indicadores y Pausa/Play */}
             <div className="absolute inset-x-0 bottom-5 z-20 flex items-center justify-center gap-3">
-                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-slate-950/70 p-1.5 px-3 shadow-xl backdrop-blur-md">
+                <div className="flex items-center gap-2 rounded-full border border-white/25 bg-slate-900/85 p-1.5 px-3.5 shadow-2xl backdrop-blur-md">
                     {portadas.map((_, index) => {
                         const isActive = index === currentIndex;
                         return (

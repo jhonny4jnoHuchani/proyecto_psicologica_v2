@@ -19,21 +19,20 @@ import {
     Lightbulb,
     MapPin,
     Megaphone,
-    MessageCircle,
     Play,
     Quote,
-    Search,
     Shield,
     Sparkles,
     Target,
     Users,
-    X,
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 
-import { PortadasCinematicSlider } from '@/components/portadas-cinematic-slider';
+import { AmbientReactiveBackground } from '@/components/ambient-reactive-background';
+import { BibliotecariaGuideCard } from '@/components/bibliotecaria-guide-card';
 import { ExploraCarreraCarousel } from '@/components/explora-carrera-carousel';
 import { FloatingScrollIndex } from '@/components/floating-scroll-index';
+import { PortadasCinematicSlider } from '@/components/portadas-cinematic-slider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatoFecha } from '@/lib/formatters';
@@ -98,11 +97,6 @@ interface Props {
     user: { id: number; nombre: string; apellido_paterno: string; apellido_materno: string } | null;
 }
 
-// Helpers de colores dinámicos
-const tint = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, white)`;
-const shade = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, black)`;
-const alpha = (hex: string, pct: number) => `color-mix(in srgb, ${hex} ${pct}%, transparent)`;
-
 const convocatoriaAbierta = (c: Convocatoria) => {
     if (!c.fecha_fin) return true;
     const fin = new Date(`${c.fecha_fin}T23:59:59`);
@@ -139,8 +133,6 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [modalPdf, setModalPdf] = useState(false);
     const [libroSeleccionado, setLibroSeleccionado] = useState<LibroItem | null>(null);
-    const [filtroMateria, setFiltroMateria] = useState<string>('todas');
-    const [busquedaLibro, setBusquedaLibro] = useState<string>('');
     const [activeTab, setActiveTab] = useState<'mision' | 'vision' | 'valores'>('mision');
 
     const abrirVideo = (link: string) => {
@@ -155,41 +147,6 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
         setLibroSeleccionado(libro);
         setModalPdf(true);
     };
-
-    // Listado único de materias a partir de los libros registrados
-    const materiasDisponibles = React.useMemo(() => {
-        const map = new Map<string, { codigo: string; nombre: string; count: number }>();
-        libros.forEach((l) => {
-            if (l.materia?.codigo) {
-                const exist = map.get(l.materia.codigo);
-                if (exist) {
-                    exist.count++;
-                } else {
-                    map.set(l.materia.codigo, {
-                        codigo: l.materia.codigo,
-                        nombre: l.materia.nombre,
-                        count: 1,
-                    });
-                }
-            }
-        });
-        return Array.from(map.values());
-    }, [libros]);
-
-    // Filtrado de libros por materia y búsqueda por texto
-    const librosFiltrados = React.useMemo(() => {
-        return libros.filter((l) => {
-            const matchesMateria = filtroMateria === 'todas' || l.materia?.codigo === filtroMateria;
-            const query = busquedaLibro.trim().toLowerCase();
-            const matchesBusqueda =
-                !query ||
-                l.nombre.toLowerCase().includes(query) ||
-                (l.autor && l.autor.toLowerCase().includes(query)) ||
-                (l.materia?.nombre && l.materia.nombre.toLowerCase().includes(query)) ||
-                (l.materia?.codigo && l.materia.codigo.toLowerCase().includes(query));
-            return matchesMateria && matchesBusqueda;
-        });
-    }, [libros, filtroMateria, busquedaLibro]);
 
     useEffect(() => {
         AOS.init({ duration: 750, easing: 'ease-out-cubic', once: true, offset: 40 });
@@ -244,50 +201,57 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 `}</style>
             </Head>
 
-            {/* ==================== ÍNDICE FLOTANTE LATERAL ("TE ENCUENTRAS AQUÍ") ==================== */}
+            {/* ========================================================================= */}
+            {/* 1. ÍNDICE LATERAL FLOTANTE DOCK (OCULTO EN EL TOPE, SOLO APARECE CON SCROLL) */}
+            {/* ========================================================================= */}
             <FloatingScrollIndex
                 primaryColor={primary}
                 secondaryColor={secondary}
                 onNavigate={scrollTo}
+                headerThreshold={90}
             />
 
-            {/* ==================== NAVBAR ESTILO CRISTAL ==================== */}
-            <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/75 backdrop-blur-2xl transition-all">
-                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6">
-                    {/* Logo e Identidad Amplio */}
-                    <Link href="/" className="group flex items-center gap-3.5">
+            {/* ========================================================================= */}
+            {/* 2. NAVBAR SUPERIOR CRISTALINO CON LOGO PROPORCIONADO                      */}
+            {/* ========================================================================= */}
+            <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-2xl transition-all">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+                    {/* Logo e Identidad Ceñido (Sin marco blanco desproporcionado) */}
+                    <Link href="/" className="group flex items-center gap-3">
                         {config?.logo ? (
                             <div className="relative">
                                 <div
-                                    className="absolute -inset-1.5 rounded-2xl opacity-45 blur-md transition-opacity group-hover:opacity-85"
+                                    className="absolute -inset-1 rounded-xl opacity-40 blur-sm transition-opacity group-hover:opacity-85"
                                     style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
                                 />
-                                <div className="relative flex h-14 items-center justify-center rounded-2xl border border-white/20 bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-md transition-transform group-hover:scale-105 sm:h-16">
+                                <div className="relative flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-xl border border-white/20 bg-slate-900/70 p-1.5 shadow-md backdrop-blur-md transition-all group-hover:scale-105 group-hover:border-white/40">
                                     <img
                                         src={`/storage/${config.logo}`}
                                         alt="Logo Institucional"
-                                        className="h-full w-auto max-w-[130px] object-contain sm:max-w-[200px]"
+                                        className="h-full w-full object-contain filter drop-shadow"
                                     />
                                 </div>
                             </div>
                         ) : (
                             <div
-                                className="flex h-13 w-13 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-lg sm:h-15 sm:w-15"
+                                className="flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-xl text-lg font-bold text-white shadow-lg"
                                 style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
                             >
-                                <GraduationCap className="h-7 w-7 text-white" />
+                                <GraduationCap className="h-6 w-6 text-white" />
                             </div>
                         )}
                         <div className="leading-tight">
                             <p className="font-title text-base font-bold tracking-tight text-white transition-opacity group-hover:opacity-90 sm:text-lg">
                                 Psicología UPEA
                             </p>
-                            <p className="font-mono-tag text-[11px] tracking-wider text-slate-400 uppercase">Preuniversitario Académico</p>
+                            <p className="font-mono-tag text-[10px] tracking-wider text-slate-400 uppercase sm:text-[11px]">
+                                Preuniversitario Académico
+                            </p>
                         </div>
                     </Link>
 
-                    {/* Enlaces de Navegación (Desktop) */}
-                    <nav className="hidden items-center gap-7 text-sm font-medium text-slate-300 md:flex">
+                    {/* Enlaces de Navegación Rápida (Desktop) */}
+                    <nav className="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
                         <button type="button" onClick={() => scrollTo('inicio')} className="cursor-pointer transition-colors hover:text-white">
                             Inicio
                         </button>
@@ -307,7 +271,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                         <button
                             type="button"
                             onClick={() => scrollTo('biblioteca')}
-                            className="flex cursor-pointer items-center gap-1.5 font-semibold transition-colors hover:opacity-80"
+                            className="flex cursor-pointer items-center gap-1.5 font-semibold transition-colors hover:opacity-90"
                             style={{ color: secondary }}
                         >
                             <BookOpen className="h-4 w-4" />
@@ -318,7 +282,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                         </button>
                     </nav>
 
-                    {/* Botón de Acción Principal (Únicamente Iniciar Sesión o Dashboard, sin Registro) */}
+                    {/* Botón de Autenticación (Estrictamente Iniciar Sesión o Dashboard, CERO Registros) */}
                     <div className="flex items-center gap-3">
                         {user ? (
                             <Link href="/dashboard">
@@ -347,14 +311,16 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </div>
             </header>
 
-            {/* ==================== HERO SECTION (Inspirado en Gas y Petroquímica) ==================== */}
+            {/* ========================================================================= */}
+            {/* 3. HERO SECTION (PORTADA INSTITUCIONAL CINEMÁTICA Y LOGO IMPONENTE)       */}
+            {/* ========================================================================= */}
             <section id="inicio" className="relative flex min-h-[92vh] items-center justify-center overflow-hidden pt-12 pb-24">
-                {/* 1. SLIDER CINEMÁTICO DINÁMICO DE PORTADAS (ROMPECABEZAS 3D, MOSAICO, PERSIANAS, VÓRTICE, HIPERESPACIO) */}
+                {/* SLIDER CINEMÁTICO DINÁMICO DE PORTADAS */}
                 <div className="absolute inset-0 z-0">
                     <PortadasCinematicSlider portadas={portadas} primaryColor={primary} secondaryColor={secondary} intervalMs={6500} />
                 </div>
 
-                {/* 2. PELÍCULA GRADIENTE OSCURA Y AURAS DE MARCA */}
+                {/* PELÍCULA GRADIENTE OSCURA PARA GARANTIZAR ALTO CONTRASTE */}
                 <div
                     className="pointer-events-none absolute inset-0 z-1"
                     style={{
@@ -362,7 +328,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     }}
                 />
 
-                {/* Auras de color dinámicas */}
+                {/* AURAS DINÁMICAS ALIMENTADAS POR COLOR PRIMARIO Y SECUNDARIO */}
                 <div
                     className="pointer-events-none absolute -top-32 -left-32 z-1 h-96 w-96 rounded-full blur-[120px]"
                     style={{ background: `${primary}35` }}
@@ -372,7 +338,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     style={{ background: `${secondary}30` }}
                 />
 
-                {/* 3. ELEMENTOS GEOMÉTRICOS FLOTANTES (PageDecorators) */}
+                {/* ELEMENTOS GEOMÉTRICOS FLOTANTES DE AMBIENTACIÓN */}
                 <div className="pointer-events-none absolute inset-0 z-2 overflow-hidden">
                     <img
                         src="/decoradores/circulo.png"
@@ -401,69 +367,80 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     />
                 </div>
 
-                {/* 4. CONTENIDO PRINCIPAL HERO */}
+                {/* CONTENIDO PRINCIPAL HERO */}
                 <div className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 text-center">
-                    {/* Emblema / Logo Institucional Amplio y Majestuoso */}
+                    {/* EMBLEMA / ESCUDO INSTITUCIONAL GRANDE (CEÑIDO AL TAMAÑO DEL LOGO, SIN CAJA BLANCA EXCESIVA) */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8, y: -20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ duration: 0.8, ease: 'easeOut' }}
-                        className="group relative mb-7"
+                        className="group relative mb-6"
                     >
-                        {/* Aura luminosa de resplandor expansiva */}
+                        {/* Halo expansivo y resplandor con Colores Institucionales */}
                         <div
-                            className="pointer-events-none absolute -inset-4 animate-pulse rounded-3xl opacity-60 blur-2xl transition-opacity duration-700 group-hover:opacity-90 sm:-inset-6"
-                            style={{ background: `radial-gradient(ellipse at center, ${secondary}80 0%, ${primary}60 50%, transparent 80%)` }}
+                            className="pointer-events-none absolute -inset-6 animate-pulse rounded-full opacity-70 blur-3xl transition-opacity duration-700 group-hover:opacity-100"
+                            style={{ background: `radial-gradient(circle, ${secondary}80 0%, ${primary}70 50%, transparent 80%)` }}
                         />
 
-                        {/* Contenedor amplio para el logo institucional */}
+                        {/* Contenedor ceñido al escudo (Squircle translúcido con drop-shadow) */}
                         <div
-                            className="relative flex h-32 max-w-lg min-w-[200px] items-center justify-center rounded-3xl bg-white/95 px-6 py-3 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-500 hover:scale-[1.03] sm:h-44 sm:min-w-[280px] sm:px-10 sm:py-4 md:h-52 md:min-w-[360px]"
+                            className="relative flex h-36 w-36 sm:h-44 sm:w-44 md:h-52 md:w-52 items-center justify-center rounded-3xl bg-slate-950/45 p-2 sm:p-3 shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-xl border border-white/20 transition-all duration-500 hover:scale-105"
                             style={{
-                                border: `4px solid ${primary}`,
-                                boxShadow: `0 20px 45px -10px ${primary}40, 0 0 25px ${secondary}30, inset 0 2px 4px rgba(255,255,255,0.8)`,
+                                boxShadow: `0 20px 45px -10px ${primary}60, 0 0 35px ${secondary}40, inset 0 1px 0 rgba(255,255,255,0.3)`,
                             }}
                         >
                             {config?.logo ? (
                                 <img
                                     src={`/storage/${config.logo}`}
                                     alt="Logo Carrera de Psicología UPEA"
-                                    className="h-full w-auto max-w-full object-contain drop-shadow-md filter transition-transform duration-500 group-hover:scale-105"
+                                    className="h-full w-full object-contain filter transition-transform duration-500 group-hover:scale-105"
+                                    style={{
+                                        filter: `drop-shadow(0 12px 24px ${primary}90) drop-shadow(0 0 30px ${secondary}60)`,
+                                    }}
                                 />
                             ) : (
-                                <div className="flex items-center gap-4">
-                                    <GraduationCap className="h-16 w-16 sm:h-20 sm:w-20" style={{ color: primary }} />
-                                    <div className="text-left">
-                                        <p className="font-title text-2xl leading-tight font-extrabold text-slate-900 sm:text-3xl">Psicología</p>
-                                        <p className="text-xs font-semibold tracking-wider text-slate-600 uppercase sm:text-sm">UPEA Oficial</p>
-                                    </div>
+                                <div className="flex flex-col items-center justify-center text-center">
+                                    <GraduationCap className="h-16 w-16 sm:h-20 sm:w-20" style={{ color: secondary }} />
+                                    <span className="font-title mt-1 text-sm font-bold text-white">Psicología UPEA</span>
                                 </div>
                             )}
                         </div>
                     </motion.div>
 
-                    {/* Insignia de Admisión */}
+                    {/* INSIGNIA DE ADMISIÓN CON EFECTO CRISTAL Y BORDE ANIMADO */}
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
                         <span
-                            className="font-mono-tag inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold tracking-wider text-white uppercase shadow-inner backdrop-blur-md"
+                            className="font-mono-tag inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold tracking-wider text-white uppercase shadow-lg backdrop-blur-xl transition-all"
                             style={{
-                                borderColor: `${primary}55`,
-                                backgroundColor: `${primary}18`,
+                                borderColor: `${secondary}70`,
+                                backgroundColor: `rgba(15, 23, 42, 0.75)`,
+                                boxShadow: `0 0 20px -3px ${primary}50, inset 0 1px 0 rgba(255,255,255,0.25)`,
                             }}
                         >
-                            <Sparkles className="h-4 w-4" style={{ color: secondary }} /> Admisión Preuniversitaria · Carrera de Psicología
+                            <Sparkles className="h-4 w-4 animate-pulse" style={{ color: secondary }} />
+                            <span>Admisión Preuniversitaria · Carrera de Psicología</span>
                         </span>
                     </motion.div>
 
-                    {/* TÍTULO PRINCIPAL DE IMPACTO */}
+                    {/* TÍTULO PRINCIPAL DE ALTO IMPACTO TIPOGRÁFICO */}
                     <motion.h1
                         initial={{ opacity: 0, y: 24 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.7, delay: 0.3 }}
-                        className="font-title mt-6 text-4xl font-extrabold tracking-tight text-white uppercase drop-shadow-xl sm:text-6xl lg:text-7xl"
+                        className="font-title mt-6 text-4xl font-extrabold tracking-tight text-white uppercase drop-shadow-2xl sm:text-6xl lg:text-7xl"
                     >
-                        CARRERA DE <span style={{ color: secondary }}>PSICOLOGÍA</span>
-                        <span className="mt-2 block text-2xl font-semibold tracking-normal text-slate-300 sm:text-3xl lg:text-4xl">
+                        CARRERA DE{' '}
+                        <span
+                            className="relative inline-block bg-clip-text text-transparent font-black tracking-tight"
+                            style={{
+                                backgroundImage: `linear-gradient(135deg, ${primary}, ${secondary}, #ffffff, ${secondary})`,
+                                backgroundSize: '200% auto',
+                                filter: `drop-shadow(0 0 35px ${primary}90)`,
+                            }}
+                        >
+                            PSICOLOGÍA
+                        </span>
+                        <span className="mt-3 block text-xl font-bold tracking-widest text-slate-200 sm:text-2xl lg:text-3xl opacity-90">
                             UNIVERSIDAD PÚBLICA DE EL ALTO
                         </span>
                     </motion.h1>
@@ -473,12 +450,12 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.7, delay: 0.4 }}
-                        className="mt-6 max-w-2xl text-base leading-relaxed font-normal text-slate-200 drop-shadow-md sm:text-xl"
+                        className="mt-6 max-w-2xl text-base leading-relaxed font-medium text-slate-200 drop-shadow-md sm:text-xl italic"
                     >
                         "{lema}"
                     </motion.p>
 
-                    {/* BOTONES DE ACCIÓN HERO */}
+                    {/* BOTONES DE ACCIÓN HERO (SIN ENLACES ROTOS NI REGISTROS PÚBLICOS) */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -536,14 +513,12 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </motion.button>
             </section>
 
-            {/* ==================== SECCIÓN EXPLORA NUESTRA CARRERA ==================== */}
-            <section id="explora" className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-24">
-                <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                        background: `radial-gradient(circle at 10% 20%, ${primary}18 0%, transparent 60%), radial-gradient(circle at 90% 80%, ${secondary}15 0%, transparent 60%)`,
-                    }}
-                />
+            {/* ========================================================================= */}
+            {/* 4. SECCIÓN EXPLORA LA CARRERA (ECOSISTEMA, CARRUSEL DE ÁREAS Y POLÍGONOS) */}
+            {/* ========================================================================= */}
+            <section id="explora" className="relative overflow-hidden bg-slate-950 px-6 py-24">
+                {/* Capa de atmósfera reactiva: polígonos, estrellas y haces diagonales */}
+                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="medium" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
                     <div className="mb-16 text-center" data-aos="fade-up">
@@ -565,7 +540,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                             className="mx-auto mt-4 h-1 w-20 rounded-full"
                             style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
                         />
-                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
+                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
                             Una experiencia formativa de vanguardia que combina ciencia del comportamiento, acompañamiento docente y tecnología
                             educativa en la UPEA.
                         </p>
@@ -583,8 +558,12 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </div>
             </section>
 
-            {/* ==================== SECCIÓN SOBRE NOSOTROS (Misión, Visión, Valores) ==================== */}
-            <section id="sobre-nosotros" className="relative overflow-hidden bg-slate-950 px-6 py-24">
+            {/* ========================================================================= */}
+            {/* 5. SECCIÓN SOBRE NOSOTROS (MISIÓN, VISIÓN, VALORES Y POLÍGONOS SUAVES)   */}
+            {/* ========================================================================= */}
+            <section id="sobre-nosotros" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
+
                 <div className="relative z-10 mx-auto max-w-7xl">
                     <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
                         {/* Columna Izquierda: Introducción y Métricas */}
@@ -609,31 +588,31 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                 boliviana.
                             </p>
 
-                            {/* Tarjetas de Estadísticas / Indicadores vinculadas a Color Primario y Secundario */}
+                            {/* Tarjetas de Estadísticas / Indicadores con Micro-interacciones */}
                             <div className="mt-8 grid grid-cols-2 gap-4">
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                                <div className="group rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/10">
                                     <p className="font-title text-3xl font-extrabold" style={{ color: secondary }}>
                                         100%
                                     </p>
-                                    <p className="mt-1 text-xs font-medium text-slate-400">Docentes Especialistas</p>
+                                    <p className="mt-1 text-xs font-medium text-slate-300">Docentes Especialistas</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                                <div className="group rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/10">
                                     <p className="font-title text-3xl font-extrabold" style={{ color: primary }}>
                                         +5
                                     </p>
-                                    <p className="mt-1 text-xs font-medium text-slate-400">Áreas de Especialidad</p>
+                                    <p className="mt-1 text-xs font-medium text-slate-300">Áreas de Especialidad</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                                <div className="group rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/10">
                                     <p className="font-title text-3xl font-extrabold" style={{ color: secondary }}>
                                         24/7
                                     </p>
-                                    <p className="mt-1 text-xs font-medium text-slate-400">Plataforma & Recursos</p>
+                                    <p className="mt-1 text-xs font-medium text-slate-300">Plataforma & Recursos</p>
                                 </div>
-                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
+                                <div className="group rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/10">
                                     <p className="font-title text-3xl font-extrabold" style={{ color: primary }}>
                                         UPEA
                                     </p>
-                                    <p className="mt-1 text-xs font-medium text-slate-400">Acreditación Pública</p>
+                                    <p className="mt-1 text-xs font-medium text-slate-300">Acreditación Pública</p>
                                 </div>
                             </div>
                         </div>
@@ -777,8 +756,12 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </div>
             </section>
 
-            {/* ==================== SECCIÓN CONVOCATORIAS Y AVISOS ==================== */}
-            <section id="convocatorias" className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-24">
+            {/* ========================================================================= */}
+            {/* 6. SECCIÓN CONVOCATORIAS OFICIALES (AFICHES Y COMUNICADOS APROBADOS)     */}
+            {/* ========================================================================= */}
+            <section id="convocatorias" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="medium" />
+
                 <div className="relative z-10 mx-auto max-w-7xl">
                     <div className="mb-16 text-center" data-aos="fade-up">
                         <span
@@ -792,12 +775,14 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                         >
                             Comunicados Oficiales
                         </span>
-                        <h2 className="font-title mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">Convocatorias de Admisión</h2>
+                        <h2 className="font-title mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+                            Convocatorias de Admisión
+                        </h2>
                         <div
                             className="mx-auto mt-4 h-1 w-20 rounded-full"
                             style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
                         />
-                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
+                        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
                             Infórmate sobre los periodos de inscripción, requisitos documentales y cronogramas de examen aprobados.
                         </p>
                     </div>
@@ -811,15 +796,14 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                         key={c.id}
                                         data-aos="fade-up"
                                         data-aos-delay={idx * 90}
-                                        className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-xl backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-2xl"
-                                        style={{
-                                            borderColor: 'rgba(255, 255, 255, 0.1)',
-                                        }}
+                                        className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
                                         onMouseEnter={(e) => {
                                             e.currentTarget.style.borderColor = `${secondary}80`;
+                                            e.currentTarget.style.boxShadow = `0 20px 40px -10px ${primary}40`;
                                         }}
                                         onMouseLeave={(e) => {
                                             e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                            e.currentTarget.style.boxShadow = 'none';
                                         }}
                                     >
                                         {/* Imagen o afiche si existe */}
@@ -910,18 +894,15 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </div>
             </section>
 
-            {/* ==================== SECCIÓN BIBLIOTECA DIGITAL & GUÍAS DE ADMISIÓN ==================== */}
-            <section id="biblioteca" className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-6 py-24">
-                <div
-                    className="pointer-events-none absolute inset-0"
-                    style={{
-                        background: `radial-gradient(circle at 80% 20%, ${secondary}18 0%, transparent 60%), radial-gradient(circle at 20% 80%, ${primary}18 0%, transparent 60%)`,
-                    }}
-                />
+            {/* ========================================================================= */}
+            {/* 7. SECCIÓN BIBLIOTECA DIGITAL (SIN BUSCADOR, CON BIBLIOTECARIA Y PDF)     */}
+            {/* ========================================================================= */}
+            <section id="biblioteca" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="medium" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
                     {/* ENCABEZADO DE LA SECCIÓN */}
-                    <div className="mb-12 text-center" data-aos="fade-up">
+                    <div className="mb-10 text-center" data-aos="fade-up">
                         <span
                             className="font-mono-tag inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold tracking-wider uppercase"
                             style={{
@@ -942,117 +923,62 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                             style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
                         />
                         <p className="mx-auto mt-4 max-w-3xl text-sm leading-relaxed text-slate-300 sm:text-base">
-                            Acceso libre y público a los compendios bibliográficos oficiales y guías de estudio de hasta 5 páginas elaboradas por la
-                            Carrera de Psicología de la UPEA para la preparación pedagógica de postulantes y estudiantes.
+                            Acceso libre y público a las guías de estudio oficiales de hasta 5 páginas elaboradas por los docentes de Psicología UPEA.
                         </p>
                     </div>
 
-                    {/* BARRA DE BÚSQUEDA Y FILTROS POR MATERIA */}
-                    <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row" data-aos="fade-up">
-                        {/* Selector de materias */}
-                        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
-                            <button
-                                type="button"
-                                onClick={() => setFiltroMateria('todas')}
-                                className={`cursor-pointer rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
-                                    filtroMateria === 'todas'
-                                        ? 'font-bold text-white shadow-lg'
-                                        : 'border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
-                                }`}
-                                style={
-                                    filtroMateria === 'todas'
-                                        ? {
-                                              background: `linear-gradient(135deg, ${primary}, ${secondary})`,
-                                              boxShadow: `0 8px 20px -4px ${primary}60`,
-                                          }
-                                        : undefined
-                                }
-                            >
-                                Todas las materias ({libros.length})
-                            </button>
-                            {materiasDisponibles.map((m) => (
-                                <button
-                                    key={m.codigo}
-                                    type="button"
-                                    onClick={() => setFiltroMateria(m.codigo)}
-                                    className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
-                                        filtroMateria === m.codigo
-                                            ? 'font-bold text-white shadow-lg'
-                                            : 'border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
-                                    }`}
-                                    style={
-                                        filtroMateria === m.codigo
-                                            ? {
-                                                  background: `linear-gradient(135deg, ${primary}, ${secondary})`,
-                                                  boxShadow: `0 8px 20px -4px ${primary}60`,
-                                              }
-                                            : undefined
-                                    }
-                                >
-                                    <span>{m.codigo}</span>
-                                    <span className="text-[10px] opacity-75">({m.count})</span>
-                                </button>
-                            ))}
-                        </div>
+                    {/* COMPONENTE EXCLUSIVO DE LA BIBLIOTECARIA ACADÉMICA (SIN INPUTS NI BUSCADORES) */}
+                    <BibliotecariaGuideCard
+                        primaryColor={primary}
+                        secondaryColor={secondary}
+                        totalLibros={libros.length}
+                    />
 
-                        {/* Buscador de libros */}
-                        <div className="relative w-full md:w-72">
-                            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                value={busquedaLibro}
-                                onChange={(e) => setBusquedaLibro(e.target.value)}
-                                placeholder="Buscar libro, autor o código..."
-                                className="w-full rounded-xl border border-white/15 bg-slate-900/90 py-2 pr-9 pl-10 text-sm text-white placeholder-slate-400 transition-colors focus:outline-none"
-                                style={{
-                                    borderColor: 'rgba(255, 255, 255, 0.15)',
-                                }}
-                                onFocus={(e) => (e.currentTarget.style.borderColor = secondary)}
-                                onBlur={(e) => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)')}
-                            />
-                            {busquedaLibro && (
-                                <button
-                                    type="button"
-                                    onClick={() => setBusquedaLibro('')}
-                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-white"
-                                >
-                                    <X className="h-3.5 w-3.5" />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* GRILLA DE LIBROS Y GUÍAS */}
-                    {librosFiltrados.length > 0 ? (
+                    {/* LISTADO / GRILLA DIRECTA DE DOCUMENTOS PDF */}
+                    {libros.length > 0 ? (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {librosFiltrados.map((libro, idx) => (
+                            {libros.map((libro, idx) => (
                                 <div
                                     key={libro.id}
                                     data-aos="fade-up"
-                                    data-aos-delay={(idx % 4) * 80}
-                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                                    style={{
-                                        borderColor: 'rgba(255, 255, 255, 0.1)',
-                                    }}
+                                    data-aos-delay={(idx % 4) * 70}
+                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.borderColor = `${secondary}80`;
+                                        e.currentTarget.style.boxShadow = `0 15px 35px -5px ${primary}40`;
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                        e.currentTarget.style.boxShadow = 'none';
                                     }}
                                 >
-                                    {/* CUBIERTA O PORTADA DEL LIBRO */}
+                                    {/* CABECERA VISUAL CON ICONO Y BADGE CLARO DE PDF */}
                                     <div
-                                        className="relative flex h-56 w-full items-center justify-center overflow-hidden border-b border-white/5 p-4"
+                                        className="relative flex h-52 w-full items-center justify-center overflow-hidden border-b border-white/5 p-4"
                                         style={{
                                             background: `linear-gradient(135deg, #030712 0%, #0f172a 60%, ${primary}25 100%)`,
                                         }}
                                     >
+                                        {/* Insignia clara de PDF en la esquina superior izquierda */}
+                                        <div className="absolute top-3 left-3 z-10">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-extrabold font-mono tracking-wider bg-rose-950/80 border border-rose-500/50 text-rose-300 shadow-lg backdrop-blur-md">
+                                                <FileText className="h-3 w-3 text-rose-400" />
+                                                PDF
+                                            </span>
+                                        </div>
+
+                                        {/* Insignia de lectura rápida de 5 páginas */}
+                                        <div className="absolute top-3 right-3 z-10">
+                                            <span className="font-mono-tag inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-950/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 shadow-md backdrop-blur-md">
+                                                ≤ 5 Págs
+                                            </span>
+                                        </div>
+
                                         {libro.portada ? (
                                             <img
                                                 src={`/storage/${libro.portada}`}
                                                 alt={libro.nombre}
-                                                className="h-full max-h-48 rounded-lg object-contain shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                                                className="h-full max-h-44 rounded-lg object-contain shadow-2xl transition-transform duration-500 group-hover:scale-105"
                                             />
                                         ) : (
                                             /* Portada estilizada oficial con emblema institucional */
@@ -1092,18 +1018,11 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                                 <div className="relative z-1 border-t border-white/10 pt-2 pl-2">
                                                     <p className="truncate text-[9px] text-slate-400">{libro.autor || 'Psicología UPEA'}</p>
                                                     <span className="font-mono-tag mt-0.5 block text-[8px] font-semibold text-emerald-400">
-                                                        Guía de 5 págs
+                                                        Guía Oficial
                                                     </span>
                                                 </div>
                                             </div>
                                         )}
-
-                                        {/* Insignia de lectura rápida de 5 páginas */}
-                                        <div className="absolute top-3 right-3">
-                                            <span className="font-mono-tag inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 shadow-md backdrop-blur-md">
-                                                <FileText className="h-3 w-3" />≤ 5 Págs
-                                            </span>
-                                        </div>
                                     </div>
 
                                     {/* CONTENIDO DEL LIBRO */}
@@ -1134,20 +1053,20 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                             </p>
                                         </div>
 
-                                        {/* ACCIONES DEL LIBRO: VISTA PREVIA Y DESCARGA */}
+                                        {/* ACCIONES DEL LIBRO: VISTA PREVIA Y DESCARGA DIRECTA DE PDF */}
                                         <div className="mt-5 flex items-center gap-2 border-t border-white/10 pt-4">
                                             {libro.archivo ? (
                                                 <>
                                                     <button
                                                         type="button"
                                                         onClick={() => abrirPdfLibro(libro)}
-                                                        className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                                        className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                         style={{
                                                             background: `linear-gradient(135deg, ${primary}, ${secondary})`,
                                                         }}
                                                     >
                                                         <Eye className="h-3.5 w-3.5" />
-                                                        Vista Previa
+                                                        Visualizar PDF
                                                     </button>
                                                     <a
                                                         href={`/storage/${libro.archivo}`}
@@ -1155,7 +1074,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="rounded-xl bg-white/10 p-2 text-slate-200 transition-colors hover:bg-white/20 hover:text-white"
-                                                        title="Descargar PDF directo"
+                                                        title="Descargar archivo PDF"
                                                     >
                                                         <Download className="h-4 w-4" />
                                                     </a>
@@ -1177,16 +1096,20 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     ) : (
                         <div className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 py-16 text-center">
                             <BookOpen className="mx-auto mb-3 h-12 w-12 text-slate-500" />
-                            <p className="font-medium text-slate-300">No se encontraron lecturas que coincidan.</p>
-                            <p className="mt-1 text-xs text-slate-500">Prueba seleccionando otra materia o borrando el filtro de búsqueda.</p>
+                            <p className="font-medium text-slate-300">Las guías de estudio están siendo preparadas.</p>
+                            <p className="mt-1 text-xs text-slate-500">Próximamente se publicará el nuevo material bibliográfico.</p>
                         </div>
                     )}
                 </div>
             </section>
 
-            {/* ==================== SECCIÓN AUTORIDADES ACADÉMICAS ==================== */}
+            {/* ========================================================================= */}
+            {/* 8. SECCIÓN AUTORIDADES DE LA CARRERA                                      */}
+            {/* ========================================================================= */}
             {autoridades && autoridades.length > 0 && (
-                <section id="autoridades" className="relative overflow-hidden bg-slate-950 px-6 py-24">
+                <section id="autoridades" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+                    <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
+
                     <div className="relative z-10 mx-auto max-w-7xl">
                         <div className="mb-16 text-center" data-aos="fade-up">
                             <span
@@ -1207,7 +1130,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                 className="mx-auto mt-4 h-1 w-20 rounded-full"
                                 style={{ background: `linear-gradient(90deg, ${primary}, ${secondary})` }}
                             />
-                            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
+                            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
                                 Equipo directivo comprometido con la excelencia pedagógica y el progreso institucional.
                             </p>
                         </div>
@@ -1218,17 +1141,16 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                     key={autoridad.id}
                                     data-aos="fade-up"
                                     data-aos-delay={idx * 100}
-                                    whileHover={{ y: -8 }}
+                                    whileHover={{ y: -6 }}
                                     transition={{ duration: 0.3 }}
-                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 shadow-2xl backdrop-blur-xl"
-                                    style={{
-                                        borderColor: 'rgba(255, 255, 255, 0.1)',
-                                    }}
+                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 shadow-2xl backdrop-blur-xl transition-all duration-300"
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.borderColor = `${primary}80`;
+                                        e.currentTarget.style.boxShadow = `0 15px 35px -5px ${primary}40`;
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                        e.currentTarget.style.boxShadow = 'none';
                                     }}
                                 >
                                     <div className="p-7">
@@ -1284,7 +1206,9 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </section>
             )}
 
-            {/* ==================== ORGANIGRAMA INSTITUCIONAL ==================== */}
+            {/* ========================================================================= */}
+            {/* 9. ORGANIGRAMA INSTITUCIONAL                                              */}
+            {/* ========================================================================= */}
             {config?.organigrama && (
                 <section className="border-t border-white/10 bg-slate-950/60 px-6 py-20">
                     <div className="mx-auto max-w-5xl text-center" data-aos="fade-up">
@@ -1305,7 +1229,9 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </section>
             )}
 
-            {/* ==================== CTA FINAL: PORTAL ACADÉMICO / AULA VIRTUAL ==================== */}
+            {/* ========================================================================= */}
+            {/* 10. CTA FINAL: PORTAL ACADÉMICO / AULA VIRTUAL                            */}
+            {/* ========================================================================= */}
             <section
                 id="portal-acceso"
                 className="relative overflow-hidden border-t border-white/10 px-6 py-20 text-center"
@@ -1313,15 +1239,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     background: `linear-gradient(135deg, ${primary}99 0%, ${secondary}25 50%, #030712 100%)`,
                 }}
             >
-                {/* Luces difuminadas de fondo */}
-                <div
-                    className="pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full opacity-40 blur-3xl"
-                    style={{ background: primary }}
-                />
-                <div
-                    className="pointer-events-none absolute -right-24 -bottom-24 h-80 w-80 rounded-full opacity-40 blur-3xl"
-                    style={{ background: secondary }}
-                />
+                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                 <div className="relative z-10 mx-auto max-w-3xl" data-aos="zoom-in">
                     <span
@@ -1384,66 +1302,156 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </div>
             </section>
 
-            {/* ==================== BOTONES SOCIALES FLOTANTES ==================== */}
-            <div className="fixed right-6 bottom-6 z-50 flex flex-col gap-3">
-                <a
-                    href="https://wa.me/59170000000?text=Hola,%20deseo%20informaci%C3%B3n%20sobre%20el%20preuniversitario%20de%20Psicolog%C3%ADa%20UPEA"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-2xl transition-transform hover:scale-110 hover:bg-emerald-400 active:scale-95 sm:h-14 sm:w-14"
-                    title="Contacto WhatsApp"
-                >
-                    <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
-                </a>
-            </div>
+            {/* ========================================================================= */}
+            {/* 11. FOOTER INSTITUCIONAL REFINADO (SIN BOTÓN VERDE FLOTANTE DE CHAT)     */}
+            {/* ========================================================================= */}
+            <footer className="relative border-t border-white/10 bg-slate-950/95 text-sm text-slate-400 overflow-hidden">
+                {/* Línea divisoria superior con gradiente dinámico */}
+                <div
+                    className="h-1 w-full"
+                    style={{
+                        background: `linear-gradient(90deg, ${primary}, ${secondary}, #ffffff, ${secondary}, ${primary})`,
+                    }}
+                />
 
-            {/* ==================== FOOTER INSTITUCIONAL ==================== */}
-            <footer className="border-t border-white/10 bg-slate-950 py-14 text-sm text-slate-400">
-                <div className="mx-auto max-w-7xl px-6">
-                    <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-3">
-                        {/* Logo y descripción Amplio */}
-                        <div className="flex items-center gap-4">
-                            {config?.logo ? (
-                                <div className="flex h-16 items-center justify-center rounded-2xl border border-white/20 bg-white/95 px-3.5 py-1.5 shadow-md sm:h-20">
-                                    <img
-                                        src={`/storage/${config.logo}`}
-                                        alt="Logo Carrera de Psicología UPEA"
-                                        className="h-full w-auto max-w-[150px] object-contain sm:max-w-[200px]"
-                                    />
+                <div className="relative z-10 mx-auto max-w-7xl px-6 py-14">
+                    <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-4">
+                        {/* 1. Logo e Identidad Proporcionada */}
+                        <div className="md:col-span-2 space-y-4">
+                            <div className="flex items-center gap-3.5">
+                                {config?.logo ? (
+                                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl border border-white/20 bg-slate-900/80 p-2 shadow-lg backdrop-blur-md">
+                                        <img
+                                            src={`/storage/${config.logo}`}
+                                            alt="Logo Carrera de Psicología UPEA"
+                                            className="h-full w-full object-contain filter drop-shadow"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div
+                                        className="flex h-14 w-14 items-center justify-center rounded-2xl font-bold text-white shadow-md"
+                                        style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+                                    >
+                                        <GraduationCap className="h-7 w-7" />
+                                    </div>
+                                )}
+                                <div>
+                                    <h4 className="font-title text-lg font-bold text-white">Carrera de Psicología</h4>
+                                    <p className="font-mono text-xs text-slate-400">Universidad Pública de El Alto</p>
                                 </div>
-                            ) : (
-                                <div
-                                    className="flex h-15 w-15 items-center justify-center rounded-2xl font-bold text-white shadow-md"
-                                    style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
-                                >
-                                    <GraduationCap className="h-8 w-8" />
-                                </div>
-                            )}
-                            <div>
-                                <p className="font-title text-base leading-tight font-bold text-white sm:text-lg">Carrera de Psicología</p>
-                                <p className="font-mono-tag text-xs text-slate-400">Universidad Pública de El Alto</p>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-400 max-w-md leading-relaxed">
+                                Formando profesionales en el estudio del comportamiento humano, salud mental, psicometría y
+                                transformación social con rigor científico y compromiso ético.
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                                <MapPin className="h-4 w-4 shrink-0" style={{ color: secondary }} />
+                                <span>Av. Sucre B, Zona Villa Esperanza — El Alto, La Paz, Bolivia</span>
                             </div>
                         </div>
 
-                        {/* Ubicación y Contacto */}
-                        <div className="flex flex-col gap-2 text-xs sm:text-sm">
-                            <p className="flex items-center gap-2 text-slate-300">
-                                <MapPin className="h-4 w-4 shrink-0" style={{ color: secondary }} />
-                                Av. Sucre B, Zona Villa Esperanza — El Alto, La Paz, Bolivia
-                            </p>
-                            <p className="text-slate-400">Área de Ciencias de la Salud / Área Social · Campus Central UPEA</p>
+                        {/* 2. Enlaces Rápidos a Secciones Reales */}
+                        <div className="space-y-3">
+                            <h5 className="font-mono text-xs font-bold uppercase tracking-wider text-white">Navegación Rápida</h5>
+                            <ul className="space-y-2 text-xs sm:text-sm">
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollTo('inicio')}
+                                        className="hover:text-white transition-colors cursor-pointer text-left"
+                                    >
+                                        Inicio / Portadas
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollTo('explora')}
+                                        className="hover:text-white transition-colors cursor-pointer text-left"
+                                    >
+                                        Explora la Carrera
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollTo('sobre-nosotros')}
+                                        className="hover:text-white transition-colors cursor-pointer text-left"
+                                    >
+                                        Misión & Visión
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollTo('convocatorias')}
+                                        className="hover:text-white transition-colors cursor-pointer text-left"
+                                    >
+                                        Convocatorias Oficiales
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollTo('biblioteca')}
+                                        className="hover:text-white transition-colors cursor-pointer text-left"
+                                    >
+                                        Biblioteca Digital
+                                    </button>
+                                </li>
+                                <li>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollTo('autoridades')}
+                                        className="hover:text-white transition-colors cursor-pointer text-left"
+                                    >
+                                        Autoridades
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
 
-                        {/* Derechos reservados y enlaces */}
-                        <div className="text-left text-xs text-slate-500 md:text-right">
-                            <p className="text-slate-400">© {new Date().getFullYear()} Preuniversitario de Psicología UPEA</p>
-                            <p className="mt-1">Todos los derechos reservados.</p>
+                        {/* 3. Acceso Institucional y Derechos */}
+                        <div className="space-y-3">
+                            <h5 className="font-mono text-xs font-bold uppercase tracking-wider text-white">Acceso al Sistema</h5>
+                            <p className="text-xs text-slate-400">
+                                Plataforma académica oficial para estudiantes, docentes y personal administrativo.
+                            </p>
+                            <div>
+                                {user ? (
+                                    <Link href="/dashboard">
+                                        <Button
+                                            size="sm"
+                                            className="rounded-xl px-4 text-xs font-bold text-white shadow-md transition-transform hover:scale-105"
+                                            style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+                                        >
+                                            Ir al Dashboard <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Link href="/login">
+                                        <Button
+                                            size="sm"
+                                            className="rounded-xl px-4 text-xs font-bold text-white shadow-md transition-transform hover:scale-105"
+                                            style={{ background: `linear-gradient(135deg, ${primary}, ${secondary})` }}
+                                        >
+                                            Iniciar Sesión <ChevronRight className="ml-1 h-3.5 w-3.5" />
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                            <div className="pt-3 border-t border-white/10 text-xs text-slate-500">
+                                <p>© {new Date().getFullYear()} Carrera de Psicología UPEA.</p>
+                                <p className="mt-0.5">Todos los derechos reservados.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </footer>
 
-            {/* ==================== MODAL VIDEO DE CONVOCATORIA ==================== */}
+            {/* ========================================================================= */}
+            {/* 12. MODAL DE VIDEO DE CONVOCATORIA                                        */}
+            {/* ========================================================================= */}
             <Dialog open={modalVideo} onOpenChange={setModalVideo}>
                 <DialogContent className="border border-white/20 bg-slate-950 text-white sm:max-w-3xl">
                     <DialogHeader>
@@ -1463,7 +1471,9 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                 </DialogContent>
             </Dialog>
 
-            {/* ==================== MODAL DE VISTA PREVIA PDF DE LIBROS ==================== */}
+            {/* ========================================================================= */}
+            {/* 13. MODAL DE VISTA PREVIA PDF DE LIBROS Y GUÍAS                           */}
+            {/* ========================================================================= */}
             <Dialog open={modalPdf} onOpenChange={setModalPdf}>
                 <DialogContent className="flex h-[88vh] flex-col overflow-hidden rounded-3xl border border-white/20 bg-slate-950 p-0 text-white shadow-2xl sm:max-w-5xl">
                     <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b border-white/10 bg-slate-900/90 p-4 sm:p-5">
