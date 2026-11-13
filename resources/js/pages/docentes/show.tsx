@@ -47,15 +47,15 @@ export default function DocentesShow({ docente }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Docente: ${nombreCompleto}`} />
 
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+            <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
                 <Button variant="outline" asChild>
                     <Link href="/docentes">
-                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        <ArrowLeft className="mr-2 h-4 w-4" />
                         Volver
                     </Link>
                 </Button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Datos Personales */}
                     <Card>
                         <CardHeader>
@@ -65,13 +65,27 @@ export default function DocentesShow({ docente }: Props) {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            <div><span className="font-medium">Nombre:</span> {u.nombre}</div>
-                            <div><span className="font-medium">Apellido Paterno:</span> {u.apellido_paterno}</div>
-                            <div><span className="font-medium">Apellido Materno:</span> {u.apellido_materno}</div>
-                            <div><span className="font-medium">CI:</span> {u.ci}</div>
-                            <div><span className="font-medium">Género:</span> {u.genero || '-'}</div>
-                            <div><span className="font-medium">Fecha Nacimiento:</span> {u.fecha_nacimiento ? formatoFecha(u.fecha_nacimiento) : '-'}</div>
-                            <div><span className="font-medium">Dirección:</span> {u.direccion || '-'}</div>
+                            <div>
+                                <span className="font-medium">Nombre:</span> {u.nombre}
+                            </div>
+                            <div>
+                                <span className="font-medium">Apellido Paterno:</span> {u.apellido_paterno}
+                            </div>
+                            <div>
+                                <span className="font-medium">Apellido Materno:</span> {u.apellido_materno}
+                            </div>
+                            <div>
+                                <span className="font-medium">CI:</span> {u.ci}
+                            </div>
+                            <div>
+                                <span className="font-medium">Género:</span> {u.genero || '-'}
+                            </div>
+                            <div>
+                                <span className="font-medium">Fecha Nacimiento:</span> {u.fecha_nacimiento ? formatoFecha(u.fecha_nacimiento) : '-'}
+                            </div>
+                            <div>
+                                <span className="font-medium">Dirección:</span> {u.direccion || '-'}
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -85,11 +99,11 @@ export default function DocentesShow({ docente }: Props) {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             <div className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-muted-foreground" />
+                                <Mail className="text-muted-foreground h-4 w-4" />
                                 {u.email}
                             </div>
                             <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 text-muted-foreground" />
+                                <Phone className="text-muted-foreground h-4 w-4" />
                                 {u.celular}
                             </div>
                             <hr />
@@ -98,8 +112,7 @@ export default function DocentesShow({ docente }: Props) {
                                 <Badge variant="outline">{docente.especialidad || 'No asignada'}</Badge>
                             </div>
                             <div>
-                                <span className="font-medium">Título Profesional:</span>{' '}
-                                {docente.titulo_profesional || 'No registrado'}
+                                <span className="font-medium">Título Profesional:</span> {docente.titulo_profesional || 'No registrado'}
                             </div>
                         </CardContent>
                     </Card>

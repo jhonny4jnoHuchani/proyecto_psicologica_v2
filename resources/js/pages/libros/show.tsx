@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { BookOpen, ArrowLeft, Calendar, User, Hash, FileText, Download } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, Download, FileText, Hash, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,11 @@ import AppLayout from '@/layouts/app-layout';
 import { formatoFechaHora } from '@/lib/formatters';
 import { type BreadcrumbItem } from '@/types';
 
-interface MateriaOption { id: number; nombre: string; codigo: string; }
+interface MateriaOption {
+    id: number;
+    nombre: string;
+    codigo: string;
+}
 
 interface Libro {
     id: number;
@@ -21,7 +25,9 @@ interface Libro {
     materia: MateriaOption;
 }
 
-interface Props { libro: Libro; }
+interface Props {
+    libro: Libro;
+}
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Libros', href: '/libros' },
@@ -53,29 +59,37 @@ export default function LibroShow({ libro }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Libro: ${libro.nombre}`} />
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
-
+            <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
                 <a href="/libros">
-                    <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />Volver</Button>
+                    <Button variant="outline">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Volver
+                    </Button>
                 </a>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                     {/* Info Principal */}
-                    <Card className="lg:col-span-2 shadow-sm">
+                    <Card className="shadow-sm lg:col-span-2">
                         <div className={`h-2 ${color.dot}`} />
                         <CardHeader>
-                            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
+                            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:gap-5 sm:text-left">
                                 {libro.portada ? (
-                                    <img src={`/storage/${libro.portada}`} alt={libro.nombre} className="h-36 sm:h-32 w-28 sm:w-24 shrink-0 object-cover rounded-xl shadow-md" />
+                                    <img
+                                        src={`/storage/${libro.portada}`}
+                                        alt={libro.nombre}
+                                        className="h-36 w-28 shrink-0 rounded-xl object-cover shadow-md sm:h-32 sm:w-24"
+                                    />
                                 ) : (
                                     <div className={`flex h-32 w-24 shrink-0 items-center justify-center rounded-xl shadow-sm ${color.bg}`}>
                                         <BookOpen className={`h-10 w-10 ${color.text}`} />
                                     </div>
                                 )}
                                 <div className="flex-1">
-                                    <CardTitle className="text-xl sm:text-2xl font-bold">{libro.nombre}</CardTitle>
-                                    <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                                        <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
+                                    <CardTitle className="text-xl font-bold sm:text-2xl">{libro.nombre}</CardTitle>
+                                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                                        <span
+                                            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}
+                                        >
                                             {libro.materia?.codigo}
                                         </span>
                                         <span className="text-sm text-neutral-500">{libro.materia?.nombre}</span>
@@ -84,28 +98,32 @@ export default function LibroShow({ libro }: Props) {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                                        <User className="h-4 w-4 text-neutral-400" />Autor
+                                        <User className="h-4 w-4 text-neutral-400" />
+                                        Autor
                                     </div>
                                     <p className="text-sm text-neutral-600">{libro.autor || 'No especificado'}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                                        <Calendar className="h-4 w-4 text-neutral-400" />Año
+                                        <Calendar className="h-4 w-4 text-neutral-400" />
+                                        Año
                                     </div>
                                     <p className="text-sm text-neutral-600">{libro.anio_lanzamiento || 'No especificado'}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                                        <Hash className="h-4 w-4 text-neutral-400" />ID
+                                        <Hash className="h-4 w-4 text-neutral-400" />
+                                        ID
                                     </div>
                                     <p className="text-sm text-neutral-600">#{libro.id}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                                        <FileText className="h-4 w-4 text-neutral-400" />Materia
+                                        <FileText className="h-4 w-4 text-neutral-400" />
+                                        Materia
                                     </div>
                                     <p className="text-sm text-neutral-600">{libro.materia?.nombre}</p>
                                 </div>
@@ -113,8 +131,12 @@ export default function LibroShow({ libro }: Props) {
                             {libro.archivo && (
                                 <div className="border-t pt-4">
                                     <a href={`/storage/${libro.archivo}`} target="_blank">
-                                        <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300">
-                                            <Download className="mr-2 h-4 w-4" />Ver / Descargar PDF
+                                        <Button
+                                            variant="outline"
+                                            className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                                        >
+                                            <Download className="mr-2 h-4 w-4" />
+                                            Ver / Descargar PDF
                                         </Button>
                                     </a>
                                 </div>
