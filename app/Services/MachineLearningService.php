@@ -30,7 +30,7 @@ class MachineLearningService
             // Si Python está apagado, NO rompemos la app, solo avisamos
             Log::error('Error conectando con ML: '.$e->getMessage());
 
-            return ['recomendar' => false, 'mensaje' => 'El sistema de Machine Learning (ML) no está disponible en este momento.'];
+            return ['recomendar' => false, 'mensaje' => 'No se pudo conectar con el servicio predictivo de Machine Learning (ML). Por favor, verifica que el servidor de predicción esté en ejecución.'];
         }
     }
 
@@ -57,11 +57,12 @@ class MachineLearningService
             }
             Log::error('❌ Respuesta no exitosa: '.$response->body());
 
-            // Si hay error, devuelve valores por defecto
+            // Si hay error, devuelve valores por defecto informativos
             return [
                 'prediccion_sin_leer' => 0,
                 'prediccion_con_leer' => 0,
                 'beneficio' => 0,
+                'mensaje' => 'El modelo de Machine Learning no devolvió una predicción válida para esta materia.',
             ];
         } catch (\Exception $e) {
             Log::error('💥 Error en ML Predictivo: '.$e->getMessage());
@@ -71,6 +72,7 @@ class MachineLearningService
                 'prediccion_sin_leer' => 0,
                 'prediccion_con_leer' => 0,
                 'beneficio' => 0,
+                'mensaje' => 'No se pudo conectar con el servicio de Machine Learning (ML). El servidor Python no se encuentra disponible.',
             ];
         }
     }

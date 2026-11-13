@@ -198,7 +198,33 @@ window.axios.interceptors.request.use((config) => {
     return config;
 });
 
-// Interceptor de response: si hay 419, refresca y reintenta
+// Función centralizada para notificar mensajes flash en español
+function processFlashMessages(flash?: { success?: string | null; error?: string | null; warning?: string | null }) {
+    if (!flash) return;
+
+    if (flash.error) {
+        toast.error(flash.error, {
+            id: `flash-error-${flash.error}`,
+            duration: 8000,
+        });
+    }
+
+    if (flash.warning) {
+        toast.warning(flash.warning, {
+            id: `flash-warning-${flash.warning}`,
+            duration: 7000,
+        });
+    }
+
+    if (flash.success) {
+        toast.success(flash.success, {
+            id: `flash-success-${flash.success}`,
+            duration: 5000,
+        });
+    }
+}
+
+// Interceptor de response: si hay 419, refresca y reintenta; maneja caídas de red o servidor en español
 window.axios.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -212,6 +238,22 @@ window.axios.interceptors.response.use(
             if (newToken) {
                 originalRequest.headers['X-CSRF-TOKEN'] = newToken;
                 return window.axios(originalRequest);
+            }
+        }
+
+        // Detección de fallos de red o servidor inalcanzable
+        if (error.code === 'ERR_NETWORK' || !error.response) {
+            toast.error('Error de Conexión: No se pudo contactar con el servidor. Revisa si la base de datos o el servicio web están activos.', {
+                id: 'axios-network-error',
+                duration: 7000,
+            });
+        } else if (error.response?.status === 503 || error.response?.status === 500) {
+            const serverMsg = error.response?.data?.message || error.response?.data?.error;
+            if (serverMsg) {
+                toast.error(serverMsg, {
+                    id: 'axios-server-error',
+                    duration: 7000,
+                });
             }
         }
 
@@ -232,6 +274,11 @@ createInertiaApp({
             applyBrandTheme(props.initialPage.props.config);
         }
 
+        // Procesar mensajes flash iniciales si existen
+        if (props.initialPage?.props?.flash) {
+            processFlashMessages(props.initialPage.props.flash as any);
+        }
+
         root.render(
             <>
                 <App {...props} />
@@ -244,13 +291,76 @@ createInertiaApp({
     },
 });
 
-// Sincronizar tema de color en cada navegación SPA de Inertia
+// Sincronizar tema de color y procesar mensajes flash en cada navegación SPA de Inertia
 router.on('navigate', (event) => {
-    const config = event.detail.page?.props?.config;
-    if (config) {
-        applyBrandTheme(config);
+    const page = event.detail.page;
+    if (page?.props?.config) {
+        applyBrandTheme(page.props.config);
+    }
+    if (page?.props?.flash) {
+        processFlashMessages(page.props.flash as any);
     }
 });
+
+// Captura de respuestas no válidas de Inertia (HTTP 500, 503, etc.) para evitar modales en inglés
+router.on('invalid', (event) => {
+    event.preventDefault();
+    const response = (event.detail as any).response;
+    let mensaje = 'Ocurrió un error inesperado al procesar la solicitud.';
+
+    if (response?.data?.message) {
+        mensaje = response.data.message;
+    } else if (response?.status === 503) {
+        mensaje = 'Servicio no disponible: No se pudo conectar con la base de datos o el servidor se encuentra temporalmente inactivo.';
+    } else if (response?.status === 500) {
+        mensaje = 'Error del servidor: Ocurrió una falla en la lógica interna al procesar los datos.';
+    } else if (response?.status === 404) {
+        mensaje = 'Recurso no encontrado: La página o registro solicitado no existe.';
+    } else if (response?.status === 403) {
+        mensaje = 'Acceso denegado: No cuentas con los permisos requeridos para esta sección.';
+    } else if (response?.status === 419) {
+        mensaje = 'Sesión caducada por inactividad. La página se actualizará en unos instantes.';
+        setTimeout(() => window.location.reload(), 2000);
+    }
+
+    toast.error(mensaje, {
+        id: 'system-error-toast',
+        duration: 8000,
+    });
+});
+
+// Captura de excepciones no controladas de red o caída de conexión en Inertia
+router.on('exception', (event) => {
+    event.preventDefault();
+    const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+
+    const mensaje = isOffline
+        ? 'Sin conexión a Internet. Por favor, comprueba tu enlace de red.'
+        : 'Error de Conexión: No se pudo establecer comunicación con el servidor. Verifica que el servidor o la base de datos se encuentren activos.';
+
+    toast.error(mensaje, {
+        id: 'system-connection-toast',
+        duration: 8000,
+    });
+});
+
+// Monitoreo de estado de red (online / offline) con avisos en español
+if (typeof window !== 'undefined') {
+    window.addEventListener('offline', () => {
+        toast.error('Sin conexión a Internet: Se ha perdido la conexión de red.', {
+            id: 'network-offline-toast',
+            duration: Infinity,
+        });
+    });
+
+    window.addEventListener('online', () => {
+        toast.dismiss('network-offline-toast');
+        toast.success('Conexión reestablecida con éxito.', {
+            id: 'network-online-toast',
+            duration: 4000,
+        });
+    });
+}
 
 // This will set light / dark mode on load...
 initializeTheme();

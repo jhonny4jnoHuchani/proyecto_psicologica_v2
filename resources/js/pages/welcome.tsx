@@ -934,7 +934,16 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                     key={libro.id}
                                     data-aos="fade-up"
                                     data-aos-delay={(idx % 4) * 70}
-                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                                    onClick={() => abrirPdfLibro(libro)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            abrirPdfLibro(libro);
+                                        }
+                                    }}
+                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer select-none"
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.borderColor = `${secondary}80`;
                                         e.currentTarget.style.boxShadow = `0 15px 35px -5px ${primary}40`;
@@ -963,6 +972,19 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                         <div className="absolute top-3 right-3 z-10">
                                             <span className="font-mono-tag inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-950/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 shadow-md backdrop-blur-md">
                                                 ≤ 5 Págs
+                                            </span>
+                                        </div>
+
+                                        {/* Indicador de lectura al pasar el mouse por el card */}
+                                        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-[2px] transition-all duration-300 group-hover:opacity-100">
+                                            <span
+                                                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold text-white shadow-2xl transition-transform duration-300 group-hover:scale-105"
+                                                style={{
+                                                    background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                                }}
+                                            >
+                                                <BookOpen className="h-3.5 w-3.5" />
+                                                Leer PDF Completo
                                             </span>
                                         </div>
 
@@ -1051,20 +1073,24 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                                 <>
                                                     <button
                                                         type="button"
-                                                        onClick={() => abrirPdfLibro(libro)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            abrirPdfLibro(libro);
+                                                        }}
                                                         className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
                                                         style={{
                                                             background: `linear-gradient(135deg, ${primary}, ${secondary})`,
                                                         }}
                                                     >
                                                         <Eye className="h-3.5 w-3.5" />
-                                                        Visualizar PDF
+                                                        Leer Documento
                                                     </button>
                                                     <a
                                                         href={`/storage/${libro.archivo}`}
                                                         download
                                                         target="_blank"
                                                         rel="noopener noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
                                                         className="rounded-xl bg-white/10 p-2 text-slate-200 transition-colors hover:bg-white/20 hover:text-white"
                                                         title="Descargar archivo PDF"
                                                     >
@@ -1467,11 +1493,11 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* 13. MODAL DE VISTA PREVIA PDF DE LIBROS Y GUÍAS                           */}
             {/* ========================================================================= */}
             <Dialog open={modalPdf} onOpenChange={setModalPdf}>
-                <DialogContent className="flex h-[88vh] flex-col overflow-hidden rounded-3xl border border-white/20 bg-slate-950 p-0 text-white shadow-2xl sm:max-w-5xl">
+                <DialogContent size="full" className="flex h-[92vh] max-w-6xl w-[96vw] flex-col overflow-hidden rounded-3xl border border-white/20 bg-slate-950 p-0 text-white shadow-2xl">
                     <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b border-white/10 bg-slate-900/90 p-4 sm:p-5">
                         <div className="flex items-center gap-3 pr-4">
                             <div
-                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-md"
                                 style={{
                                     backgroundColor: `${secondary}20`,
                                     borderColor: `${secondary}50`,
@@ -1486,18 +1512,18 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                     {libroSeleccionado?.nombre}
                                 </DialogTitle>
                                 <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                                    <span className="font-mono-tag" style={{ color: secondary }}>
+                                    <span className="font-mono-tag font-semibold" style={{ color: secondary }}>
                                         {libroSeleccionado?.materia?.codigo} · {libroSeleccionado?.materia?.nombre}
                                     </span>
                                     {libroSeleccionado?.autor && <span>· {libroSeleccionado.autor}</span>}
-                                    <span className="rounded-full bg-emerald-950/60 px-2 py-0.5 text-[10px] text-emerald-400">
-                                        Guía de lectura oficial (≤ 5 págs)
+                                    <span className="rounded-full border border-emerald-500/40 bg-emerald-950/70 px-2 py-0.5 text-[10px] font-medium text-emerald-300 shadow-sm">
+                                        Lectura Completa Oficial
                                     </span>
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex shrink-0 items-center gap-2 pr-12 sm:pr-14">
                             {libroSeleccionado?.archivo && (
                                 <a
                                     href={`/storage/${libroSeleccionado.archivo}`}
@@ -1514,24 +1540,24 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                 <a
                                     href={`/storage/${libroSeleccionado.archivo}`}
                                     download
-                                    className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-white shadow-lg transition-colors hover:opacity-90"
+                                    className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
                                     style={{
                                         background: `linear-gradient(135deg, ${primary}, ${secondary})`,
                                     }}
                                     title="Descargar PDF"
                                 >
                                     <Download className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Descargar</span>
+                                    <span className="hidden sm:inline">Descargar PDF</span>
                                 </a>
                             )}
                         </div>
                     </DialogHeader>
 
-                    <div className="relative w-full flex-1 bg-slate-900/60">
+                    <div className="relative w-full flex-1 bg-slate-950">
                         {libroSeleccionado?.archivo ? (
                             <iframe
-                                src={`/storage/${libroSeleccionado.archivo}#toolbar=1&navpanes=0`}
-                                className="h-full w-full border-0"
+                                src={`/storage/${libroSeleccionado.archivo}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                                className="h-full w-full border-0 bg-slate-950"
                                 title={libroSeleccionado.nombre}
                             />
                         ) : (

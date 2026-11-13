@@ -166,9 +166,14 @@ class ImportController extends Controller
                 ],
             ]);
         } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            $errorDetalle = (str_contains($msg, 'zip') || str_contains($msg, 'format') || str_contains($msg, 'Corrupt') || str_contains($msg, 'corrupt'))
+                ? 'El archivo seleccionado no tiene un formato Excel (.xlsx o .xls) válido o se encuentra dañado.'
+                : 'No se pudo leer el archivo Excel: '.$msg;
+
             return response()->json([
-                'error' => 'No se pudo leer el archivo: '.$e->getMessage(),
-            ], 500);
+                'error' => $errorDetalle,
+            ], 422);
         }
     }
 

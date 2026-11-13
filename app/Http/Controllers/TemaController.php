@@ -63,7 +63,7 @@ class TemaController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al generar resumen: '.$e->getMessage(),
+                'message' => 'Error al generar resumen con IA: '.IAService::traducirErrorIA($e),
             ], 500);
         }
     }

@@ -143,7 +143,7 @@ class RefuerzoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => 'No se pudieron generar las preguntas: '.$e->getMessage(),
+                'error' => IAService::traducirErrorIA($e),
             ], 500);
         }
     }
@@ -186,7 +186,7 @@ class RefuerzoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'error' => 'No se pudo regenerar la pregunta: '.$e->getMessage(),
+                'error' => IAService::traducirErrorIA($e),
             ], 500);
         }
     }

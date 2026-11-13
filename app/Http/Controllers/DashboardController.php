@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -349,17 +350,23 @@ class DashboardController extends Controller
             abort(403, 'No tienes permiso sobre esta asignación de materia.');
         }
 
-        // Borrar imagen anterior si existía en el servidor
-        if ($cursoMateria->imagen && Storage::disk('public')->exists($cursoMateria->imagen)) {
-            Storage::disk('public')->delete($cursoMateria->imagen);
+        try {
+            // Borrar imagen anterior si existía en el servidor
+            if ($cursoMateria->imagen && Storage::disk('public')->exists($cursoMateria->imagen)) {
+                Storage::disk('public')->delete($cursoMateria->imagen);
+            }
+
+            $ruta = Storage::disk('public')->putFile('materias/portadas', $request->file('imagen'));
+
+            DB::table('curso_materia')
+                ->where('id', $cursoMateriaId)
+                ->update(['imagen' => $ruta]);
+
+            return back()->with('success', 'Portada de la materia actualizada correctamente.');
+        } catch (\Exception $e) {
+            Log::error("Error al actualizar la portada de curso_materia #{$cursoMateriaId}: ".$e->getMessage());
+
+            return back()->with('error', 'No se pudo guardar la imagen de portada debido a un fallo al escribir el archivo en el servidor.');
         }
-
-        $ruta = Storage::disk('public')->putFile('materias/portadas', $request->file('imagen'));
-
-        DB::table('curso_materia')
-            ->where('id', $cursoMateriaId)
-            ->update(['imagen' => $ruta]);
-
-        return back()->with('success', 'Portada de la materia actualizada correctamente.');
     }
 }

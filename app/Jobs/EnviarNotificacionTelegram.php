@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Http\Controllers\Settings\TelegramConfigController;
 use App\Models\Configuracion;
 use App\Models\Notificacion;
 use Illuminate\Bus\Queueable;
@@ -83,10 +84,11 @@ class EnviarNotificacionTelegram implements ShouldQueue
                     'telegram_error' => null,
                 ]);
             } else {
-                $error = $response->json('description') ?? 'Error desconocido';
+                $rawError = $response->json('description') ?? 'Error desconocido';
+                $errorTraducido = TelegramConfigController::traducirErrorTelegram("HTTP {$response->status()}: {$rawError}");
                 $notificacion->update([
                     'enviada_telegram' => false,
-                    'telegram_error' => "HTTP {$response->status()}: {$error}",
+                    'telegram_error' => $errorTraducido,
                 ]);
             }
         } catch (\Exception $e) {
@@ -94,7 +96,7 @@ class EnviarNotificacionTelegram implements ShouldQueue
 
             $notificacion->update([
                 'enviada_telegram' => false,
-                'telegram_error' => $e->getMessage(),
+                'telegram_error' => TelegramConfigController::traducirErrorTelegram($e),
             ]);
 
             // Re-lanzar para que la cola reintente

@@ -1,6 +1,7 @@
 import { AppContent } from '@/components/app-content';
 import { AppHeader } from '@/components/app-header';
 import { AppShell } from '@/components/app-shell';
+import { SystemAlertBanner } from '@/components/system-alert-banner';
 import { type BreadcrumbItem } from '@/types';
 
 interface AppHeaderLayoutProps {
@@ -12,7 +13,10 @@ export default function AppHeaderLayout({ children, breadcrumbs }: AppHeaderLayo
     return (
         <AppShell>
             <AppHeader breadcrumbs={breadcrumbs} />
-            <AppContent>{children}</AppContent>
+            <AppContent>
+                <SystemAlertBanner />
+                {children}
+            </AppContent>
         </AppShell>
     );
 }

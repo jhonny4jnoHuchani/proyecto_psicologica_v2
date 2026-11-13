@@ -94,7 +94,7 @@ class TelegramConfigController extends Controller
                 Log::error('Error conectando a Telegram getMe: '.$e->getMessage());
 
                 return back()->withErrors([
-                    'telegram_bot_token' => 'No se pudo conectar con los servidores de Telegram (Tiempo de espera agotado o error de red): '.$e->getMessage(),
+                    'telegram_bot_token' => self::traducirErrorTelegram($e),
                 ]);
             }
 
@@ -102,7 +102,7 @@ class TelegramConfigController extends Controller
                 $descripcion = $getMeResponse->json('description') ?? 'Token no reconocido por Telegram.';
 
                 return back()->withErrors([
-                    'telegram_bot_token' => "Token inválido: {$descripcion}. Por favor revisa el token generado en @BotFather.",
+                    'telegram_bot_token' => self::traducirErrorTelegram($descripcion),
                 ]);
             }
 
@@ -122,11 +122,11 @@ class TelegramConfigController extends Controller
                     if ($webhookResponse->successful() && $webhookResponse->json('ok')) {
                         $webhookRegistrado = true;
                     } else {
-                        $advertenciaWebhook = $webhookResponse->json('description') ?? 'Telegram rechazó el webhook.';
+                        $advertenciaWebhook = self::traducirErrorTelegram($webhookResponse->json('description') ?? 'Telegram rechazó el webhook.');
                         Log::warning("Telegram rechazó el webhook ({$webhookUrl}): {$advertenciaWebhook}");
                     }
                 } catch (\Exception $e) {
-                    $advertenciaWebhook = $e->getMessage();
+                    $advertenciaWebhook = self::traducirErrorTelegram($e);
                     Log::error('Error registrando Webhook en Telegram: '.$e->getMessage());
                 }
             } else {
@@ -210,9 +210,38 @@ class TelegramConfigController extends Controller
 
             $error = $response->json('description') ?? 'Respuesta no exitosa de Telegram.';
 
-            return back()->with('error', "No se pudo enviar el mensaje a Telegram: {$error}");
+            return back()->with('error', self::traducirErrorTelegram($error));
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al intentar enviar mensaje de prueba: '.$e->getMessage());
+            return back()->with('error', self::traducirErrorTelegram($e));
         }
+    }
+
+    /**
+     * Traduce descripciones técnicas y excepciones en inglés de Telegram a mensajes en español claros y concisos.
+     */
+    public static function traducirErrorTelegram(\Throwable|string $error): string
+    {
+        $msg = is_string($error) ? $error : $error->getMessage();
+
+        if (str_contains($msg, 'chat not found') || str_contains($msg, 'chat_id is empty')) {
+            return 'No se encontró el Chat ID en Telegram. Asegúrate de haber iniciado el bot con /start antes de enviar mensajes.';
+        }
+        if (str_contains($msg, 'Unauthorized') || str_contains($msg, '401') || (str_contains($msg, 'Not Found') && str_contains($msg, 'bot'))) {
+            return 'El Token de Bot es inválido o no existe en @BotFather. Verifica que esté copiado correctamente.';
+        }
+        if (str_contains($msg, 'blocked by the user') || str_contains($msg, 'user is deactivated')) {
+            return 'El usuario ha bloqueado al bot en Telegram o la cuenta está desactivada.';
+        }
+        if (str_contains($msg, 'timed out') || str_contains($msg, 'timeout') || str_contains($msg, 'cURL error 28')) {
+            return 'Tiempo de espera agotado al conectar con Telegram. Revisa la conexión a Internet del servidor.';
+        }
+        if (str_contains($msg, 'Could not resolve host') || str_contains($msg, 'cURL error 6') || str_contains($msg, 'Connection refused')) {
+            return 'Fallo de conexión con api.telegram.org. Revisa el acceso a Internet del servidor.';
+        }
+        if (str_contains($msg, 'message is too long')) {
+            return 'El mensaje supera la longitud máxima permitida por Telegram.';
+        }
+
+        return 'Falla de comunicación con Telegram: '.$msg;
     }
 }

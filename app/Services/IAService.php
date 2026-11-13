@@ -69,7 +69,7 @@ class IAService
             Log::error("Fallo de conexión HTTP con el servicio de IA para la entrega #{$entrega->id}: ".$httpException->getMessage(), [
                 'exception' => $httpException,
             ]);
-            throw new \Exception('No se pudo establecer conexión con el servicio de IA: '.$httpException->getMessage());
+            throw new \Exception(self::traducirErrorIA($httpException));
         }
 
         if (! $response->successful()) {
@@ -79,7 +79,7 @@ class IAService
             Log::error("Groq error al generar preguntas (HTTP {$response->status()}): {$errorBody}", [
                 'entrega_id' => $entrega->id,
             ]);
-            throw new \Exception("Error del proveedor de IA (HTTP {$response->status()}): {$errorMessage}");
+            throw new \Exception(self::traducirErrorIA("HTTP {$response->status()}: {$errorMessage}"));
         }
 
         $data = $response->json();
@@ -134,7 +134,7 @@ class IAService
                 ]);
         } catch (\Exception $httpException) {
             Log::error("Fallo de conexión HTTP al regenerar pregunta para entrega #{$entrega->id}: ".$httpException->getMessage());
-            throw new \Exception('No se pudo conectar con el servicio de IA: '.$httpException->getMessage());
+            throw new \Exception(self::traducirErrorIA($httpException));
         }
 
         if (! $response->successful()) {
@@ -142,7 +142,7 @@ class IAService
             $decoded = json_decode($errorBody, true);
             $errorMessage = $decoded['error']['message'] ?? $errorBody;
             Log::error("Groq error al regenerar pregunta (HTTP {$response->status()}): {$errorBody}");
-            throw new \Exception("Error al regenerar pregunta con IA (HTTP {$response->status()}): {$errorMessage}");
+            throw new \Exception(self::traducirErrorIA("HTTP {$response->status()}: {$errorMessage}"));
         }
 
         $contenido = trim($response->json('choices.0.message.content', ''));
@@ -601,5 +601,31 @@ class IAService
             'paginas_libro' => $paginas,
             'resumen' => $resumen,
         ];
+    }
+
+    /**
+     * Traduce excepciones técnicas y errores en inglés de proveedores externos a español claro y conciso.
+     */
+    public static function traducirErrorIA(\Throwable|string $error): string
+    {
+        $msg = is_string($error) ? $error : $error->getMessage();
+
+        if (str_contains($msg, 'timed out') || str_contains($msg, 'timeout') || str_contains($msg, 'cURL error 28')) {
+            return 'El servicio de IA tardó demasiado en responder (tiempo de espera agotado). Por favor, intenta de nuevo.';
+        }
+        if (str_contains($msg, 'Could not resolve host') || str_contains($msg, 'cURL error 6') || str_contains($msg, 'Connection refused')) {
+            return 'No se pudo conectar con el servidor del proveedor de IA. Revisa la conexión a Internet o el estado del servicio.';
+        }
+        if (str_contains($msg, 'Rate limit') || str_contains($msg, 'rate_limit') || str_contains($msg, '429')) {
+            return 'Se superó el límite de consultas permitidas por minuto en la IA. Por favor, espera unos segundos e inténtalo de nuevo.';
+        }
+        if (str_contains($msg, 'Invalid API Key') || str_contains($msg, 'invalid_api_key') || str_contains($msg, 'Unauthorized') || str_contains($msg, '401')) {
+            return 'La clave de acceso del servicio de IA (API Key) es inválida o ha expirado. Contacta al administrador del sistema.';
+        }
+        if (str_contains($msg, 'model_not_found') || (str_contains($msg, 'model') && str_contains($msg, 'not found'))) {
+            return 'El modelo de IA solicitado no se encuentra disponible actualmente en el proveedor.';
+        }
+
+        return 'Falla al procesar la solicitud con el servicio de IA: '.$msg;
     }
 }

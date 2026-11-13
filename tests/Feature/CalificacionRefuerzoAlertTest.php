@@ -278,7 +278,7 @@ test('refuerzos generar endpoint captures and surfaces IAService exception messa
             'success' => false,
         ]);
 
-    expect($response->json('error'))->toContain('Rate limit exceeded from Groq (HTTP 429)');
+    expect($response->json('error'))->toContain('límite de consultas permitidas por minuto en la IA');
 });
 
 test('docente can request AI feedback suggestion for an entrega', function () {
