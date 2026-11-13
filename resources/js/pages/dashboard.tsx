@@ -1961,6 +1961,13 @@ export default function Dashboard({
           </div>
         )}
         </div>
+
+        {/* MODAL DE PERSONALIZACIÓN VISUAL DE PORTADA DE LA MATERIA (ROL DOCENTE) */}
+        <ModalCambiarPortadaMateria
+          isOpen={!!materiaParaPortada}
+          onClose={() => setMateriaParaPortada(null)}
+          materia={materiaParaPortada}
+        />
       </div>
     </AppLayout>
   );
@@ -2222,13 +2229,6 @@ function SemaforoRezagoWidget({
           )}
         </div>
       )}
-
-      {/* MODAL DE PERSONALIZACIÓN VISUAL DE PORTADA DE LA MATERIA (ROL DOCENTE) */}
-      <ModalCambiarPortadaMateria
-        isOpen={!!materiaParaPortada}
-        onClose={() => setMateriaParaPortada(null)}
-        materia={materiaParaPortada}
-      />
     </div>
   );
 }
