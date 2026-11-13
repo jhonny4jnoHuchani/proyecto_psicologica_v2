@@ -17,18 +17,27 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
+  GraduationCap,
   LoaderCircle,
+  Mail,
+  MessageCircle,
   Paperclip,
   Pencil,
+  Phone,
   Plus,
+  Printer,
+  RotateCcw,
+  School,
+  Send,
   Sparkles,
   Trash2,
-  Send,
+  User,
   Users,
   X,
   Youtube,
 } from "lucide-react";
 import { FormEventHandler, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import InputError from "@/components/input-error";
 import { PageHeaderBanner } from "@/components/page-header-banner";
@@ -55,6 +64,7 @@ import {
 } from "@/components/ui/select";
 import AppLayout from "@/layouts/app-layout";
 import {
+  formatoFecha,
   formatoFechaHora,
   formatoRangoFechas,
   toDatetimeLocal,
@@ -162,13 +172,47 @@ interface Recurso {
   created_at?: string;
 }
 
+interface EstudianteLeccionItem {
+  id: number;
+  user_id: number;
+  colegio_procedencia: string | null;
+  tipo_inscripcion: string | null;
+  user: {
+    id: number;
+    nombre: string;
+    apellido_paterno: string;
+    apellido_materno: string;
+    ci: string;
+    expedido: string | null;
+    celular: string | null;
+    email: string;
+    genero: string | null;
+    fecha_nacimiento: string | null;
+    direccion: string | null;
+  };
+  cursos: {
+    id: number;
+    paralelo: string;
+    turno?: string;
+    gestion?: {
+      año: number;
+      etapa: string;
+    };
+    pivot?: {
+      fecha_inscripcion: string;
+      estado: "activo" | "abandonado" | "completado";
+    };
+  }[];
+}
+
 interface Props {
   lecciones: Leccion[];
   recursos?: Recurso[];
   cursos: CursoOption[];
   materias: MateriaOption[];
   temas: Tema[];
-  filtros: Filtros;
+  estudiantes?: EstudianteLeccionItem[];
+  filtros: Filtros & { tab?: string | null };
   rol: string;
 }
 
@@ -276,6 +320,7 @@ export default function LeccionesIndex({
   cursos,
   materias,
   temas,
+  estudiantes = [],
   filtros,
   rol,
 }: Props) {
@@ -421,6 +466,113 @@ export default function LeccionesIndex({
     filtros.materia_id ? String(filtros.materia_id) : "",
   );
 
+  // Apartado activo: "lecciones" o "estudiantes"
+  const [apartadoActivo, setApartadoActivo] = useState<"lecciones" | "estudiantes">(
+    filtros.tab === "estudiantes" ? "estudiantes" : "lecciones"
+  );
+  const [busquedaEstudiante, setBusquedaEstudiante] = useState("");
+  const [filtroEstadoEstudiante, setFiltroEstadoEstudiante] = useState("todos");
+  const [estudianteModal, setEstudianteModal] = useState<EstudianteLeccionItem | null>(null);
+
+  // Helpers para nómina de estudiantes
+  const formatNombreEstudiante = (u?: any) => {
+    if (!u) return "Sin datos";
+    const paterno = u.apellido_paterno || "";
+    const materno = u.apellido_materno || "";
+    const nombres = u.nombre || "";
+    return `${paterno} ${materno}, ${nombres}`.trim();
+  };
+
+  const getInicialesEstudiante = (u?: any) => {
+    if (!u) return "ES";
+    const p = u.apellido_paterno ? u.apellido_paterno.charAt(0) : "";
+    const n = u.nombre ? u.nombre.charAt(0) : "";
+    return (p + n).toUpperCase() || "ES";
+  };
+
+  const formatTipoInscripcion = (tipo: string | null) => {
+    const map: Record<string, string> = {
+      preuniversitario: "Preuniversitario",
+      regular: "Regular",
+      dispensacion: "Prueba de Suficiencia",
+      cursillo: "Curso Preuniversitario",
+    };
+    return tipo ? map[tipo] || tipo : "Regular";
+  };
+
+  const getEstadoBadgeEstudiante = (estado?: string | null) => {
+    switch (estado) {
+      case "activo":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Activo
+          </span>
+        );
+      case "abandonado":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            Abandonado
+          </span>
+        );
+      case "completado":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+            <CheckCircle2 className="w-3 h-3 text-sky-500" />
+            Completado
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {estado || "Inscrito"}
+          </span>
+        );
+    }
+  };
+
+  const cursoActual = useMemo(() => {
+    if (!filtroCurso || filtroCurso === "none") return null;
+    return cursos.find((c) => String(c.id) === String(filtroCurso)) || null;
+  }, [cursos, filtroCurso]);
+
+  const materiaActual = useMemo(() => {
+    if (!filtroMateria || filtroMateria === "none") return null;
+    return materias.find((m) => String(m.id) === String(filtroMateria)) || null;
+  }, [materias, filtroMateria]);
+
+  // Filtrado reactivo de estudiantes
+  const estudiantesFiltrados = useMemo(() => {
+    let result = estudiantes || [];
+
+    if (filtroEstadoEstudiante !== "todos") {
+      result = result.filter(
+        (e) => (e.cursos?.[0]?.pivot?.estado || "activo") === filtroEstadoEstudiante
+      );
+    }
+
+    if (busquedaEstudiante.trim()) {
+      const q = busquedaEstudiante.toLowerCase().trim();
+      result = result.filter((e) => {
+        const u = e.user;
+        if (!u) return false;
+        const nombreComp = `${u.nombre} ${u.apellido_paterno} ${u.apellido_materno}`.toLowerCase();
+        const ci = (u.ci || "").toLowerCase();
+        const email = (u.email || "").toLowerCase();
+        const cel = (u.celular || "").toLowerCase();
+        return (
+          nombreComp.includes(q) ||
+          ci.includes(q) ||
+          email.includes(q) ||
+          cel.includes(q)
+        );
+      });
+    }
+
+    return result;
+  }, [estudiantes, filtroEstadoEstudiante, busquedaEstudiante]);
+
   // Filtrado instantáneo (al momento): al cambiar curso o materia se filtra sin pulsar botón
   const handleCursoChange = (val: string) => {
     const nuevoCurso = val === "none" ? "" : val;
@@ -428,6 +580,7 @@ export default function LeccionesIndex({
     const params = new URLSearchParams();
     if (nuevoCurso) params.set("curso_id", nuevoCurso);
     if (filtroMateria && filtroMateria !== "none") params.set("materia_id", filtroMateria);
+    if (apartadoActivo === "estudiantes") params.set("tab", "estudiantes");
     router.get(`/lecciones?${params.toString()}`, {}, { preserveState: true, preserveScroll: true });
   };
 
@@ -437,6 +590,7 @@ export default function LeccionesIndex({
     const params = new URLSearchParams();
     if (filtroCurso && filtroCurso !== "none") params.set("curso_id", filtroCurso);
     if (nuevaMateria) params.set("materia_id", nuevaMateria);
+    if (apartadoActivo === "estudiantes") params.set("tab", "estudiantes");
     router.get(`/lecciones?${params.toString()}`, {}, { preserveState: true, preserveScroll: true });
   };
 
@@ -1013,7 +1167,73 @@ export default function LeccionesIndex({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* PESTAÑAS DE NAVEGACIÓN: PLANIFICACIÓN Y LECCIONES vs LISTA DE ESTUDIANTES */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 pb-3 pt-1 print:hidden">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setApartadoActivo("lecciones")}
+              className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-2xl transition-all cursor-pointer ${
+                apartadoActivo === "lecciones"
+                  ? "bg-gradient-to-tr from-primary to-secondary text-white shadow-md shadow-primary/25 ring-2 ring-primary/20"
+                  : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70"
+              }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Contenidos y Lecciones</span>
+              <span
+                className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                  apartadoActivo === "lecciones"
+                    ? "bg-white/20 text-white"
+                    : "bg-muted text-foreground"
+                }`}
+              >
+                {lecciones?.length || 0}
+              </span>
+            </button>
+
+            {isDocente && (
+              <button
+                type="button"
+                onClick={() => setApartadoActivo("estudiantes")}
+                className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-2xl transition-all cursor-pointer ${
+                  apartadoActivo === "estudiantes"
+                    ? "bg-gradient-to-tr from-primary to-secondary text-white shadow-md shadow-primary/25 ring-2 ring-primary/20"
+                    : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border/70"
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <span>Nómina de Estudiantes</span>
+                <span
+                  className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    apartadoActivo === "estudiantes"
+                      ? "bg-white/20 text-white"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {estudiantes?.length || 0}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {isDocente && apartadoActivo === "estudiantes" && (
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="text-xs h-9 gap-1.5 rounded-xl border-border/80 hover:border-primary/40 text-foreground"
+              >
+                <Printer className="h-3.5 w-3.5 text-primary" />
+                <span>Imprimir Nómina</span>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {apartadoActivo === "lecciones" && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <Card className="bg-card/90 backdrop-blur-md border border-primary/20 shadow-sm rounded-3xl overflow-hidden lg:col-span-2 flex flex-col">
             <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/80 bg-gradient-to-r from-primary/[0.04] via-transparent to-secondary/[0.04] px-6 py-4.5">
               <div className="flex items-center gap-3">
@@ -1991,8 +2211,478 @@ export default function LeccionesIndex({
                 })}
               </CardContent>
             </Card>
+
+            {/* WIDGET LATERAL: ESTUDIANTES DEL PARALELO */}
+            {isDocente && (
+              <Card className="shadow-sm border border-primary/20 rounded-3xl bg-card/90 backdrop-blur-md overflow-hidden">
+                <CardHeader className="pb-3 border-b border-border/70 bg-gradient-to-r from-primary/[0.04] to-transparent px-5 pt-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-sm font-bold text-foreground">
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <Users className="h-4 w-4" />
+                      </div>
+                      <span>Estudiantes del Paralelo</span>
+                    </CardTitle>
+                    <Badge variant="outline" className="text-[10px] font-bold bg-primary/10 text-primary border-primary/25">
+                      {estudiantes?.length || 0} inscritos
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-5 pt-3 space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    {cursoActual
+                      ? `Alumnos matriculados en Paralelo ${cursoActual.paralelo} (${cursoActual.gestion?.año})`
+                      : "Alumnos de tus materias y cursos asignados"}
+                  </p>
+
+                  {estudiantes && estudiantes.length > 0 ? (
+                    <div className="flex items-center -space-x-2 overflow-hidden py-1">
+                      {estudiantes.slice(0, 7).map((est) => (
+                        <div
+                          key={est.id}
+                          title={formatNombreEstudiante(est.user)}
+                          className="inline-block h-8 w-8 rounded-full ring-2 ring-card bg-gradient-to-tr from-primary to-secondary text-white text-[10px] font-bold flex items-center justify-center shadow-xs"
+                        >
+                          {getInicialesEstudiante(est.user)}
+                        </div>
+                      ))}
+                      {estudiantes.length > 7 && (
+                        <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground ring-2 ring-card">
+                          +{estudiantes.length - 7}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">
+                      No hay estudiantes registrados en este curso aún.
+                    </p>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setApartadoActivo("estudiantes")}
+                    className="w-full text-xs h-8 gap-1.5 rounded-xl border-border hover:border-primary/50 text-foreground hover:text-primary cursor-pointer"
+                  >
+                    <Users className="h-3.5 w-3.5 text-primary" />
+                    <span>Ver nómina completa</span>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
+        )}
+
+        {/* ===================== APARTADO DE ESTUDIANTES MATRICULADOS ===================== */}
+        {apartadoActivo === "estudiantes" && (
+          <div className="space-y-4">
+            {/* Header del apartado */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-3xl bg-card border border-primary/20 shadow-sm bg-gradient-to-br from-primary/[0.03] via-card to-card">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
+                  <Users className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <span>Nómina de Estudiantes Matriculados</span>
+                    <Badge variant="outline" className="text-xs font-semibold bg-primary/10 text-primary border-primary/25">
+                      {estudiantesFiltrados.length} estudiantes
+                    </Badge>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {cursoActual
+                      ? `Paralelo ${cursoActual.paralelo} • ${cursoActual.gestion?.año || ""} ${cursoActual.gestion?.etapa || ""}`
+                      : "Todos los cursos"}
+                    {materiaActual ? ` — Materia: ${materiaActual.nombre} (${materiaActual.codigo})` : ""}
+                  </p>
+                </div>
+              </div>
+
+              {/* Controles de filtro interno del apartado */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar estudiante..."
+                    value={busquedaEstudiante}
+                    onChange={(e) => setBusquedaEstudiante(e.target.value)}
+                    className="pl-9 pr-8 h-9 text-xs rounded-xl"
+                  />
+                  {busquedaEstudiante && (
+                    <button
+                      onClick={() => setBusquedaEstudiante("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <Select
+                  value={filtroEstadoEstudiante}
+                  onValueChange={setFiltroEstadoEstudiante}
+                >
+                  <SelectTrigger className="h-9 text-xs rounded-xl w-full sm:w-36">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="todos">Todos los estados</SelectItem>
+                    <SelectItem value="activo">Solo Activos</SelectItem>
+                    <SelectItem value="abandonado">Abandonados</SelectItem>
+                    <SelectItem value="completado">Completados</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Tabla de Estudiantes */}
+            {estudiantesFiltrados.length === 0 ? (
+              <Card className="border-dashed border-2 p-12 text-center bg-card/60 backdrop-blur-sm">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <Users className="h-7 w-7" />
+                </div>
+                <h4 className="text-base font-bold text-foreground">
+                  No se encontraron estudiantes
+                </h4>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
+                  {!filtroCurso
+                    ? "Selecciona un curso y materia en el filtro superior para ver a los estudiantes matriculados."
+                    : "No hay alumnos inscritos que coincidan con la búsqueda."}
+                </p>
+                {(busquedaEstudiante || filtroEstadoEstudiante !== "todos") && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setBusquedaEstudiante("");
+                      setFiltroEstadoEstudiante("todos");
+                    }}
+                    className="mt-3 text-xs gap-1 rounded-xl"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    <span>Limpiar filtros</span>
+                  </Button>
+                )}
+              </Card>
+            ) : (
+              <Card className="overflow-hidden border border-border/80 shadow-sm rounded-3xl bg-card">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs sm:text-sm">
+                    <thead className="bg-muted/50 border-b text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <tr>
+                        <th className="px-5 py-3">#</th>
+                        <th className="px-5 py-3">Estudiante</th>
+                        <th className="px-5 py-3">Cédula de Identidad</th>
+                        <th className="px-5 py-3">Curso / Paralelo</th>
+                        <th className="px-5 py-3">Contacto</th>
+                        <th className="px-5 py-3">Estado</th>
+                        <th className="px-5 py-3 text-right">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/60">
+                      {estudiantesFiltrados.map((est, index) => {
+                        const u = est.user;
+                        const primerCurso = est.cursos?.[0];
+                        const estado = primerCurso?.pivot?.estado || "activo";
+
+                        return (
+                          <tr
+                            key={est.id}
+                            className="hover:bg-muted/40 transition-colors group"
+                          >
+                            <td className="px-5 py-3.5 text-xs font-semibold text-muted-foreground">
+                              {index + 1}
+                            </td>
+                            <td className="px-5 py-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0 ring-2 ring-background">
+                                  {getInicialesEstudiante(u)}
+                                </div>
+                                <div>
+                                  <p
+                                    className="font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
+                                    onClick={() => setEstudianteModal(est)}
+                                  >
+                                    {formatNombreEstudiante(u)}
+                                  </p>
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {formatTipoInscripcion(est.tipo_inscripcion)}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <span className="font-mono text-xs font-bold text-foreground">
+                                {u?.ci || "—"}
+                              </span>
+                              {u?.expedido && (
+                                <Badge
+                                  variant="outline"
+                                  className="ml-1.5 text-[10px] uppercase font-bold py-0 px-1 bg-muted/60"
+                                >
+                                  {u.expedido}
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {primerCurso ? (
+                                <div className="text-xs">
+                                  <Badge variant="outline" className="font-bold bg-muted/40">
+                                    Paralelo {primerCurso.paralelo}
+                                  </Badge>
+                                  {primerCurso.gestion && (
+                                    <span className="ml-1 text-[11px] text-muted-foreground">
+                                      {primerCurso.gestion.año}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                {u?.email && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(u.email);
+                                      toast.success("Correo copiado");
+                                    }}
+                                    title={`Copiar: ${u.email}`}
+                                    className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                                  >
+                                    <Mail className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                                {u?.celular ? (
+                                  <a
+                                    href={`https://wa.me/591${u.celular.replace(/\D/g, "")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    title={`WhatsApp: ${u.celular}`}
+                                    className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-500/20 transition-colors"
+                                  >
+                                    <MessageCircle className="h-3.5 w-3.5" />
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {getEstadoBadgeEstudiante(estado)}
+                            </td>
+                            <td className="px-5 py-3.5 text-right whitespace-nowrap">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEstudianteModal(est)}
+                                className="text-xs h-8 gap-1.5 rounded-lg border-border hover:border-primary/50 hover:text-primary"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>Ver Ficha</span>
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* MODAL DE FICHA DEL ESTUDIANTE (SOLO LECTURA) */}
+        <Dialog
+          open={!!estudianteModal}
+          onOpenChange={(open) => !open && setEstudianteModal(null)}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-6">
+            {estudianteModal && (
+              <>
+                <DialogHeader className="pb-3 border-b">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+                      {getInicialesEstudiante(estudianteModal.user)}
+                    </div>
+                    <div>
+                      <DialogTitle className="text-lg font-black text-foreground">
+                        {formatNombreEstudiante(estudianteModal.user)}
+                      </DialogTitle>
+                      <DialogDescription className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                        <span>
+                          C.I.: {estudianteModal.user.ci}{" "}
+                          {estudianteModal.user.expedido &&
+                            `(${estudianteModal.user.expedido})`}
+                        </span>
+                        <span>•</span>
+                        <span>
+                          {formatTipoInscripcion(
+                            estudianteModal.tipo_inscripcion
+                          )}
+                        </span>
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-4 py-3 text-xs">
+                  {/* Datos Personales */}
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 mb-2">
+                      <User className="h-3.5 w-3.5" />
+                      Datos Personales
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/80">
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Cédula de Identidad:
+                        </span>
+                        <span className="font-semibold text-foreground font-mono">
+                          {estudianteModal.user.ci}{" "}
+                          {estudianteModal.user.expedido &&
+                            `(${estudianteModal.user.expedido})`}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Género:
+                        </span>
+                        <span className="font-semibold text-foreground capitalize">
+                          {estudianteModal.user.genero === "M"
+                            ? "Masculino"
+                            : estudianteModal.user.genero === "F"
+                            ? "Femenino"
+                            : estudianteModal.user.genero || "No especificado"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Fecha de Nacimiento:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {estudianteModal.user.fecha_nacimiento
+                            ? formatoFecha(estudianteModal.user.fecha_nacimiento)
+                            : "No registrada"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Dirección:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {estudianteModal.user.direccion || "No registrada"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contacto */}
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 mb-2">
+                      <Phone className="h-3.5 w-3.5" />
+                      Canales de Contacto
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/80">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-muted-foreground block text-[11px]">
+                            Correo:
+                          </span>
+                          <span className="font-semibold text-foreground break-all">
+                            {estudianteModal.user.email}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              estudianteModal.user.email
+                            );
+                            toast.success("Correo copiado");
+                          }}
+                          className="h-7 px-2 text-xs text-primary"
+                        >
+                          Copiar
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-muted-foreground block text-[11px]">
+                            Celular:
+                          </span>
+                          <span className="font-semibold text-foreground">
+                            {estudianteModal.user.celular || "Sin celular"}
+                          </span>
+                        </div>
+                        {estudianteModal.user.celular && (
+                          <a
+                            href={`https://wa.me/591${estudianteModal.user.celular.replace(
+                              /\D/g,
+                              ""
+                            )}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            <span>WhatsApp</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Datos Académicos */}
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5 mb-2">
+                      <GraduationCap className="h-3.5 w-3.5" />
+                      Información Académica
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/80">
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Colegio de Procedencia:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {estudianteModal.colegio_procedencia ||
+                            "No registrado"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">
+                          Tipo de Admisión:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {formatTipoInscripcion(
+                            estudianteModal.tipo_inscripcion
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter className="pt-3 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEstudianteModal(null)}
+                    className="rounded-xl w-full sm:w-auto"
+                  >
+                    Cerrar
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* MODAL CREAR */}
         <Dialog open={modalCreate} onOpenChange={setModalCreate}>

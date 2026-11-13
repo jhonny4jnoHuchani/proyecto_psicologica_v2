@@ -29,7 +29,6 @@ import {
 import React, { useEffect, useState } from 'react';
 
 import { AmbientReactiveBackground } from '@/components/ambient-reactive-background';
-import { BibliotecariaGuideCard } from '@/components/bibliotecaria-guide-card';
 import { ExploraCarreraCarousel } from '@/components/explora-carrera-carousel';
 import { FloatingScrollIndex } from '@/components/floating-scroll-index';
 import { PortadasCinematicSlider } from '@/components/portadas-cinematic-slider';
@@ -927,14 +926,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                         </p>
                     </div>
 
-                    {/* COMPONENTE EXCLUSIVO DE LA BIBLIOTECARIA ACADÉMICA (SIN INPUTS NI BUSCADORES) */}
-                    <BibliotecariaGuideCard
-                        primaryColor={primary}
-                        secondaryColor={secondary}
-                        totalLibros={libros.length}
-                    />
-
-                    {/* LISTADO / GRILLA DIRECTA DE DOCUMENTOS PDF */}
+                    {/* LISTADO / GRILLA DIRECTA DE DOCUMENTOS PDF (CONECTADO DIRECTAMENTE SIN ESPACIOS GIGANTES) */}
                     {libros.length > 0 ? (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {libros.map((libro, idx) => (

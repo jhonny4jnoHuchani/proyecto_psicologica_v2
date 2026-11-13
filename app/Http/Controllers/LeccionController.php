@@ -101,15 +101,53 @@ class LeccionController extends Controller
             $temas = Tema::orderBy('materia_id')->orderBy('orden')->get();
         }
 
+        // Obtener estudiantes matriculados en el curso seleccionado (apartado de nómina estudiantil)
+        $estudiantes = collect();
+        if ($cursoId) {
+            $estudiantes = Estudiante::whereHas('cursos', function ($q) use ($cursoId) {
+                $q->where('cursos.id', $cursoId);
+            })
+                ->with([
+                    'user',
+                    'cursos' => function ($q) use ($cursoId) {
+                        $q->where('cursos.id', $cursoId)
+                            ->with('gestion')
+                            ->withPivot('fecha_inscripcion', 'estado');
+                    },
+                ])
+                ->orderBy('id', 'desc')
+                ->get();
+        } elseif ($user->hasRole('docente')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($docente) {
+                $docenteCursoIds = Curso::whereHas('materias', fn ($q) => $q->where('curso_materia.docente_id', $docente->id))->pluck('id');
+                $estudiantes = Estudiante::whereHas('cursos', fn ($q) => $q->whereIn('cursos.id', $docenteCursoIds))
+                    ->with([
+                        'user',
+                        'cursos' => function ($q) use ($docenteCursoIds) {
+                            $q->whereIn('cursos.id', $docenteCursoIds)
+                                ->with('gestion')
+                                ->withPivot('fecha_inscripcion', 'estado');
+                        },
+                    ])
+                    ->orderBy('id', 'desc')
+                    ->get();
+            }
+        } elseif ($user->hasRole('admin')) {
+            $estudiantes = Estudiante::with(['user', 'cursos.gestion'])->orderBy('id', 'desc')->get();
+        }
+
         return Inertia::render('lecciones/index', [
             'lecciones' => $lecciones,
             'recursos' => $recursos,
             'cursos' => $cursos,
             'materias' => $materias,
             'temas' => $temas,
+            'estudiantes' => $estudiantes,
             'filtros' => [
                 'curso_id' => $cursoId ? (int) $cursoId : null,
                 'materia_id' => $materiaId ? (int) $materiaId : null,
+                'tab' => $request->query('tab'),
             ],
             'rol' => $user->roles->first()?->name,
         ]);

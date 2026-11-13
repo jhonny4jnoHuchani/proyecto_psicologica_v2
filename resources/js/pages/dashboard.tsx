@@ -1,3 +1,4 @@
+import { ModalCambiarPortadaMateria, type MateriaParaPortada } from "@/components/modal-cambiar-portada-materia";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import confetti from "canvas-confetti";
 import { motion } from "framer-motion";
@@ -175,6 +176,8 @@ interface UltimaEntregaPendiente {
 interface TareaPendiente {
   id: number;
   hash_id?: string;
+  materia_id?: number;
+  curso_id?: number;
   titulo: string;
   descripcion?: string | null;
   fecha_entrega: string | null;
@@ -307,6 +310,7 @@ export default function Dashboard({
   const pageProps = usePage<SharedData>().props;
   const user = pageProps.auth?.user;
   const [drawerTareasAbierto, setDrawerTareasAbierto] = useState(false);
+  const [materiaParaPortada, setMateriaParaPortada] = useState<MateriaParaPortada | null>(null);
 
   // Saludo dinámico según la hora local
   const saludo = useMemo(() => {
@@ -976,6 +980,13 @@ export default function Dashboard({
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5">
+                <Link href="/docente/estudiantes">
+                  <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary/50 hover:text-primary">
+                    <Users className="h-3.5 w-3.5 text-primary" />
+                    <span>Lista de Estudiantes</span>
+                  </Button>
+                </Link>
+
                 <Link href="/lecciones">
                   <Button variant="gradient" size="sm" className="text-xs gap-1.5">
                     <Plus className="h-3.5 w-3.5" />
@@ -1226,12 +1237,20 @@ export default function Dashboard({
                           </span>
                         </div>
                       </div>
-                      <Link href={`/cursos/${curso.id}`}>
-                        <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary/40 hover:text-primary">
-                          <span>Ver Curso</span>
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/docente/estudiantes?curso_id=${curso.id}`}>
+                          <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary/40 hover:text-primary">
+                            <Users className="h-3.5 w-3.5 text-primary" />
+                            <span>Ver Estudiantes</span>
+                          </Button>
+                        </Link>
+                        <Link href={`/cursos/${curso.id}`}>
+                          <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary/40 hover:text-primary">
+                            <span>Ver Curso</span>
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
@@ -1292,33 +1311,26 @@ export default function Dashboard({
                             <span>IA {m.pivot?.ayuda_ia_activa ? "Activa" : "Off"}</span>
                           </button>
 
-                          {/* Botón flotante Cambiar Imagen */}
-                          <label
-                            className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md bg-black/50 text-white cursor-pointer hover:bg-black/70 transition-colors shadow-sm"
-                            onClick={(e) => e.stopPropagation()}
+                          {/* Botón flotante Cambiar Imagen de Portada con Modal */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setMateriaParaPortada({
+                                id: m.id,
+                                pivotId: m.pivot?.id,
+                                nombre: m.nombre,
+                                codigo: m.codigo,
+                                imagenActual: m.pivot?.imagen,
+                              });
+                            }}
+                            title="Personalizar portada de la materia"
+                            className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold backdrop-blur-md bg-black/60 text-white cursor-pointer hover:bg-black/85 hover:border-primary border border-white/20 transition-all shadow-sm hover:scale-105 active:scale-95"
                           >
                             <ImagePlus className="h-3 w-3" />
-                            <span>Foto</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                const formData = new FormData();
-                                formData.append("imagen", file);
-                                router.post(
-                                  `/docente/curso-materia/${m.pivot?.id}/imagen`,
-                                  formData,
-                                  {
-                                    forceFormData: true,
-                                    preserveScroll: true,
-                                  },
-                                );
-                              }}
-                            />
-                          </label>
+                            <span>Portada</span>
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -1473,21 +1485,30 @@ export default function Dashboard({
                   </div>
                 </div>
 
-                {/* DETALLE CONTEXTUAL DEL CURSO DEL ESTUDIANTE */}
-                {cursos && cursos.length > 0 && (
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border/80 text-xs text-muted-foreground shadow-xs self-start sm:self-auto">
-                    <School className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="font-bold text-foreground">
-                      {cursos[0].gestion?.año} - {cursos[0].gestion?.etapa}
-                    </span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <span className="capitalize">Turno {cursos[0].turno}</span>
-                    <span className="text-muted-foreground/60">·</span>
-                    <Badge variant="outline" className="text-[10px] py-0 px-2 font-black border-primary/40 text-primary bg-primary/5">
-                      Paralelo {cursos[0].paralelo}
-                    </Badge>
-                  </div>
-                )}
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                  <Link href="/estudiante/recomendaciones">
+                    <Button variant="outline" size="sm" className="text-xs gap-1.5 hover:border-primary/50 hover:text-primary">
+                      <Wand2 className="h-3.5 w-3.5 text-primary" />
+                      <span>Recomendaciones Predictivas con ML</span>
+                    </Button>
+                  </Link>
+
+                  {/* DETALLE CONTEXTUAL DEL CURSO DEL ESTUDIANTE */}
+                  {cursos && cursos.length > 0 && (
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-card/90 border border-border/80 text-xs text-muted-foreground shadow-xs">
+                      <School className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="font-bold text-foreground">
+                        {cursos[0].gestion?.año} - {cursos[0].gestion?.etapa}
+                      </span>
+                      <span className="text-muted-foreground/60">·</span>
+                      <span className="capitalize">Turno {cursos[0].turno}</span>
+                      <span className="text-muted-foreground/60">·</span>
+                      <Badge variant="outline" className="text-[10px] py-0 px-2 font-black border-primary/40 text-primary bg-primary/5">
+                        Paralelo {cursos[0].paralelo}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {!cursos || cursos.length === 0 ? (
@@ -1508,9 +1529,19 @@ export default function Dashboard({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                       {curso.materias?.map((m) => {
-                        const tareasDeMateria = (tareas_pendientes || []).filter(
-                          (t) => t.materia?.id === m.id || t.materia_id === m.id,
-                        );
+                        const tareasDeMateria = (tareas_pendientes || []).filter((t) => {
+                          const targetMateriaId = Number(m.id ?? (m as any).materia_id ?? m.pivot?.materia_id);
+                          const tMateriaId = Number(t.materia?.id ?? t.materia_id);
+                          if (!targetMateriaId || !tMateriaId || targetMateriaId !== tMateriaId) {
+                            return false;
+                          }
+                          const targetCursoId = Number(curso.id);
+                          const tCursoId = Number(t.curso?.id ?? t.curso_id);
+                          if (targetCursoId && tCursoId && targetCursoId !== tCursoId) {
+                            return false;
+                          }
+                          return true;
+                        });
                         const tieneTareas = tareasDeMateria.length > 0;
 
                         return (
@@ -2191,6 +2222,13 @@ function SemaforoRezagoWidget({
           )}
         </div>
       )}
+
+      {/* MODAL DE PERSONALIZACIÓN VISUAL DE PORTADA DE LA MATERIA (ROL DOCENTE) */}
+      <ModalCambiarPortadaMateria
+        isOpen={!!materiaParaPortada}
+        onClose={() => setMateriaParaPortada(null)}
+        materia={materiaParaPortada}
+      />
     </div>
   );
 }

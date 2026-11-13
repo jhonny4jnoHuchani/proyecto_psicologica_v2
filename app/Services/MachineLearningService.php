@@ -30,7 +30,7 @@ class MachineLearningService
             // Si Python está apagado, NO rompemos la app, solo avisamos
             Log::error('Error conectando con ML: '.$e->getMessage());
 
-            return ['recomendar' => false, 'mensaje' => 'El sistema de IA no está disponible en este momento.'];
+            return ['recomendar' => false, 'mensaje' => 'El sistema de Machine Learning (ML) no está disponible en este momento.'];
         }
     }
 

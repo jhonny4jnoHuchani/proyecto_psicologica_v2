@@ -23,7 +23,7 @@ interface Props {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-  { title: "Recomendaciones de Estudio", href: "/estudiante/recomendaciones" },
+  { title: "Recomendaciones Predictivas con ML", href: "/estudiante/recomendaciones" },
 ];
 
 export default function Index({
@@ -40,13 +40,13 @@ export default function Index({
   if (sin_datos) {
     return (
       <AppLayout breadcrumbs={breadcrumbs}>
-        <Head title="Recomendaciones de Estudio - IA" />
+        <Head title="Recomendaciones Predictivas con ML" />
         <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
           <PageHeaderBanner
-            title="Recomendaciones Predictivas con IA"
-            subtitle="Análisis predictivo de rendimiento y sugerencias personalizadas de preparación académica."
+            title="Recomendaciones Predictivas con ML"
+            subtitle="Análisis predictivo de rendimiento basado en Machine Learning y sugerencias personalizadas de preparación académica."
             icon={Wand2}
-            badgeText="ASISTENTE INTELIGENTE"
+            badgeText="MODELO PREDICTIVO ML"
           />
 
           <Card className="text-center py-16 px-6">
@@ -58,7 +58,7 @@ export default function Index({
                 Aún no hay recomendaciones acumuladas
               </h2>
               <p className="text-muted-foreground max-w-md text-sm leading-relaxed">
-                {mensaje || "Completa tus primeras lecciones y evaluaciones para que nuestro modelo de IA calcule tus proyecciones de estudio."}
+                {mensaje || "Completa tus primeras lecciones y evaluaciones para que nuestro modelo de ML calcule tus proyecciones predictivas de estudio."}
               </p>
             </CardContent>
           </Card>
@@ -69,13 +69,13 @@ export default function Index({
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Recomendaciones Predictivas - IA" />
+      <Head title="Recomendaciones Predictivas con ML" />
       <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
         <PageHeaderBanner
-          title="Recomendaciones Predictivas con IA"
-          subtitle={`Plan preventivo personalizado para ${estudiante_nombre}: proyección de notas para el siguiente tema.`}
+          title="Recomendaciones Predictivas con ML"
+          subtitle={`Plan predictivo preventivo personalizado para ${estudiante_nombre}: proyección de notas con Machine Learning para el siguiente tema.`}
           icon={Wand2}
-          badgeText="ASISTENTE INTELIGENTE"
+          badgeText="MODELO PREDICTIVO ML"
           stats={[
             { label: "Beneficio", value: `+${prediccion?.beneficio || 0} pts` },
             { label: "Nota Actual", value: `${nota_actual || 0}/100` },

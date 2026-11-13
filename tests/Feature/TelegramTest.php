@@ -4,6 +4,7 @@ use App\Jobs\EnviarNotificacionTelegram;
 use App\Models\Notificacion;
 use App\Models\TelegramVinculacion;
 use App\Models\User;
+use App\Services\NotificacionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -161,5 +162,49 @@ test('enviar notificacion telegram job sends notification to vinculated user', f
         return str_contains($request->url(), 'sendMessage')
             && $request['chat_id'] === '12345678'
             && str_contains($request['text'], $notificacion->titulo);
+    });
+});
+
+test('notificacion tarea calificada via telegram omite la nota y solo indica que fue calificada', function () {
+    Config::set('services.telegram.enabled', true);
+    Config::set('services.telegram.bot_token', 'fake-token');
+
+    $user = User::factory()->create();
+    TelegramVinculacion::create([
+        'user_id' => $user->id,
+        'chat_id' => '99887766',
+        'telegram_username' => 'estudiantebot',
+        'vinculado_at' => now(),
+    ]);
+
+    $notificacion = NotificacionService::tareaCalificada(
+        user: $user,
+        nota: 88.5,
+        nombreTarea: 'Ensayo de Psicología Social',
+        nombreMateria: 'Psicología Social',
+        comentarios: 'Excelente análisis de casos.',
+        url: '/lecciones/1',
+        mandarTelegram: true,
+    );
+
+    Http::fake([
+        'https://api.telegram.org/*' => Http::response(['ok' => true], 200),
+    ]);
+
+    (new EnviarNotificacionTelegram($notificacion->id))->handle();
+
+    Http::assertSent(function ($request) {
+        $text = $request['text'];
+
+        // Debe avisar que la tarea ya fue calificada
+        $diceCalificada = str_contains($text, 'ya fue calificada');
+
+        // Estrictamente NO debe avisar la nota con la que fue calificado
+        $noDiceNota = ! str_contains($text, '88.5') && ! str_contains($text, '/100');
+
+        return str_contains($request->url(), 'sendMessage')
+            && $request['chat_id'] === '99887766'
+            && $diceCalificada
+            && $noDiceNota;
     });
 });

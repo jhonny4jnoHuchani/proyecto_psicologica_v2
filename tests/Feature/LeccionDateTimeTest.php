@@ -216,3 +216,45 @@ test('lecciones index loads successfully with filter query params', function () 
         ->where('filtros.materia_id', $materia->id)
     );
 });
+
+test('lecciones index returns matriculated estudiantes when curso_id is provided', function () {
+    $userDocente = User::factory()->create();
+    $userDocente->assignRole('docente');
+    $docente = Docente::create(['user_id' => $userDocente->id, 'especialidad' => 'Psicología']);
+
+    $gestion = Gestion::create([
+        'año' => 2026,
+        'etapa' => '1er Semestre',
+        'fecha_inicio' => '2026-01-01',
+        'fecha_fin' => '2026-06-30',
+        'estado' => 'activo',
+    ]);
+    $curso = Curso::create(['gestion_id' => $gestion->id, 'paralelo' => 'A', 'turno' => 'mañana', 'cupos' => 30, 'estado' => 'activo']);
+    $materia = Materia::create(['codigo' => 'PSI-101', 'nombre' => 'Psicología General']);
+
+    DB::table('curso_materia')->insert([
+        'curso_id' => $curso->id,
+        'materia_id' => $materia->id,
+        'docente_id' => $docente->id,
+        'ayuda_ia_activa' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $userEst = User::factory()->create(['nombre' => 'EstudianteLeccion', 'ci' => '99887766']);
+    $userEst->assignRole('estudiante');
+    $estudiante = Estudiante::create(['user_id' => $userEst->id]);
+    $curso->estudiantes()->attach($estudiante->id, ['fecha_inscripcion' => now(), 'estado' => 'activo']);
+
+    $response = $this->actingAs($userDocente)->get("/lecciones?curso_id={$curso->id}&materia_id={$materia->id}&tab=estudiantes");
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('lecciones/index')
+        ->has('estudiantes', 1)
+        ->where('estudiantes.0.user.ci', '99887766')
+        ->where('filtros.curso_id', $curso->id)
+        ->where('filtros.materia_id', $materia->id)
+        ->where('filtros.tab', 'estudiantes')
+    );
+});

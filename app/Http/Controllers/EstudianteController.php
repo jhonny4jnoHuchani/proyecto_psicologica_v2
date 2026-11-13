@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\CredencialTemporal;
 use App\Models\Curso;
+use App\Models\Docente;
 use App\Models\Estudiante;
+use App\Models\Materia;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -30,6 +34,134 @@ class EstudianteController extends Controller
         return Inertia::render('estudiantes/index', [
             'estudiantes' => $estudiantes,
             'cursos' => $cursos,
+        ]);
+    }
+
+    /**
+     * Vista del Docente: Listado de solo lectura de sus estudiantes inscritos en sus materias/cursos.
+     */
+    public function docenteIndex(Request $request): Response
+    {
+        $user = Auth::user();
+        $docente = Docente::where('user_id', $user->id)->first();
+
+        // En caso de que un administrador acceda para supervisión o pruebas
+        if (! $docente && $user->hasRole('admin')) {
+            $docenteId = $request->query('docente_id');
+            $docente = $docenteId ? Docente::find($docenteId) : Docente::first();
+        }
+
+        if ($docente) {
+            $cursos = Curso::whereHas('materias', function ($q) use ($docente) {
+                $q->where('curso_materia.docente_id', $docente->id);
+            })
+                ->with([
+                    'gestion',
+                    'materias' => function ($q) use ($docente) {
+                        $q->where('curso_materia.docente_id', $docente->id);
+                    },
+                ])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $materias = Materia::whereHas('cursos', function ($q) use ($docente) {
+                $q->where('curso_materia.docente_id', $docente->id);
+            })
+                ->orderBy('nombre')
+                ->get();
+        } elseif ($user->hasRole('admin')) {
+            $cursos = Curso::with(['gestion', 'materias'])->orderBy('created_at', 'desc')->get();
+            $materias = Materia::orderBy('nombre')->get();
+        } else {
+            $cursos = collect();
+            $materias = collect();
+        }
+
+        $cursoId = $request->query('curso_id');
+        $materiaId = $request->query('materia_id');
+        $estado = $request->query('estado');
+        $buscar = $request->query('buscar');
+
+        $docenteCursoIds = $cursos->pluck('id')->all();
+
+        // Filtrar por materia si fue especificada
+        if ($materiaId) {
+            $materiaCursoIds = DB::table('curso_materia')
+                ->when($docente, fn ($q) => $q->where('docente_id', $docente->id))
+                ->where('materia_id', $materiaId)
+                ->pluck('curso_id')
+                ->all();
+
+            $allowedCursoIds = array_values(array_intersect($docenteCursoIds, $materiaCursoIds));
+        } else {
+            $allowedCursoIds = $docenteCursoIds;
+        }
+
+        // Filtrar por curso_id si fue seleccionado y pertenece a los cursos permitidos
+        if ($cursoId && in_array((int) $cursoId, $allowedCursoIds, true)) {
+            $targetCursoIds = [(int) $cursoId];
+        } else {
+            $targetCursoIds = $allowedCursoIds;
+        }
+
+        if (empty($targetCursoIds)) {
+            $estudiantes = collect();
+        } else {
+            $query = Estudiante::query()
+                ->whereHas('cursos', function ($q) use ($targetCursoIds, $estado) {
+                    $q->whereIn('cursos.id', $targetCursoIds);
+                    if ($estado) {
+                        $q->where('curso_estudiante.estado', $estado);
+                    }
+                })
+                ->with([
+                    'user',
+                    'cursos' => function ($q) use ($docenteCursoIds, $docente) {
+                        $q->whereIn('cursos.id', $docenteCursoIds)
+                            ->with([
+                                'gestion',
+                                'materias' => function ($mq) use ($docente) {
+                                    if ($docente) {
+                                        $mq->where('curso_materia.docente_id', $docente->id);
+                                    }
+                                },
+                            ])
+                            ->withPivot('fecha_inscripcion', 'estado');
+                    },
+                ]);
+
+            if ($buscar) {
+                $buscar = trim($buscar);
+                $query->whereHas('user', function ($uq) use ($buscar) {
+                    $uq->where(function ($inner) use ($buscar) {
+                        $inner->where('nombre', 'like', "%{$buscar}%")
+                            ->orWhere('apellido_paterno', 'like', "%{$buscar}%")
+                            ->orWhere('apellido_materno', 'like', "%{$buscar}%")
+                            ->orWhere('ci', 'like', "%{$buscar}%")
+                            ->orWhere('email', 'like', "%{$buscar}%");
+                    });
+                });
+            }
+
+            $estudiantes = $query->orderBy('id', 'desc')->get();
+        }
+
+        return Inertia::render('estudiantes/docente', [
+            'docente' => $docente ? $docente->load('user') : null,
+            'estudiantes' => $estudiantes,
+            'cursos' => $cursos,
+            'materias' => $materias,
+            'filtros' => [
+                'curso_id' => $cursoId ? (int) $cursoId : null,
+                'materia_id' => $materiaId ? (int) $materiaId : null,
+                'estado' => $estado ?: null,
+                'buscar' => $buscar ?: '',
+            ],
+            'stats' => [
+                'total_estudiantes' => $estudiantes->count(),
+                'total_cursos' => $cursos->count(),
+                'total_materias' => $materias->count(),
+            ],
         ]);
     }
 

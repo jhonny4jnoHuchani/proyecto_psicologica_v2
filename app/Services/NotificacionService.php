@@ -52,11 +52,9 @@ class NotificacionService
         ?string $url = null,
         bool $mandarTelegram = true,
     ): Notificacion {
-        $mensaje = "Tu tarea \"{$nombreTarea}\"";
-        if ($nombreMateria) {
-            $mensaje .= " ({$nombreMateria})";
-        }
-        $mensaje .= " fue calificada con {$nota}/100.";
+        $materiaStr = $nombreMateria ? " ({$nombreMateria})" : '';
+        // El mensaje solo notifica que la tarea fue calificada, sin revelar la nota obtenida
+        $mensaje = "Tu tarea \"{$nombreTarea}\"{$materiaStr} ya fue calificada.";
 
         if (! empty(trim($comentarios ?? ''))) {
             $mensaje .= "\n\n💬 Observaciones:\n\"{$comentarios}\"";
@@ -65,7 +63,7 @@ class NotificacionService
         return self::crear(
             user: $user,
             tipo: 'tarea_calificada',
-            titulo: "📝 Tarea calificada: {$nota}/100",
+            titulo: '📝 Tarea calificada',
             mensaje: $mensaje,
             url: $url ?? '/entregas',
             mandarTelegram: $mandarTelegram,

@@ -223,11 +223,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ========================
-    // DOCENTE (toggle IA + imagen)
+    // DOCENTE (toggle IA + imagen + lista de estudiantes)
     // ========================
-    Route::middleware(['role:docente|admin'])->prefix('docente')->name('docente.')->controller(DashboardController::class)->group(function () {
-        Route::post('/curso-materia/{cursoMateriaId}/toggle-ia', 'toggleIA')->name('toggle-ia');
-        Route::post('/curso-materia/{cursoMateriaId}/imagen', 'subirImagen')->name('subir-imagen');
+    Route::middleware(['role:docente|admin'])->prefix('docente')->name('docente.')->group(function () {
+        Route::controller(DashboardController::class)->group(function () {
+            Route::post('/curso-materia/{cursoMateriaId}/toggle-ia', 'toggleIA')->name('toggle-ia');
+            Route::post('/curso-materia/{cursoMateriaId}/imagen', 'subirImagen')->name('subir-imagen');
+        });
+
+        Route::get('/estudiantes', [EstudianteController::class, 'docenteIndex'])->name('estudiantes');
     });
 
     // ========================
@@ -251,7 +255,7 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // Recomendacion de la IA
+    // Recomendaciones predictivas con ML
     Route::get('/estudiante/recomendaciones', [RecomendacionController::class, 'index'])
         ->name('estudiante.recomendaciones');
 

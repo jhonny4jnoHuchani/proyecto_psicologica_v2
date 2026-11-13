@@ -107,6 +107,25 @@ class EnviarNotificacionTelegram implements ShouldQueue
      */
     private function construirMensaje(Notificacion $notificacion): string
     {
+        // En tareas calificadas, Telegram solo notifica que fue calificada sin avisar la nota
+        if ($notificacion->tipo === 'tarea_calificada') {
+            $titulo = '📝 Tarea calificada';
+            $mensaje = preg_replace('/\s*fue calificada con \d+(\.\d+)?\/100\.?/i', ' ya fue calificada.', $notificacion->mensaje);
+            $lineas = [
+                $titulo,
+                '',
+                $mensaje,
+            ];
+
+            if ($notificacion->url) {
+                $baseUrl = rtrim(config('app.url'), '/');
+                $lineas[] = '';
+                $lineas[] = $baseUrl.$notificacion->url;
+            }
+
+            return implode("\n", $lineas);
+        }
+
         $lineas = [
             $notificacion->titulo,
             '',

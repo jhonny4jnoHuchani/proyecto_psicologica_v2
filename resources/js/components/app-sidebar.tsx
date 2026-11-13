@@ -128,6 +128,11 @@ export function AppSidebar() {
     {
       label: "Gestión de Aula",
       items: [
+        {
+          title: "Lista de Estudiantes",
+          url: "/docente/estudiantes",
+          icon: Users,
+        },
         { title: "Lecciones y Tareas", url: "/lecciones", icon: BookOpen },
         {
           title: "Revisión de Entregas",
@@ -171,7 +176,7 @@ export function AppSidebar() {
           icon: Sparkles,
         },
         {
-          title: "Recomendaciones de Estudio",
+          title: "Recomendaciones Predictivas (ML)",
           url: "/estudiante/recomendaciones",
           icon: Wand2,
         },

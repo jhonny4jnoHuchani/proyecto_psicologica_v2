@@ -257,7 +257,6 @@ class DashboardController extends Controller
                 ->where('estado', 'activo')
                 ->whereDoesntHave('entregas', fn ($q) => $q->where('estudiante_id', $estudianteId))
                 ->orderBy('fecha_entrega', 'asc')
-                ->limit(6)
                 ->get()
             : collect();
 
@@ -329,31 +328,38 @@ class DashboardController extends Controller
     public function subirImagen(Request $request, $cursoMateriaId): RedirectResponse
     {
         $request->validate([
-            'imagen' => 'required|image|max:2048',
+            'imagen' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ]);
 
-        $docente = Docente::where('user_id', Auth::id())->first();
+        $user = Auth::user();
+        $docente = Docente::where('user_id', $user->id)->first();
+        $isAdmin = $user->hasRole('admin');
 
-        $cursoMateria = DB::table('curso_materia')
-            ->where('id', $cursoMateriaId)
-            ->where('docente_id', $docente->id)
-            ->first();
-
-        if (! $cursoMateria) {
-            abort(403, 'No tienes permiso');
+        $query = DB::table('curso_materia')->where('id', $cursoMateriaId);
+        if (! $isAdmin) {
+            if (! $docente) {
+                abort(403, 'No tienes un perfil de docente asignado.');
+            }
+            $query->where('docente_id', $docente->id);
         }
 
-        // Borrar imagen anterior si existe
-        if ($cursoMateria->imagen) {
+        $cursoMateria = $query->first();
+
+        if (! $cursoMateria) {
+            abort(403, 'No tienes permiso sobre esta asignación de materia.');
+        }
+
+        // Borrar imagen anterior si existía en el servidor
+        if ($cursoMateria->imagen && Storage::disk('public')->exists($cursoMateria->imagen)) {
             Storage::disk('public')->delete($cursoMateria->imagen);
         }
 
-        $ruta = $request->file('imagen')->store('curso-materia', 'public');
+        $ruta = Storage::disk('public')->putFile('materias/portadas', $request->file('imagen'));
 
         DB::table('curso_materia')
             ->where('id', $cursoMateriaId)
             ->update(['imagen' => $ruta]);
 
-        return back()->with('success', 'Imagen actualizada.');
+        return back()->with('success', 'Portada de la materia actualizada correctamente.');
     }
 }
