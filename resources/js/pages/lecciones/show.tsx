@@ -438,8 +438,8 @@ export default function LeccionesShow({
             Estado de la entrega
           </h2>
 
-          <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
-            <table className="w-full text-xs sm:text-sm border-collapse">
+          <div className="rounded-xl border bg-card shadow-xs overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm border-collapse min-w-[500px] sm:min-w-0">
               <tbody>
                 {/* Fila 1: Estado de la entrega */}
                 <tr className="border-b transition-colors hover:bg-muted/40">
@@ -630,8 +630,8 @@ export default function LeccionesShow({
               Comentario
             </h2>
 
-            <div className="rounded-xl border bg-card shadow-xs overflow-hidden">
-              <table className="w-full text-xs sm:text-sm border-collapse">
+            <div className="rounded-xl border bg-card shadow-xs overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm border-collapse min-w-[500px] sm:min-w-0">
                 <tbody>
                   {/* Calificación */}
                   <tr className="border-b transition-colors hover:bg-muted/40">

@@ -53,7 +53,7 @@ export default function LibroShow({ libro }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Libro: ${libro.nombre}`} />
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
 
                 <a href="/libros">
                     <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" />Volver</Button>
@@ -64,17 +64,17 @@ export default function LibroShow({ libro }: Props) {
                     <Card className="lg:col-span-2 shadow-sm">
                         <div className={`h-2 ${color.dot}`} />
                         <CardHeader>
-                            <div className="flex items-start gap-5">
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5">
                                 {libro.portada ? (
-                                    <img src={`/storage/${libro.portada}`} alt={libro.nombre} className="h-32 w-24 shrink-0 object-cover rounded-lg shadow" />
+                                    <img src={`/storage/${libro.portada}`} alt={libro.nombre} className="h-36 sm:h-32 w-28 sm:w-24 shrink-0 object-cover rounded-xl shadow-md" />
                                 ) : (
-                                    <div className={`flex h-32 w-24 shrink-0 items-center justify-center rounded-lg ${color.bg}`}>
+                                    <div className={`flex h-32 w-24 shrink-0 items-center justify-center rounded-xl shadow-sm ${color.bg}`}>
                                         <BookOpen className={`h-10 w-10 ${color.text}`} />
                                     </div>
                                 )}
                                 <div className="flex-1">
-                                    <CardTitle className="text-2xl font-bold">{libro.nombre}</CardTitle>
-                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                    <CardTitle className="text-xl sm:text-2xl font-bold">{libro.nombre}</CardTitle>
+                                    <div className="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-2">
                                         <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
                                             {libro.materia?.codigo}
                                         </span>

@@ -738,7 +738,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     </div>
                                 )}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <Label>Fecha Inicio</Label>
                                     <Input type="date" value={convocatoriaInicio} onChange={(e) => setConvocatoriaInicio(e.target.value)} />

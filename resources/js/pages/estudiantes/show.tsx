@@ -63,7 +63,7 @@ export default function EstudiantesShow({ estudiante }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`Estudiante: ${nombreCompleto}`} />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
         <Button variant="outline" asChild>
           <Link href="/estudiantes">
             <ArrowLeft className="h-4 w-4 mr-2" />

@@ -383,7 +383,7 @@ export default function LeccionesEntregas({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`Entregas: ${leccion.titulo}`} />
 
-      <div className="mx-auto max-w-4xl space-y-6 p-6">
+      <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
         <Button variant="outline" asChild>
           <Link href="/lecciones">
             <ArrowLeft className="mr-2 h-4 w-4" />

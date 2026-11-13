@@ -104,7 +104,7 @@ export default function RefuerzoShow({ refuerzo }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={`Refuerzo: ${refuerzo.leccion.titulo}`} />
 
-      <div className="mx-auto max-w-4xl space-y-6 p-6">
+      <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6 lg:p-8">
         <Button variant="outline" asChild>
           <Link href="/refuerzos">
             <ArrowLeft className="mr-2 h-4 w-4" />

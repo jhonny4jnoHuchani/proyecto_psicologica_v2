@@ -67,18 +67,20 @@ export default function MateriasEliminadas({ materias }: Props) {
                 <Card>
                     <CardHeader><CardTitle>Papelera</CardTitle></CardHeader>
                     <CardContent>
-                        <table className="w-full text-sm">
-                            <thead><tr className="border-b text-left"><th className="py-3 px-4">Código</th><th className="py-3 px-4">Nombre</th><th className="py-3 px-4">Eliminada</th><th className="py-3 px-4 text-right">Acciones</th></tr></thead>
-                            <tbody>
-                                {(!materias || materias.length === 0) && <tr><td colSpan={4} className="py-8 text-center text-neutral-500">No hay materias eliminadas</td></tr>}
-                                {materias?.map((m) => (
-                                    <tr key={m.id} className="border-b hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
-                                        <td className="py-3 px-4">{m.codigo}</td><td className="py-3 px-4">{m.nombre}</td><td className="py-3 px-4">{formatoFechaHora(m.deleted_at)}</td>
-                                        <td className="py-3 px-4 text-right"><Button variant="outline" size="sm" onClick={() => openRestore(m)}><RefreshCw className="h-4 w-4 mr-2" />Restaurar</Button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead><tr className="border-b text-left"><th className="py-3 px-4">Código</th><th className="py-3 px-4">Nombre</th><th className="py-3 px-4">Eliminada</th><th className="py-3 px-4 text-right">Acciones</th></tr></thead>
+                                <tbody>
+                                    {(!materias || materias.length === 0) && <tr><td colSpan={4} className="py-8 text-center text-neutral-500">No hay materias eliminadas</td></tr>}
+                                    {materias?.map((m) => (
+                                        <tr key={m.id} className="border-b hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors">
+                                            <td className="py-3 px-4">{m.codigo}</td><td className="py-3 px-4">{m.nombre}</td><td className="py-3 px-4">{formatoFechaHora(m.deleted_at)}</td>
+                                            <td className="py-3 px-4 text-right"><Button variant="outline" size="sm" onClick={() => openRestore(m)}><RefreshCw className="h-4 w-4 mr-2" />Restaurar</Button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </CardContent>
                 </Card>
                 <Dialog open={modalRestore} onOpenChange={setModalRestore}>

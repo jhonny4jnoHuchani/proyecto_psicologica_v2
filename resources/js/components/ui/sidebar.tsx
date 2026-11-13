@@ -2,6 +2,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
 import { PanelLeft } from 'lucide-react';
 import * as React from 'react';
+import { router } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +76,7 @@ const SidebarProvider = React.forwardRef<
         return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
     }, [isMobile, setOpen, setOpenMobile]);
 
-    // Listen for mobile navigation events
+    // Listen for mobile navigation events and Inertia SPA navigation
     React.useEffect(() => {
         const handleMobileNavigation = () => {
             if (isMobile) {
@@ -83,8 +84,13 @@ const SidebarProvider = React.forwardRef<
             }
         };
 
+        const unsubscribeInertia = router.on('navigate', handleMobileNavigation);
         window.addEventListener('mobile-navigation', handleMobileNavigation);
-        return () => window.removeEventListener('mobile-navigation', handleMobileNavigation);
+
+        return () => {
+            unsubscribeInertia();
+            window.removeEventListener('mobile-navigation', handleMobileNavigation);
+        };
     }, [isMobile, setOpenMobile]);
 
     // Adds a keyboard shortcut to toggle the sidebar.
@@ -164,7 +170,7 @@ const Sidebar = React.forwardRef<
                 <SheetContent
                     data-sidebar="sidebar"
                     data-mobile="true"
-                    className="w-(--sidebar-width) relative overflow-hidden bg-white/20 dark:bg-slate-950/30 backdrop-blur-md p-0 text-sidebar-foreground [&>button]:hidden border-r border-white/30 dark:border-white/10"
+                    className="w-72 max-w-[85vw] bg-sidebar p-0 text-sidebar-foreground border-r border-sidebar-border overflow-hidden shadow-2xl [&>button]:hidden"
                     style={
                         {
                             '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -173,7 +179,7 @@ const Sidebar = React.forwardRef<
                     side={side}
                 >
                     <SheetTitle className="sr-only">Sidebar Navigation</SheetTitle>
-                    <div className="flex h-full w-full flex-col">{children}</div>
+                    <div className="relative flex h-full w-full flex-col overflow-hidden">{children}</div>
                 </SheetContent>
             </Sheet>
         );
@@ -235,14 +241,14 @@ const SidebarTrigger = React.forwardRef<React.ElementRef<typeof Button>, React.C
                 data-sidebar="trigger"
                 variant="ghost"
                 size="icon"
-                className={cn('h-7 w-7', className)}
+                className={cn('h-8 w-8 md:h-7 md:w-7 cursor-pointer', className)}
                 onClick={(event) => {
                     onClick?.(event);
                     toggleSidebar();
                 }}
                 {...props}
             >
-                <PanelLeft />
+                <PanelLeft className="h-5 w-5 md:h-4 md:w-4" />
                 <span className="sr-only">Toggle Sidebar</span>
             </Button>
         );
@@ -281,7 +287,7 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<'main
         <main
             ref={ref}
             className={cn(
-                'relative flex min-h-svh flex-1 flex-col bg-slate-50/40 dark:bg-slate-950/40 backdrop-blur-xs',
+                'relative flex min-h-svh flex-1 flex-col bg-slate-50/40 dark:bg-slate-950/40 backdrop-blur-xs w-full max-w-full min-w-0',
                 'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-2xl md:peer-data-[variant=inset]:border md:peer-data-[variant=inset]:border-border/60 md:peer-data-[variant=inset]:shadow-sm',
                 className,
             )}

@@ -2694,7 +2694,7 @@ export default function LeccionesIndex({
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label>Curso *</Label>
                   <Select
@@ -2733,7 +2733,7 @@ export default function LeccionesIndex({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <Label>Tema del temario</Label>
                   <Select
                     value={form.tema_id || "none"}
@@ -2755,7 +2755,7 @@ export default function LeccionesIndex({
                   </Select>
                   <InputError message={errors.tema_id} />
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <Label>Título *</Label>
                   <Input
                     value={form.titulo}
@@ -2766,7 +2766,7 @@ export default function LeccionesIndex({
                   />
                   <InputError message={errors.titulo} />
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <Label>Descripción</Label>
                   <textarea
                     value={form.descripcion}
@@ -2817,7 +2817,7 @@ export default function LeccionesIndex({
                   />
                   <InputError message={errors.fecha_entrega} />
                 </div>
-                <div className="col-span-2 space-y-1.5">
+                <div className="sm:col-span-2 space-y-1.5">
                   <Label htmlFor="create-archivo">
                     Material / Guía de la lección (PDF opcional)
                   </Label>
@@ -2861,8 +2861,8 @@ export default function LeccionesIndex({
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2 space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2 space-y-1">
                   <Label>Título *</Label>
                   <Input
                     value={form.titulo}
@@ -2872,7 +2872,7 @@ export default function LeccionesIndex({
                     required
                   />
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <Label>Tema del temario</Label>
                   <Select
                     value={form.tema_id || "none"}
@@ -2893,7 +2893,7 @@ export default function LeccionesIndex({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <Label>Descripción</Label>
                   <textarea
                     value={form.descripcion}
@@ -2959,7 +2959,7 @@ export default function LeccionesIndex({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-2 space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <Label htmlFor="edit-archivo">
                     Material / Guía de la lección (PDF)
                   </Label>

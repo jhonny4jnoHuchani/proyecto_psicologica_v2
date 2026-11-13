@@ -8,9 +8,9 @@ import { Image as ImageIcon } from 'lucide-react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
-        <header className="bg-background/40 backdrop-blur-md border-sidebar-border/40 flex h-16 shrink-0 items-center justify-between border-b px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
+        <header className="bg-background/60 backdrop-blur-md border-sidebar-border/60 flex h-16 shrink-0 items-center justify-between border-b px-4 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-6">
             <div className="flex items-center gap-2 min-w-0">
-                <SidebarTrigger className="-ml-1" />
+                <SidebarTrigger className="-ml-1 h-9 w-9 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 text-foreground cursor-pointer transition-colors" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
 

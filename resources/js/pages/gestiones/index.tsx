@@ -264,7 +264,7 @@ export default function GestionesIndex({ gestiones }: Props) {
                             <DialogDescription>Completa los datos de la gestión académica.</DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleCreate} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="año">Año</Label>
                                     <Input
@@ -290,7 +290,7 @@ export default function GestionesIndex({ gestiones }: Props) {
                                     <InputError message={errors.etapa} />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="fecha_inicio">Fecha Inicio</Label>
                                     <Input
@@ -348,7 +348,7 @@ export default function GestionesIndex({ gestiones }: Props) {
                             <DialogDescription>Modifica los datos de la gestión académica.</DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleUpdate} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="edit-año">Año</Label>
                                     <Input
@@ -372,7 +372,7 @@ export default function GestionesIndex({ gestiones }: Props) {
                                     <InputError message={errors.etapa} />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="edit-fecha_inicio">Fecha Inicio</Label>
                                     <Input

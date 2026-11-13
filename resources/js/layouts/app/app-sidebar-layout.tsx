@@ -18,7 +18,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: { child
             <AppContent variant="sidebar">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 <SystemAlertBanner />
-                <div className="relative z-10 flex-1">
+                <div className="relative z-10 flex-1 min-w-0 w-full">
                     {children}
                 </div>
             </AppContent>

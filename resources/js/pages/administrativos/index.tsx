@@ -166,7 +166,7 @@ export default function AdministrativosIndex({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Personal Administrativo" />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
         {flash?.success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
             <span className="block sm:inline">{flash.success}</span>

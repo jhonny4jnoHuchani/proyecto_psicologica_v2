@@ -70,34 +70,36 @@ export default function CursosEliminados({ cursos }: Props) {
                 <Card>
                     <CardHeader><CardTitle>Papelera</CardTitle></CardHeader>
                     <CardContent>
-                        <table className="w-full text-sm">
-                            <thead><tr className="border-b text-left">
-                                <th className="py-3 px-4">Gestión</th><th className="py-3 px-4">Paralelo</th>
-                                <th className="py-3 px-4">Turno</th><th className="py-3 px-4">Eliminado</th>
-                                <th className="py-3 px-4 text-right">Acciones</th>
-                            </tr></thead>
-                            <tbody>
-                                {(!cursos || cursos.length === 0) && (
-                                    <tr>
-                                        <td colSpan={5} className="py-12 text-center text-muted-foreground">
-                                            <Trash2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                                            No hay cursos eliminados
-                                        </td>
-                                    </tr>
-                                )}
-                                {cursos?.map((c) => (
-                                    <tr key={c.id} className="border-b hover:bg-muted/50 transition-colors">
-                                        <td className="py-3 px-4">{c.gestion?.año} - {c.gestion?.etapa}</td>
-                                        <td className="py-3 px-4">{c.paralelo}</td>
-                                        <td className="py-3 px-4 capitalize">{c.turno}</td>
-                                        <td className="py-3 px-4 text-muted-foreground">{formatoFechaHora(c.deleted_at)}</td>
-                                        <td className="py-3 px-4 text-right">
-                                            <Button variant="outline" size="sm" onClick={() => openRestore(c)}><RefreshCw className="h-4 w-4 mr-2" />Restaurar</Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead><tr className="border-b text-left">
+                                    <th className="py-3 px-4">Gestión</th><th className="py-3 px-4">Paralelo</th>
+                                    <th className="py-3 px-4">Turno</th><th className="py-3 px-4">Eliminado</th>
+                                    <th className="py-3 px-4 text-right">Acciones</th>
+                                </tr></thead>
+                                <tbody>
+                                    {(!cursos || cursos.length === 0) && (
+                                        <tr>
+                                            <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                                                <Trash2 className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                                No hay cursos eliminados
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {cursos?.map((c) => (
+                                        <tr key={c.id} className="border-b hover:bg-muted/50 transition-colors">
+                                            <td className="py-3 px-4">{c.gestion?.año} - {c.gestion?.etapa}</td>
+                                            <td className="py-3 px-4">{c.paralelo}</td>
+                                            <td className="py-3 px-4 capitalize">{c.turno}</td>
+                                            <td className="py-3 px-4 text-muted-foreground">{formatoFechaHora(c.deleted_at)}</td>
+                                            <td className="py-3 px-4 text-right">
+                                                <Button variant="outline" size="sm" onClick={() => openRestore(c)}><RefreshCw className="h-4 w-4 mr-2" />Restaurar</Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </CardContent>
                 </Card>
                 <Dialog open={modalRestore} onOpenChange={setModalRestore}>

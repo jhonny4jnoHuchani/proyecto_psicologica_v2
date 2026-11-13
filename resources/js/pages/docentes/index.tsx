@@ -415,7 +415,7 @@ export default function DocentesIndex({ docentes }: Props) {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="nombre">Nombre *</Label>
                   <Input
@@ -597,7 +597,7 @@ export default function DocentesIndex({ docentes }: Props) {
               <DialogTitle>Editar Docente</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-nombre">Nombre *</Label>
                   <Input
