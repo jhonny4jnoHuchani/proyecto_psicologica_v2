@@ -41,7 +41,7 @@ class Libro extends Model
 
         $clean = preg_replace('/^\/?storage\//', '', $this->archivo);
 
-        return asset('storage/'.ltrim($clean, '/'));
+        return '/storage/'.ltrim($clean, '/');
     }
 
     public function getPortadaUrlAttribute(): ?string
@@ -56,7 +56,7 @@ class Libro extends Model
 
         $clean = preg_replace('/^\/?storage\//', '', $this->portada);
 
-        return asset('storage/'.ltrim($clean, '/'));
+        return '/storage/'.ltrim($clean, '/');
     }
 
     /**

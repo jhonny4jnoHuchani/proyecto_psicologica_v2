@@ -142,11 +142,20 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
 
     const obtenerUrlConvocatoria = (c: Convocatoria): string | null => {
         if (convocatoriaImgError[c.id]) return null;
-        if (c.imagen_url) return c.imagen_url;
-        if (c.archivo_url) return c.archivo_url;
-        if (!c.archivo) return null;
-        if (c.archivo.startsWith('http://') || c.archivo.startsWith('https://')) return c.archivo;
-        const cleanPath = c.archivo.replace(/^\/?storage\//, '').replace(/^\//, '');
+        const candidate = c.imagen_url || c.archivo_url || c.archivo;
+        if (!candidate) return null;
+        if (candidate.startsWith('http://') || candidate.startsWith('https://')) {
+            try {
+                const parsed = new URL(candidate);
+                if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+                    return parsed.pathname;
+                }
+            } catch {
+                // fall through
+            }
+            return candidate;
+        }
+        const cleanPath = candidate.replace(/^\/?storage\//, '').replace(/^\//, '');
         return `/storage/${cleanPath}`;
     };
 
@@ -1938,18 +1947,18 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             <Dialog open={modalConvocatoria} onOpenChange={setModalConvocatoria}>
                 <DialogContent
                     size="full"
-                    className="flex max-h-[92vh] max-w-5xl w-[95vw] flex-col overflow-hidden rounded-3xl border border-white/20 bg-slate-950/95 p-0 text-white shadow-2xl backdrop-blur-2xl"
+                    className="flex max-h-[94vh] max-w-5xl w-[95vw] flex-col overflow-hidden rounded-3xl border border-white/20 bg-slate-950/90 p-0 text-white shadow-2xl backdrop-blur-2xl"
                     style={{
-                        borderColor: `${primary}50`,
+                        borderColor: `${primary}70`,
                         boxShadow: `0 25px 60px -15px ${primary}40`,
                     }}
                 >
                     {convocatoriaSeleccionada && (
                         <div className="flex flex-col h-full overflow-hidden">
                             {/* Cabecera del Lightbox */}
-                            <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b border-white/10 bg-slate-900/90 p-4 sm:p-6 pr-14">
+                            <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b border-white/10 bg-slate-900/90 p-4 sm:p-5 pr-14">
                                 <div className="min-w-0 pr-4">
-                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                    <div className="flex flex-wrap items-center gap-2 mb-1">
                                         <Badge
                                             className={`font-mono-tag text-xs font-semibold uppercase ${
                                                 convocatoriaAbierta(convocatoriaSeleccionada)
@@ -1971,11 +1980,11 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                                             Comunicado Oficial UPEA
                                         </span>
                                     </div>
-                                    <DialogTitle className="truncate text-base sm:text-xl font-extrabold text-white">
+                                    <DialogTitle className="truncate text-base sm:text-lg font-extrabold text-white">
                                         {convocatoriaSeleccionada.titulo}
                                     </DialogTitle>
                                     {convocatoriaSeleccionada.descripcion && (
-                                        <p className="mt-1 line-clamp-2 text-xs text-slate-300">
+                                        <p className="mt-0.5 line-clamp-2 text-xs text-slate-300">
                                             {convocatoriaSeleccionada.descripcion}
                                         </p>
                                     )}
@@ -1983,12 +1992,12 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                             </DialogHeader>
 
                             {/* Contenido Visual: Imagen en alta resolución completa sin recortar */}
-                            <div className="relative flex-1 overflow-auto bg-black/80 p-4 sm:p-6 flex items-center justify-center">
+                            <div className="relative flex-1 overflow-auto bg-black/85 p-3 sm:p-5 flex items-center justify-center">
                                 {obtenerUrlConvocatoria(convocatoriaSeleccionada) ? (
                                     <img
                                         src={obtenerUrlConvocatoria(convocatoriaSeleccionada)!}
                                         alt={convocatoriaSeleccionada.titulo}
-                                        className="max-h-[66vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                                        className="max-h-[75vh] sm:max-h-[82vh] w-auto max-w-full object-contain rounded-xl shadow-2xl border border-white/15"
                                     />
                                 ) : (
                                     <div

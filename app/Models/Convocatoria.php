@@ -39,7 +39,7 @@ class Convocatoria extends Model
 
         $clean = preg_replace('/^\/?storage\//', '', $this->archivo);
 
-        return asset('storage/'.ltrim($clean, '/'));
+        return '/storage/'.ltrim($clean, '/');
     }
 
     public function getArchivoUrlAttribute(): ?string

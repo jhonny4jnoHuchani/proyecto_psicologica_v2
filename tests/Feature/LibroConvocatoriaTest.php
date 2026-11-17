@@ -37,11 +37,11 @@ test('welcome page renders successfully with convocatorias and libros', function
 
 test('convocatoria model resolves imagen_url and archivo_url without duplicates', function () {
     $c1 = new Convocatoria(['archivo' => 'convocatorias/afiche.jpg']);
-    expect($c1->imagen_url)->toContain('/storage/convocatorias/afiche.jpg');
+    expect($c1->imagen_url)->toBe('/storage/convocatorias/afiche.jpg');
     expect($c1->imagen_url)->not->toContain('/storage/storage/');
 
     $c2 = new Convocatoria(['archivo' => '/storage/convocatorias/afiche2.jpg']);
-    expect($c2->imagen_url)->toContain('/storage/convocatorias/afiche2.jpg');
+    expect($c2->imagen_url)->toBe('/storage/convocatorias/afiche2.jpg');
     expect($c2->imagen_url)->not->toContain('/storage/storage/');
 
     $c3 = new Convocatoria(['archivo' => null]);
