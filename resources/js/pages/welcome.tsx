@@ -18,6 +18,7 @@ import {
     Library,
     Lightbulb,
     MapPin,
+    Maximize2,
     Megaphone,
     Play,
     Quote,
@@ -66,6 +67,8 @@ interface Convocatoria {
     titulo: string;
     descripcion: string | null;
     archivo: string | null;
+    imagen_url?: string | null;
+    archivo_url?: string | null;
     link_video: string | null;
     fecha_inicio: string | null;
     fecha_fin: string | null;
@@ -132,7 +135,25 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [modalPdf, setModalPdf] = useState(false);
     const [libroSeleccionado, setLibroSeleccionado] = useState<LibroItem | null>(null);
+    const [modalConvocatoria, setModalConvocatoria] = useState(false);
+    const [convocatoriaSeleccionada, setConvocatoriaSeleccionada] = useState<Convocatoria | null>(null);
+    const [convocatoriaImgError, setConvocatoriaImgError] = useState<Record<number, boolean>>({});
     const [activeTab, setActiveTab] = useState<'mision' | 'vision' | 'valores'>('mision');
+
+    const obtenerUrlConvocatoria = (c: Convocatoria): string | null => {
+        if (convocatoriaImgError[c.id]) return null;
+        if (c.imagen_url) return c.imagen_url;
+        if (c.archivo_url) return c.archivo_url;
+        if (!c.archivo) return null;
+        if (c.archivo.startsWith('http://') || c.archivo.startsWith('https://')) return c.archivo;
+        const cleanPath = c.archivo.replace(/^\/?storage\//, '').replace(/^\//, '');
+        return `/storage/${cleanPath}`;
+    };
+
+    const abrirLightboxConvocatoria = (c: Convocatoria) => {
+        setConvocatoriaSeleccionada(c);
+        setModalConvocatoria(true);
+    };
 
     const abrirVideo = (link: string) => {
         const embedUrl = convertirLinkAEmbed(link);
@@ -560,7 +581,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             {/* 5. SECCIÓN SOBRE NOSOTROS (MISIÓN, VISIÓN, VALORES Y POLÍGONOS SUAVES)   */}
             {/* ========================================================================= */}
-            <section id="sobre-nosotros" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+            <section id="sobre-nosotros" className="relative overflow-hidden bg-slate-950 px-6 py-24 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
@@ -758,8 +779,38 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             {/* 6. SECCIÓN CONVOCATORIAS OFICIALES (AFICHES Y COMUNICADOS APROBADOS)     */}
             {/* ========================================================================= */}
-            <section id="convocatorias" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
-                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="medium" />
+            <section
+                id="convocatorias"
+                className="relative overflow-hidden bg-slate-950 px-6 py-28 transition-colors duration-500 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
+            >
+                {/* 1. Malla arquitectónica (Grid Pattern) de fondo */}
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-40 select-none"
+                    style={{
+                        backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px)',
+                        backgroundSize: '36px 36px',
+                    }}
+                />
+
+                {/* 2. Orbes difuminados de color primario y secundario detrás de las tarjetas */}
+                <div
+                    className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full blur-[130px] opacity-25 select-none"
+                    style={{ backgroundColor: primary }}
+                />
+                <div
+                    className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full blur-[140px] opacity-25 select-none"
+                    style={{ backgroundColor: secondary }}
+                />
+
+                {/* 3. Marca de agua decorativa gigante del símbolo psicológico Ψ */}
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none overflow-hidden">
+                    <span className="font-serif text-[340px] sm:text-[480px] font-black text-white/[0.022] leading-none select-none">
+                        Ψ
+                    </span>
+                </div>
+
+                {/* 4. Atmósfera reactiva con polígonos y destellos */}
+                <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="high" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
                     <div className="mb-16 text-center" data-aos="fade-up">
@@ -787,102 +838,410 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     </div>
 
                     {convocatorias && convocatorias.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                            {convocatorias.map((c, idx) => {
+                        <>
+                            {/* CASO 1: 1 SOLA CONVOCATORIA (FEATURED SHOWCASE CARD HORIZONTAL) */}
+                            {convocatorias.length === 1 && (() => {
+                                const c = convocatorias[0];
                                 const abierta = convocatoriaAbierta(c);
+                                const imgUrl = obtenerUrlConvocatoria(c);
+
                                 return (
-                                    <div
-                                        key={c.id}
-                                        data-aos="fade-up"
-                                        data-aos-delay={idx * 90}
-                                        className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.borderColor = `${secondary}80`;
-                                            e.currentTarget.style.boxShadow = `0 20px 40px -10px ${primary}40`;
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                            e.currentTarget.style.boxShadow = 'none';
-                                        }}
-                                    >
-                                        {/* Imagen o afiche si existe */}
-                                        {c.archivo ? (
-                                            <div className="relative h-48 w-full overflow-hidden bg-slate-950">
-                                                <img
-                                                    src={`/storage/${c.archivo}`}
-                                                    alt={c.titulo}
-                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                                            </div>
-                                        ) : (
+                                    <div className="mx-auto max-w-4xl w-full" data-aos="fade-up">
+                                        <div
+                                            className="group relative grid grid-cols-1 md:grid-cols-12 overflow-hidden rounded-3xl border border-white/15 bg-slate-900/80 shadow-2xl backdrop-blur-2xl transition-all duration-300 hover:border-white/30"
+                                            style={{
+                                                boxShadow: `0 20px 50px -15px ${primary}35`,
+                                            }}
+                                        >
+                                            {/* Columna Izquierda: Imagen / Afiche */}
                                             <div
-                                                className="flex h-28 w-full items-center justify-center"
-                                                style={{
-                                                    background: `linear-gradient(135deg, ${primary}40, ${secondary}40)`,
-                                                }}
+                                                className="relative md:col-span-6 h-80 sm:h-96 md:h-[430px] w-full overflow-hidden bg-slate-950 cursor-pointer"
+                                                onClick={() => abrirLightboxConvocatoria(c)}
                                             >
-                                                <Megaphone className="h-10 w-10 text-slate-300 opacity-60" />
-                                            </div>
-                                        )}
-
-                                        <div className="flex flex-1 flex-col justify-between p-6">
-                                            <div>
-                                                <div className="mb-3 flex items-center justify-between gap-2">
-                                                    <Badge
-                                                        className={`font-mono-tag text-xs font-semibold uppercase ${
-                                                            abierta
-                                                                ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
-                                                                : 'border border-slate-600/40 bg-slate-700/40 text-slate-400'
-                                                        }`}
+                                                {imgUrl ? (
+                                                    <>
+                                                        <img
+                                                            src={imgUrl}
+                                                            alt={c.titulo}
+                                                            onError={() => setConvocatoriaImgError((prev) => ({ ...prev, [c.id]: true }))}
+                                                            className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 md:opacity-60 transition-opacity group-hover:opacity-40" />
+                                                        <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+                                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950/80 px-3 py-1 text-xs font-semibold text-white shadow-lg backdrop-blur-md border border-white/20">
+                                                                <Eye className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                                                Clic para ampliar afiche
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div
+                                                        className="flex h-full w-full flex-col items-center justify-center p-8 text-center"
+                                                        style={{
+                                                            background: `linear-gradient(135deg, ${primary}40, ${secondary}30)`,
+                                                        }}
                                                     >
-                                                        {abierta ? '● Convocatoria Abierta' : 'Cerrada'}
-                                                    </Badge>
+                                                        <Megaphone className="h-16 w-16 text-white/70 mb-3" />
+                                                        <span className="text-sm font-bold text-white/90">Comunicado Oficial de Admisión</span>
+                                                        <span className="text-xs text-white/60 mt-1">Universidad Pública de El Alto</span>
+                                                    </div>
+                                                )}
+                                            </div>
 
-                                                    {(c.fecha_inicio || c.fecha_fin) && (
-                                                        <span className="font-mono-tag flex items-center gap-1.5 text-xs text-slate-400">
-                                                            <CalendarDays className="h-3.5 w-3.5" style={{ color: secondary }} />
-                                                            {c.fecha_fin ? formatoFecha(c.fecha_fin) : 'Vigente'}
+                                            {/* Columna Derecha: Contenido y Acciones */}
+                                            <div className="md:col-span-6 p-7 sm:p-9 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
+                                                        <Badge
+                                                            className={`font-mono-tag text-xs font-semibold uppercase ${
+                                                                abierta
+                                                                    ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                                                                    : 'border border-slate-600/40 bg-slate-700/40 text-slate-400'
+                                                            }`}
+                                                        >
+                                                            {abierta ? '● Convocatoria Abierta' : 'Cerrada'}
+                                                        </Badge>
+
+                                                        {(c.fecha_inicio || c.fecha_fin) && (
+                                                            <span className="font-mono-tag flex items-center gap-1.5 text-xs text-slate-300">
+                                                                <CalendarDays className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                                                {c.fecha_fin ? `Hasta: ${formatoFecha(c.fecha_fin)}` : 'Vigente'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="mt-4">
+                                                        <span
+                                                            className="font-mono-tag text-[11px] font-bold uppercase tracking-wider block mb-1.5"
+                                                            style={{ color: secondary }}
+                                                        >
+                                                            Admisión Preuniversitaria · Psicología
                                                         </span>
-                                                    )}
+                                                        <h3 className="font-title text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                                                            {c.titulo}
+                                                        </h3>
+                                                        {c.descripcion && (
+                                                            <p className="mt-3 text-sm leading-relaxed text-slate-300 line-clamp-4">
+                                                                {c.descripcion}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="mt-5 flex flex-wrap gap-2 text-xs">
+                                                        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1 text-slate-300 font-medium">
+                                                            <Shield className="h-3.5 w-3.5" style={{ color: primary }} />
+                                                            Comunicado Oficial UPEA
+                                                        </span>
+                                                        <span className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1 text-slate-300 font-medium">
+                                                            <GraduationCap className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                                            Carrera de Psicología
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <h3 className="font-title text-xl font-bold text-white transition-colors">{c.titulo}</h3>
-
-                                                {c.descripcion && (
-                                                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-300">{c.descripcion}</p>
-                                                )}
-                                            </div>
-
-                                            {/* Acciones de la Convocatoria */}
-                                            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-                                                {c.link_video && (
-                                                    <button
+                                                <div className="mt-7 pt-5 border-t border-white/10 flex flex-wrap items-center gap-3">
+                                                    <Button
                                                         type="button"
-                                                        onClick={() => abrirVideo(c.link_video!)}
-                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-red-500/40 bg-red-600/20 px-3 py-1.5 text-xs font-semibold text-red-300 transition-colors hover:bg-red-600/30"
+                                                        onClick={() => abrirLightboxConvocatoria(c)}
+                                                        className="flex-1 min-w-[200px] h-11 rounded-xl text-xs sm:text-sm font-bold text-white shadow-lg transition-transform hover:scale-[1.02] cursor-pointer"
+                                                        style={{
+                                                            background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                                        }}
                                                     >
-                                                        <Play className="h-3.5 w-3.5 fill-current" /> Ver Video
-                                                    </button>
-                                                )}
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        Ver Convocatoria en Grande
+                                                    </Button>
 
-                                                {c.archivo && (
-                                                    <a
-                                                        href={`/storage/${c.archivo}`}
-                                                        download
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
-                                                    >
-                                                        <Download className="h-3.5 w-3.5" /> Descargar
-                                                    </a>
-                                                )}
+                                                    {c.link_video && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() => abrirVideo(c.link_video!)}
+                                                            className="h-11 rounded-xl border-red-500/40 bg-red-600/20 text-red-300 hover:bg-red-600/30 text-xs font-semibold cursor-pointer"
+                                                        >
+                                                            <Play className="mr-1.5 h-3.5 w-3.5 fill-current" />
+                                                            Video
+                                                        </Button>
+                                                    )}
+
+                                                    {imgUrl && (
+                                                        <a
+                                                            href={imgUrl}
+                                                            download
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex h-11 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 px-3.5 text-xs font-semibold text-white transition-colors"
+                                                            title="Descargar afiche"
+                                                        >
+                                                            <Download className="h-4 w-4" />
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 );
-                            })}
-                        </div>
+                            })()}
+
+                            {/* CASO 2: 2 CONVOCATORIAS (LAYOUT CENTRADO SIMÉTRICO) */}
+                            {convocatorias.length === 2 && (
+                                <div className="flex flex-wrap justify-center items-stretch gap-8 max-w-5xl mx-auto">
+                                    {convocatorias.map((c, idx) => {
+                                        const abierta = convocatoriaAbierta(c);
+                                        const imgUrl = obtenerUrlConvocatoria(c);
+
+                                        return (
+                                            <div
+                                                key={c.id}
+                                                data-aos="fade-up"
+                                                data-aos-delay={idx * 120}
+                                                className="group w-full md:w-[440px] flex flex-col justify-between overflow-hidden rounded-3xl border border-white/15 bg-slate-900/80 shadow-2xl backdrop-blur-2xl transition-all duration-300 hover:-translate-y-2 hover:border-white/30"
+                                                style={{
+                                                    boxShadow: `0 20px 45px -15px ${idx === 0 ? primary : secondary}30`,
+                                                }}
+                                            >
+                                                {/* Miniatura alta del afiche */}
+                                                <div
+                                                    className="relative h-72 w-full overflow-hidden bg-slate-950 cursor-pointer"
+                                                    onClick={() => abrirLightboxConvocatoria(c)}
+                                                >
+                                                    {imgUrl ? (
+                                                        <>
+                                                            <img
+                                                                src={imgUrl}
+                                                                alt={c.titulo}
+                                                                onError={() => setConvocatoriaImgError((prev) => ({ ...prev, [c.id]: true }))}
+                                                                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-70 group-hover:opacity-40 transition-opacity" />
+                                                            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950/80 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md backdrop-blur-md border border-white/20">
+                                                                    <Eye className="h-3 w-3" style={{ color: secondary }} />
+                                                                    Clic para ampliar
+                                                                </span>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div
+                                                            className="flex h-full w-full flex-col items-center justify-center p-6 text-center"
+                                                            style={{
+                                                                background: `linear-gradient(135deg, ${primary}40, ${secondary}30)`,
+                                                            }}
+                                                        >
+                                                            <Megaphone className="h-14 w-14 text-white/70 mb-2" />
+                                                            <span className="text-xs font-bold text-white/90">Comunicado Oficial de Admisión</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Contenido */}
+                                                <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
+                                                    <div>
+                                                        <div className="mb-3 flex items-center justify-between gap-2">
+                                                            <Badge
+                                                                className={`font-mono-tag text-xs font-semibold uppercase ${
+                                                                    abierta
+                                                                        ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                                                                        : 'border border-slate-600/40 bg-slate-700/40 text-slate-400'
+                                                                }`}
+                                                            >
+                                                                {abierta ? '● Convocatoria Abierta' : 'Cerrada'}
+                                                            </Badge>
+
+                                                            {(c.fecha_inicio || c.fecha_fin) && (
+                                                                <span className="font-mono-tag flex items-center gap-1.5 text-xs text-slate-300">
+                                                                    <CalendarDays className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                                                    {c.fecha_fin ? formatoFecha(c.fecha_fin) : 'Vigente'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <h3 className="font-title text-xl font-bold text-white transition-colors line-clamp-2">
+                                                            {c.titulo}
+                                                        </h3>
+
+                                                        {c.descripcion && (
+                                                            <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-300">
+                                                                {c.descripcion}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() => abrirLightboxConvocatoria(c)}
+                                                            className="flex-1 h-10 rounded-xl text-xs font-bold text-white shadow-md transition-transform hover:scale-[1.02] cursor-pointer"
+                                                            style={{
+                                                                background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                                            }}
+                                                        >
+                                                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                                            Ver en Grande
+                                                        </Button>
+
+                                                        {c.link_video && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => abrirVideo(c.link_video!)}
+                                                                className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-xl border border-red-500/40 bg-red-600/20 px-3 text-xs font-semibold text-red-300 transition-colors hover:bg-red-600/30"
+                                                                title="Ver video"
+                                                            >
+                                                                <Play className="h-3.5 w-3.5 fill-current" />
+                                                            </button>
+                                                        )}
+
+                                                        {imgUrl && (
+                                                            <a
+                                                                href={imgUrl}
+                                                                download
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex h-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 px-3 text-xs font-semibold text-white transition-colors"
+                                                                title="Descargar afiche"
+                                                            >
+                                                                <Download className="h-3.5 w-3.5" />
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {/* CASO 3: 3 O MÁS CONVOCATORIAS (GRID CENTRADO RESPONSIVO) */}
+                            {convocatorias.length >= 3 && (
+                                <div className="flex flex-wrap justify-center items-stretch gap-8 max-w-7xl mx-auto">
+                                    {convocatorias.map((c, idx) => {
+                                        const abierta = convocatoriaAbierta(c);
+                                        const imgUrl = obtenerUrlConvocatoria(c);
+
+                                        return (
+                                            <div
+                                                key={c.id}
+                                                data-aos="fade-up"
+                                                data-aos-delay={idx * 90}
+                                                className="group w-full md:w-[360px] lg:w-[380px] flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.borderColor = `${secondary}80`;
+                                                    e.currentTarget.style.boxShadow = `0 20px 40px -10px ${primary}40`;
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                }}
+                                            >
+                                                {/* Imagen o afiche si existe */}
+                                                <div
+                                                    className="relative h-56 w-full overflow-hidden bg-slate-950 cursor-pointer"
+                                                    onClick={() => abrirLightboxConvocatoria(c)}
+                                                >
+                                                    {imgUrl ? (
+                                                        <>
+                                                            <img
+                                                                src={imgUrl}
+                                                                alt={c.titulo}
+                                                                onError={() => setConvocatoriaImgError((prev) => ({ ...prev, [c.id]: true }))}
+                                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                            />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+                                                            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950/80 px-2.5 py-1 text-[11px] font-semibold text-white shadow-md backdrop-blur-md border border-white/20">
+                                                                    <Eye className="h-3 w-3" style={{ color: secondary }} />
+                                                                    Ampliar afiche
+                                                                </span>
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <div
+                                                            className="flex h-full w-full items-center justify-center"
+                                                            style={{
+                                                                background: `linear-gradient(135deg, ${primary}40, ${secondary}40)`,
+                                                            }}
+                                                        >
+                                                            <Megaphone className="h-10 w-10 text-slate-300 opacity-60" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex flex-1 flex-col justify-between p-6">
+                                                    <div>
+                                                        <div className="mb-3 flex items-center justify-between gap-2">
+                                                            <Badge
+                                                                className={`font-mono-tag text-xs font-semibold uppercase ${
+                                                                    abierta
+                                                                        ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                                                                        : 'border border-slate-600/40 bg-slate-700/40 text-slate-400'
+                                                                }`}
+                                                            >
+                                                                {abierta ? '● Convocatoria Abierta' : 'Cerrada'}
+                                                            </Badge>
+
+                                                            {(c.fecha_inicio || c.fecha_fin) && (
+                                                                <span className="font-mono-tag flex items-center gap-1.5 text-xs text-slate-400">
+                                                                    <CalendarDays className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                                                    {c.fecha_fin ? formatoFecha(c.fecha_fin) : 'Vigente'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <h3 className="font-title text-xl font-bold text-white transition-colors line-clamp-2">
+                                                            {c.titulo}
+                                                        </h3>
+
+                                                        {c.descripcion && (
+                                                            <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-slate-300">
+                                                                {c.descripcion}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4">
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() => abrirLightboxConvocatoria(c)}
+                                                            className="flex-1 h-9 rounded-xl text-xs font-bold text-white shadow-sm cursor-pointer"
+                                                            style={{
+                                                                background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                                            }}
+                                                        >
+                                                            <Eye className="mr-1.5 h-3.5 w-3.5" />
+                                                            Ver en Grande
+                                                        </Button>
+
+                                                        {c.link_video && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => abrirVideo(c.link_video!)}
+                                                                className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-xl border border-red-500/40 bg-red-600/20 px-2.5 text-xs font-semibold text-red-300 transition-colors hover:bg-red-600/30"
+                                                                title="Ver video"
+                                                            >
+                                                                <Play className="h-3.5 w-3.5 fill-current" />
+                                                            </button>
+                                                        )}
+
+                                                        {imgUrl && (
+                                                            <a
+                                                                href={imgUrl}
+                                                                download
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex h-9 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 px-2.5 text-xs font-semibold text-white transition-colors"
+                                                                title="Descargar afiche"
+                                                            >
+                                                                <Download className="h-3.5 w-3.5" />
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 py-12 text-center">
                             <Megaphone className="mx-auto mb-3 h-12 w-12 text-slate-500" />
@@ -896,7 +1255,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             {/* 7. SECCIÓN BIBLIOTECA DIGITAL (SIN BUSCADOR, CON BIBLIOTECARIA Y PDF)     */}
             {/* ========================================================================= */}
-            <section id="biblioteca" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+            <section id="biblioteca" className="relative overflow-hidden bg-slate-950 px-6 py-24 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="medium" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
@@ -1125,7 +1484,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* 8. SECCIÓN AUTORIDADES DE LA CARRERA                                      */}
             {/* ========================================================================= */}
             {autoridades && autoridades.length > 0 && (
-                <section id="autoridades" className="relative overflow-hidden bg-slate-950 px-6 py-24 border-t border-white/5">
+                <section id="autoridades" className="relative overflow-hidden bg-slate-950 px-6 py-24 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
                     <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                     <div className="relative z-10 mx-auto max-w-7xl">
@@ -1228,7 +1587,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* 9. ORGANIGRAMA INSTITUCIONAL                                              */}
             {/* ========================================================================= */}
             {config?.organigrama && (
-                <section className="border-t border-white/10 bg-slate-950/60 px-6 py-20">
+                <section className="relative overflow-hidden bg-slate-950/60 px-6 py-20 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
                     <div className="mx-auto max-w-5xl text-center" data-aos="fade-up">
                         <span className="font-mono-tag text-xs font-semibold tracking-wider text-slate-400 uppercase">Estructura Orgánica</span>
                         <h2 className="font-title mt-2 text-3xl font-bold text-white">Organigrama de la Carrera</h2>
@@ -1252,7 +1611,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             <section
                 id="portal-acceso"
-                className="relative overflow-hidden border-t border-white/10 px-6 py-20 text-center"
+                className="relative overflow-hidden px-6 py-20 text-center before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
                 style={{
                     background: `linear-gradient(135deg, ${primary}99 0%, ${secondary}25 50%, #030712 100%)`,
                 }}
@@ -1570,6 +1929,137 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                             </div>
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* ========================================================================= */}
+            {/* 14. MODAL LIGHTBOX EN GRANDE DE CONVOCATORIA (AFICHE EN ALTA RESOLUCIÓN)  */}
+            {/* ========================================================================= */}
+            <Dialog open={modalConvocatoria} onOpenChange={setModalConvocatoria}>
+                <DialogContent
+                    size="full"
+                    className="flex max-h-[92vh] max-w-5xl w-[95vw] flex-col overflow-hidden rounded-3xl border border-white/20 bg-slate-950/95 p-0 text-white shadow-2xl backdrop-blur-2xl"
+                    style={{
+                        borderColor: `${primary}50`,
+                        boxShadow: `0 25px 60px -15px ${primary}40`,
+                    }}
+                >
+                    {convocatoriaSeleccionada && (
+                        <div className="flex flex-col h-full overflow-hidden">
+                            {/* Cabecera del Lightbox */}
+                            <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b border-white/10 bg-slate-900/90 p-4 sm:p-6 pr-14">
+                                <div className="min-w-0 pr-4">
+                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <Badge
+                                            className={`font-mono-tag text-xs font-semibold uppercase ${
+                                                convocatoriaAbierta(convocatoriaSeleccionada)
+                                                    ? 'border border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                                                    : 'border border-slate-600/40 bg-slate-700/40 text-slate-400'
+                                            }`}
+                                        >
+                                            {convocatoriaAbierta(convocatoriaSeleccionada) ? '● Convocatoria Abierta' : 'Cerrada'}
+                                        </Badge>
+                                        {(convocatoriaSeleccionada.fecha_inicio || convocatoriaSeleccionada.fecha_fin) && (
+                                            <span className="font-mono-tag flex items-center gap-1.5 text-xs text-slate-300">
+                                                <CalendarDays className="h-3.5 w-3.5" style={{ color: secondary }} />
+                                                {convocatoriaSeleccionada.fecha_fin
+                                                    ? `Fecha Límite: ${formatoFecha(convocatoriaSeleccionada.fecha_fin)}`
+                                                    : 'Vigente'}
+                                            </span>
+                                        )}
+                                        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-slate-300">
+                                            Comunicado Oficial UPEA
+                                        </span>
+                                    </div>
+                                    <DialogTitle className="truncate text-base sm:text-xl font-extrabold text-white">
+                                        {convocatoriaSeleccionada.titulo}
+                                    </DialogTitle>
+                                    {convocatoriaSeleccionada.descripcion && (
+                                        <p className="mt-1 line-clamp-2 text-xs text-slate-300">
+                                            {convocatoriaSeleccionada.descripcion}
+                                        </p>
+                                    )}
+                                </div>
+                            </DialogHeader>
+
+                            {/* Contenido Visual: Imagen en alta resolución completa sin recortar */}
+                            <div className="relative flex-1 overflow-auto bg-black/80 p-4 sm:p-6 flex items-center justify-center">
+                                {obtenerUrlConvocatoria(convocatoriaSeleccionada) ? (
+                                    <img
+                                        src={obtenerUrlConvocatoria(convocatoriaSeleccionada)!}
+                                        alt={convocatoriaSeleccionada.titulo}
+                                        className="max-h-[66vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                                    />
+                                ) : (
+                                    <div
+                                        className="flex h-72 w-full max-w-md flex-col items-center justify-center rounded-2xl border border-white/10 p-8 text-center"
+                                        style={{
+                                            background: `linear-gradient(135deg, ${primary}40, ${secondary}30)`,
+                                        }}
+                                    >
+                                        <Megaphone className="h-16 w-16 text-white/70 mb-3" />
+                                        <h4 className="text-base font-bold text-white">Comunicado Oficial de Admisión</h4>
+                                        <p className="mt-1 text-xs text-slate-300">
+                                            El afiche gráfico de esta convocatoria se encuentra disponible en formato impreso en la dirección de carrera.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Barra inferior de acciones */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-slate-900/90 p-4 sm:p-5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {obtenerUrlConvocatoria(convocatoriaSeleccionada) && (
+                                        <a
+                                            href={obtenerUrlConvocatoria(convocatoriaSeleccionada)!}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2 text-xs font-semibold text-white transition-colors"
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                            Abrir en Pestaña Nueva
+                                        </a>
+                                    )}
+                                    {obtenerUrlConvocatoria(convocatoriaSeleccionada) && (
+                                        <a
+                                            href={obtenerUrlConvocatoria(convocatoriaSeleccionada)!}
+                                            download
+                                            className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+                                            style={{
+                                                background: `linear-gradient(135deg, ${primary}, ${secondary})`,
+                                            }}
+                                        >
+                                            <Download className="h-4 w-4" />
+                                            Descargar Imagen
+                                        </a>
+                                    )}
+                                    {convocatoriaSeleccionada.link_video && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setModalConvocatoria(false);
+                                                abrirVideo(convocatoriaSeleccionada.link_video!);
+                                            }}
+                                            className="rounded-xl border-red-500/40 bg-red-600/20 text-red-300 hover:bg-red-600/30 text-xs font-semibold cursor-pointer"
+                                        >
+                                            <Play className="mr-1.5 h-3.5 w-3.5 fill-current" />
+                                            Ver Video Informativo
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setModalConvocatoria(false)}
+                                    className="rounded-xl border-white/20 bg-white/5 hover:bg-white/15 text-white text-xs font-semibold cursor-pointer"
+                                >
+                                    Cerrar
+                                </Button>
+                            </div>
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

@@ -640,6 +640,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     accept="image/*"
                                     maxSizeMB={15}
                                     helperText="Sube una fotografía horizontal de alta resolución (JPG, PNG, WEBP hasta 15MB)"
+                                    onFileChange={(file) => setPortadaImagen(file)}
                                     onFileSelect={(file) => setPortadaImagen(file)}
                                 />
                                 {portadaSelect?.imagen && !portadaImagen && (
@@ -680,6 +681,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     accept="image/*"
                                     maxSizeMB={10}
                                     helperText="Fotografía formal para el portal de autoridades (JPG, PNG, WEBP)"
+                                    onFileChange={(file) => setAutoridadFoto(file)}
                                     onFileSelect={(file) => setAutoridadFoto(file)}
                                 />
                                 {autoridadSelect?.foto && !autoridadFoto && (
@@ -729,6 +731,7 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     accept="image/*,.pdf"
                                     maxSizeMB={20}
                                     helperText="Sube la imagen de la convocatoria o el documento oficial"
+                                    onFileChange={(file) => setConvocatoriaArchivo(file)}
                                     onFileSelect={(file) => setConvocatoriaArchivo(file)}
                                 />
                                 {convocatoriaSelect?.archivo && !convocatoriaArchivo && (

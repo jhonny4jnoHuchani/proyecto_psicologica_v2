@@ -207,7 +207,9 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
   const handleCreate: FormEventHandler = (e) => {
     e.preventDefault();
     setProcessing(true);
+    setErrors({});
     router.post("/libros", buildFormData(), {
+      forceFormData: true,
       onSuccess: () => {
         setModalCreate(false);
         resetForm();
@@ -224,7 +226,11 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
     e.preventDefault();
     if (!libroSelect) return;
     setProcessing(true);
-    router.put(`/libros/${libroSelect.id}`, buildFormData(), {
+    setErrors({});
+    const formData = buildFormData();
+    formData.append("_method", "PUT");
+    router.post(`/libros/${libroSelect.id}`, formData, {
+      forceFormData: true,
       onSuccess: () => {
         setModalEdit(false);
         setLibroSelect(null);
@@ -653,20 +659,48 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     <FileUploadDropzone
                       iconType="pdf"
                       accept="application/pdf"
-                      onFileChange={(f) => setArchivo(f)}
+                      maxSizeMB={50}
+                      error={errors.archivo}
+                      onFileChange={(f) => {
+                        setArchivo(f);
+                        if (errors.archivo) setErrors((prev) => { const n = { ...prev }; delete n.archivo; return n; });
+                      }}
+                      onFileSelect={(f) => {
+                        setArchivo(f);
+                        if (errors.archivo) setErrors((prev) => { const n = { ...prev }; delete n.archivo; return n; });
+                      }}
                       label="Arrastra el documento PDF"
-                      helperText="Libro completo en formato PDF"
+                      helperText="Libro completo en formato PDF (máx. 50MB)"
                     />
+                    {archivo && (
+                      <p className="text-xs font-semibold text-primary">
+                        Archivo seleccionado: {archivo.name} ({(archivo.size / (1024 * 1024)).toFixed(2)} MB)
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label>Portada del Libro (Imagen)</Label>
                     <FileUploadDropzone
                       iconType="image"
                       accept="image/*"
-                      onFileChange={(f) => setPortada(f)}
+                      maxSizeMB={5}
+                      error={errors.portada}
+                      onFileChange={(f) => {
+                        setPortada(f);
+                        if (errors.portada) setErrors((prev) => { const n = { ...prev }; delete n.portada; return n; });
+                      }}
+                      onFileSelect={(f) => {
+                        setPortada(f);
+                        if (errors.portada) setErrors((prev) => { const n = { ...prev }; delete n.portada; return n; });
+                      }}
                       label="Arrastra la portada"
-                      helperText="JPG, PNG o WebP de la cubierta"
+                      helperText="JPG, PNG o WebP de la cubierta (máx. 5MB)"
                     />
+                    {portada && (
+                      <p className="text-xs font-semibold text-primary">
+                        Portada seleccionada: {portada.name} ({(portada.size / (1024 * 1024)).toFixed(2)} MB)
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -760,12 +794,26 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     <FileUploadDropzone
                       iconType="pdf"
                       accept="application/pdf"
-                      onFileChange={(f) => setArchivo(f)}
+                      maxSizeMB={50}
+                      error={errors.archivo}
+                      onFileChange={(f) => {
+                        setArchivo(f);
+                        if (errors.archivo) setErrors((prev) => { const n = { ...prev }; delete n.archivo; return n; });
+                      }}
+                      onFileSelect={(f) => {
+                        setArchivo(f);
+                        if (errors.archivo) setErrors((prev) => { const n = { ...prev }; delete n.archivo; return n; });
+                      }}
                       label="Subir nuevo documento PDF"
-                      helperText="Opcional: Sube un nuevo archivo para sustituir el actual"
+                      helperText="Opcional: Sube un nuevo archivo para sustituir el actual (máx. 50MB)"
                     />
-                    {libroSelect?.archivo && (
-                      <p className="text-xs text-neutral-500">
+                    {archivo && (
+                      <p className="text-xs font-semibold text-primary">
+                        Nuevo archivo: {archivo.name} ({(archivo.size / (1024 * 1024)).toFixed(2)} MB)
+                      </p>
+                    )}
+                    {libroSelect?.archivo && !archivo && (
+                      <p className="text-xs text-neutral-500 truncate">
                         PDF actual: {libroSelect.archivo}
                       </p>
                     )}
@@ -775,16 +823,33 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     <FileUploadDropzone
                       iconType="image"
                       accept="image/*"
-                      onFileChange={(f) => setPortada(f)}
+                      maxSizeMB={5}
+                      error={errors.portada}
+                      onFileChange={(f) => {
+                        setPortada(f);
+                        if (errors.portada) setErrors((prev) => { const n = { ...prev }; delete n.portada; return n; });
+                      }}
+                      onFileSelect={(f) => {
+                        setPortada(f);
+                        if (errors.portada) setErrors((prev) => { const n = { ...prev }; delete n.portada; return n; });
+                      }}
                       label="Subir nueva portada"
-                      helperText="Opcional: Sube una nueva imagen para la cubierta"
+                      helperText="Opcional: Sube una nueva imagen para la cubierta (máx. 5MB)"
                     />
-                    {libroSelect?.portada && (
-                      <img
-                        src={`/storage/${libroSelect.portada}`}
-                        alt="Portada actual"
-                        className="h-12 rounded mt-1"
-                      />
+                    {portada && (
+                      <p className="text-xs font-semibold text-primary">
+                        Nueva portada: {portada.name} ({(portada.size / (1024 * 1024)).toFixed(2)} MB)
+                      </p>
+                    )}
+                    {libroSelect?.portada && !portada && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <img
+                          src={`/storage/${libroSelect.portada}`}
+                          alt="Portada actual"
+                          className="h-10 w-8 object-cover rounded shadow-xs"
+                        />
+                        <span className="text-[11px] text-muted-foreground">Portada actual en el sistema</span>
+                      </div>
                     )}
                   </div>
                 </div>

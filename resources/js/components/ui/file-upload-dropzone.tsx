@@ -21,6 +21,7 @@ export interface FileUploadDropzoneProps {
   value?: File | File[] | FileList | null;
   onChange?: (files: FileList | null) => void;
   onFileChange?: (file: File | null) => void;
+  onFileSelect?: (file: File | null) => void;
   onFilesChange?: (files: File[]) => void;
   label?: string;
   helperText?: string;
@@ -47,6 +48,7 @@ export function FileUploadDropzone({
   maxSizeMB = 25,
   onChange,
   onFileChange,
+  onFileSelect,
   onFilesChange,
   label = "Arrastra y suelta aquí tu archivo",
   helperText,
@@ -66,6 +68,7 @@ export function FileUploadDropzone({
       setLocalError(null);
       onChange?.(null);
       onFileChange?.(null);
+      onFileSelect?.(null);
       onFilesChange?.([]);
       return;
     }
@@ -84,6 +87,7 @@ export function FileUploadDropzone({
       }
       onChange?.(null);
       onFileChange?.(null);
+      onFileSelect?.(null);
       onFilesChange?.([]);
       return;
     }
@@ -92,6 +96,7 @@ export function FileUploadDropzone({
     setSelectedFiles(filesArray);
     onChange?.(fileList);
     onFileChange?.(filesArray[0] || null);
+    onFileSelect?.(filesArray[0] || null);
     onFilesChange?.(filesArray);
   };
 
@@ -129,6 +134,7 @@ export function FileUploadDropzone({
     }
 
     onFileChange?.(updated[0] || null);
+    onFileSelect?.(updated[0] || null);
     onFilesChange?.(updated);
   };
 

@@ -21,6 +21,32 @@ class Convocatoria extends Model
         'activo',
     ];
 
+    protected $appends = [
+        'imagen_url',
+        'archivo_url',
+        'vigente',
+    ];
+
+    public function getImagenUrlAttribute(): ?string
+    {
+        if (! $this->archivo) {
+            return null;
+        }
+
+        if (str_starts_with($this->archivo, 'http://') || str_starts_with($this->archivo, 'https://')) {
+            return $this->archivo;
+        }
+
+        $clean = preg_replace('/^\/?storage\//', '', $this->archivo);
+
+        return asset('storage/'.ltrim($clean, '/'));
+    }
+
+    public function getArchivoUrlAttribute(): ?string
+    {
+        return $this->getImagenUrlAttribute();
+    }
+
     protected function casts(): array
     {
         return [
