@@ -1,4 +1,4 @@
-import { motion, type Variants } from "framer-motion";
+import { motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 
 interface PageDecoratorsProps {
@@ -84,14 +84,6 @@ export function PageDecorators({
     return () => window.removeEventListener("click", handleClick);
   }, [primaryColor, secondaryColor]);
 
-  const cornerVariants: Variants = {
-    animate: {
-      scale: [1, 1.04, 1],
-      opacity: [0.14, 0.28, 0.14],
-      transition: { duration: 7, repeat: Infinity, ease: "easeInOut" },
-    },
-  };
-
   return (
     <>
       <style>{`
@@ -125,23 +117,7 @@ export function PageDecorators({
       `}</style>
 
       <div className="welcome-decorator-canvas">
-        {/* 1. Esquinas arquitectónicas ornamentales fijas con pulsación suave */}
-        <motion.img
-          src="/decoradores/esquina-izquierda.png"
-          alt=""
-          variants={cornerVariants}
-          animate="animate"
-          className="absolute top-0 left-0 w-[clamp(220px,28vw,460px)] opacity-20 pointer-events-none select-none"
-        />
-        <motion.img
-          src="/decoradores/esquina-derecha.png"
-          alt=""
-          variants={cornerVariants}
-          animate="animate"
-          className="absolute bottom-0 right-0 w-[clamp(220px,28vw,460px)] opacity-20 pointer-events-none select-none"
-        />
-
-        {/* 2. Partículas flotantes de luz cálida / institucional que eliminan el vacío muerto */}
+        {/* Partículas flotantes de luz cálida / institucional que eliminan el vacío muerto */}
         {showSparkles && particles.length > 0 && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {particles.map((p) => (

@@ -377,19 +377,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     style={{ background: `radial-gradient(circle, #f59e0b 0%, ${primary} 50%, transparent 75%)` }}
                 />
 
-                {/* DECORADORES FLOTANTES DE ENRIQUECIMIENTO VISUAL (TIPO GAS Y PETROQUÍMICA) */}
-                <img
-                    src="/decoradores/esquina-derecha.png"
-                    alt=""
-                    className="absolute bottom-0 right-0 w-[clamp(260px,30vw,440px)] pointer-events-none opacity-30 select-none z-2"
-                />
-                <img
-                    src="/decoradores/esquina-derecha_invertido.png"
-                    alt=""
-                    className="absolute bottom-0 left-0 w-[clamp(260px,30vw,440px)] pointer-events-none opacity-30 select-none z-2"
-                />
-
-                {/* GIFs Y ELEMENTOS ROTATORIOS DE BORDES */}
+                {/* GIFs Y ELEMENTOS ROTATORIOS DE BORDES (TIPO GAS Y PETROQUÍMICA) */}
                 <motion.img
                     src="/decoradores/decor_mov2.gif"
                     alt=""
@@ -910,19 +898,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     style={{ background: `radial-gradient(circle, #f59e0b 0%, ${primary} 50%, transparent 75%)` }}
                 />
 
-                {/* 3. Esquinas ornamentales y decoradores de gasypetroquimica */}
-                <img
-                    src="/decoradores/esquina-izquierda.png"
-                    alt=""
-                    className="absolute top-0 left-0 w-[clamp(200px,22vw,360px)] pointer-events-none opacity-20 select-none z-0"
-                />
-                <img
-                    src="/decoradores/esquina-derecha.png"
-                    alt=""
-                    className="absolute bottom-0 right-0 w-[clamp(200px,22vw,360px)] pointer-events-none opacity-20 select-none z-0"
-                />
-
-                {/* 4. Decoradores flotantes para rellenar los costados vacíos */}
+                {/* 3. Decoradores flotantes para rellenar los costados vacíos */}
                 <motion.img
                     src="/decoradores/decor_static/cometa.png"
                     alt=""
@@ -1852,18 +1828,6 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     background: `linear-gradient(135deg, ${primary}99 0%, ${secondary}25 50%, #030712 100%)`,
                 }}
             >
-                {/* Esquinas ornamentales */}
-                <img
-                    src="/decoradores/esquina-izquierda.png"
-                    alt=""
-                    className="absolute top-0 left-0 w-[clamp(200px,25vw,380px)] pointer-events-none opacity-20 select-none z-0"
-                />
-                <img
-                    src="/decoradores/esquina-derecha.png"
-                    alt=""
-                    className="absolute bottom-0 right-0 w-[clamp(200px,25vw,380px)] pointer-events-none opacity-20 select-none z-0"
-                />
-
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                 <div className="relative z-10 mx-auto max-w-3xl" data-aos="zoom-in">
