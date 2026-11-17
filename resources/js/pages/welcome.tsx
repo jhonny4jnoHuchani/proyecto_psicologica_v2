@@ -32,6 +32,7 @@ import React, { useEffect, useState } from 'react';
 import { AmbientReactiveBackground } from '@/components/ambient-reactive-background';
 import { ExploraCarreraCarousel } from '@/components/explora-carrera-carousel';
 import { FloatingScrollIndex } from '@/components/floating-scroll-index';
+import { PageDecorators } from '@/components/page-decorators';
 import { PortadasCinematicSlider } from '@/components/portadas-cinematic-slider';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -190,7 +191,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
 
     return (
         <div
-            className="font-body relative min-h-screen overflow-x-hidden bg-slate-950 text-slate-100"
+            className="font-body relative min-h-screen overflow-x-hidden bg-[#050814] text-slate-100"
             style={
                 {
                     '--primary': primary,
@@ -229,6 +230,11 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     }
                 `}</style>
             </Head>
+
+            {/* ========================================================================= */}
+            {/* DECORADORES GLOBALES (ESQUINAS FLOTANTES, CHISPAS Y BRILLO AMBIENTAL)     */}
+            {/* ========================================================================= */}
+            <PageDecorators primaryColor={primary} secondaryColor={secondary} showSparkles={true} />
 
             {/* ========================================================================= */}
             {/* 1. ÍNDICE LATERAL FLOTANTE DOCK (OCULTO EN EL TOPE, SOLO APARECE CON SCROLL) */}
@@ -357,14 +363,60 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     }}
                 />
 
-                {/* AURAS DINÁMICAS ALIMENTADAS POR COLOR PRIMARIO Y SECUNDARIO */}
+                {/* AURAS DINÁMICAS ALIMENTADAS POR COLOR PRIMARIO, SECUNDARIO Y TOQUE CÁLIDO */}
                 <div
                     className="pointer-events-none absolute -top-32 -left-32 z-1 h-96 w-96 rounded-full blur-[120px]"
-                    style={{ background: `${primary}35` }}
+                    style={{ background: `${primary}45` }}
                 />
                 <div
                     className="pointer-events-none absolute -right-32 -bottom-32 z-1 h-96 w-96 rounded-full blur-[130px]"
-                    style={{ background: `${secondary}30` }}
+                    style={{ background: `${secondary}38` }}
+                />
+                <div
+                    className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-1 h-[520px] w-[520px] rounded-full blur-[150px] opacity-20"
+                    style={{ background: `radial-gradient(circle, #f59e0b 0%, ${primary} 50%, transparent 75%)` }}
+                />
+
+                {/* DECORADORES FLOTANTES DE ENRIQUECIMIENTO VISUAL (TIPO GAS Y PETROQUÍMICA) */}
+                <img
+                    src="/decoradores/esquina-derecha.png"
+                    alt=""
+                    className="absolute bottom-0 right-0 w-[clamp(260px,30vw,440px)] pointer-events-none opacity-30 select-none z-2"
+                />
+                <img
+                    src="/decoradores/esquina-derecha_invertido.png"
+                    alt=""
+                    className="absolute bottom-0 left-0 w-[clamp(260px,30vw,440px)] pointer-events-none opacity-30 select-none z-2"
+                />
+
+                {/* GIFs Y ELEMENTOS ROTATORIOS DE BORDES */}
+                <motion.img
+                    src="/decoradores/decor_mov2.gif"
+                    alt=""
+                    className="absolute top-[24%] right-[4%] w-20 sm:w-28 pointer-events-none opacity-45 select-none z-2 hidden sm:block"
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_mov2.gif"
+                    alt=""
+                    className="absolute top-[28%] left-[4%] w-20 sm:w-28 pointer-events-none opacity-45 select-none z-2 hidden sm:block"
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/cometa.png"
+                    alt=""
+                    className="absolute bottom-[22%] right-[10%] w-16 sm:w-24 pointer-events-none opacity-45 select-none z-2"
+                    animate={{ y: [0, -8, 0], rotate: [0, 6, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/circulo_azuul.png"
+                    alt=""
+                    className="absolute top-[16%] left-[10%] w-16 sm:w-22 pointer-events-none opacity-40 select-none z-2"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
                 />
 
                 {/* ELEMENTOS GEOMÉTRICOS FLOTANTES DE AMBIENTACIÓN */}
@@ -590,7 +642,50 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             {/* 5. SECCIÓN SOBRE NOSOTROS (MISIÓN, VISIÓN, VALORES Y POLÍGONOS SUAVES)   */}
             {/* ========================================================================= */}
-            <section id="sobre-nosotros" className="relative overflow-hidden bg-slate-950 px-6 py-24 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
+            <section
+                id="sobre-nosotros"
+                className="relative overflow-hidden bg-gradient-to-b from-[#050814] via-[#091129] to-[#050814] px-6 py-24 transition-colors duration-500 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
+            >
+                {/* Iluminación de fondo cálida e institucional */}
+                <div
+                    className="pointer-events-none absolute top-10 right-10 h-96 w-96 rounded-full blur-[140px] opacity-25 select-none"
+                    style={{ background: `radial-gradient(circle, ${primary} 0%, transparent 70%)` }}
+                />
+                <div
+                    className="pointer-events-none absolute bottom-10 left-10 h-96 w-96 rounded-full blur-[140px] opacity-20 select-none"
+                    style={{ background: `radial-gradient(circle, #f59e0b 0%, ${secondary} 50%, transparent 75%)` }}
+                />
+
+                {/* Decoradores flotantes laterales para rellenar vacíos */}
+                <motion.img
+                    src="/decoradores/decor_static/cometa.png"
+                    alt=""
+                    className="absolute top-10 left-4 w-16 sm:w-24 pointer-events-none opacity-40 select-none hidden lg:block"
+                    animate={{ y: [0, -10, 0], rotate: [0, 6, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/circulo_azuul.png"
+                    alt=""
+                    className="absolute top-20 right-4 w-20 sm:w-28 pointer-events-none opacity-35 select-none hidden lg:block"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/redondo_con_forma.png"
+                    alt=""
+                    className="absolute bottom-12 left-4 w-24 sm:w-36 pointer-events-none opacity-30 select-none hidden lg:block"
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 32, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/decoracion1.png"
+                    alt=""
+                    className="absolute bottom-10 right-6 w-16 sm:w-24 pointer-events-none opacity-35 select-none hidden lg:block"
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
@@ -790,7 +885,7 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             <section
                 id="convocatorias"
-                className="relative overflow-hidden bg-slate-950 px-6 py-28 transition-colors duration-500 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
+                className="relative overflow-hidden bg-gradient-to-b from-[#050814] via-[#09122c] to-[#050814] px-6 py-28 transition-colors duration-500 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
             >
                 {/* 1. Malla arquitectónica (Grid Pattern) de fondo */}
                 <div
@@ -801,24 +896,84 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     }}
                 />
 
-                {/* 2. Orbes difuminados de color primario y secundario detrás de las tarjetas */}
+                {/* 2. Orbes difuminados de color primario, secundario y calidez ámbar detrás de las tarjetas */}
                 <div
-                    className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full blur-[130px] opacity-25 select-none"
+                    className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full blur-[130px] opacity-30 select-none"
                     style={{ backgroundColor: primary }}
                 />
                 <div
-                    className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full blur-[140px] opacity-25 select-none"
+                    className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full blur-[140px] opacity-30 select-none"
                     style={{ backgroundColor: secondary }}
                 />
+                <div
+                    className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full blur-[160px] opacity-20 select-none"
+                    style={{ background: `radial-gradient(circle, #f59e0b 0%, ${primary} 50%, transparent 75%)` }}
+                />
 
-                {/* 3. Marca de agua decorativa gigante del símbolo psicológico Ψ */}
+                {/* 3. Esquinas ornamentales y decoradores de gasypetroquimica */}
+                <img
+                    src="/decoradores/esquina-izquierda.png"
+                    alt=""
+                    className="absolute top-0 left-0 w-[clamp(200px,22vw,360px)] pointer-events-none opacity-20 select-none z-0"
+                />
+                <img
+                    src="/decoradores/esquina-derecha.png"
+                    alt=""
+                    className="absolute bottom-0 right-0 w-[clamp(200px,22vw,360px)] pointer-events-none opacity-20 select-none z-0"
+                />
+
+                {/* 4. Decoradores flotantes para rellenar los costados vacíos */}
+                <motion.img
+                    src="/decoradores/decor_static/cometa.png"
+                    alt=""
+                    className="absolute top-14 left-4 w-16 sm:w-24 pointer-events-none opacity-45 select-none z-0 hidden lg:block"
+                    animate={{ y: [0, -10, 0], rotate: [0, 6, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/circulo_azuul.png"
+                    alt=""
+                    className="absolute top-20 right-6 w-20 sm:w-28 pointer-events-none opacity-40 select-none z-0 hidden lg:block"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 24, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/redondo_con_forma.png"
+                    alt=""
+                    className="absolute bottom-16 left-6 w-24 sm:w-36 pointer-events-none opacity-35 select-none z-0 hidden lg:block"
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/redondo_form2.png"
+                    alt=""
+                    className="absolute bottom-20 right-8 w-20 sm:w-28 pointer-events-none opacity-35 select-none z-0 hidden lg:block"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/3_lineas_siksak.png"
+                    alt=""
+                    className="absolute top-1/2 left-6 -translate-y-1/2 w-16 sm:w-24 pointer-events-none opacity-30 select-none z-0 hidden xl:block"
+                    animate={{ x: [0, -6, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_mov2.gif"
+                    alt=""
+                    className="absolute bottom-10 right-1/4 w-20 sm:w-28 pointer-events-none opacity-40 select-none z-0 hidden md:block"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
+                {/* 5. Marca de agua decorativa gigante del símbolo psicológico Ψ */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none overflow-hidden">
                     <span className="font-serif text-[340px] sm:text-[480px] font-black text-white/[0.022] leading-none select-none">
                         Ψ
                     </span>
                 </div>
 
-                {/* 4. Atmósfera reactiva con polígonos y destellos */}
+                {/* 6. Atmósfera reactiva con polígonos y destellos */}
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="high" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
@@ -1264,7 +1419,50 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* ========================================================================= */}
             {/* 7. SECCIÓN BIBLIOTECA DIGITAL (SIN BUSCADOR, CON BIBLIOTECARIA Y PDF)     */}
             {/* ========================================================================= */}
-            <section id="biblioteca" className="relative overflow-hidden bg-slate-950 px-6 py-24 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
+            <section
+                id="biblioteca"
+                className="relative overflow-hidden bg-gradient-to-b from-[#050814] via-[#091129] to-[#050814] px-6 py-24 transition-colors duration-500 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
+            >
+                {/* Iluminación de fondo cálida e índigo */}
+                <div
+                    className="pointer-events-none absolute top-10 right-10 h-96 w-96 rounded-full blur-[140px] opacity-25 select-none"
+                    style={{ background: `radial-gradient(circle, ${secondary} 0%, transparent 70%)` }}
+                />
+                <div
+                    className="pointer-events-none absolute bottom-10 left-10 h-96 w-96 rounded-full blur-[140px] opacity-20 select-none"
+                    style={{ background: `radial-gradient(circle, #f59e0b 0%, ${primary} 50%, transparent 75%)` }}
+                />
+
+                {/* Decoradores flotantes laterales para dinamismo visual */}
+                <motion.img
+                    src="/decoradores/decor_static/decoracion2.png"
+                    alt=""
+                    className="absolute top-12 left-4 w-16 sm:w-24 pointer-events-none opacity-35 select-none hidden lg:block"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/redondo_con_forma.png"
+                    alt=""
+                    className="absolute top-28 right-4 w-20 sm:w-28 pointer-events-none opacity-30 select-none hidden lg:block"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/cometa.png"
+                    alt=""
+                    className="absolute bottom-16 right-6 w-16 sm:w-24 pointer-events-none opacity-35 select-none hidden lg:block"
+                    animate={{ y: [0, 8, 0] }}
+                    transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.img
+                    src="/decoradores/decor_static/fihura_extraña1.png"
+                    alt=""
+                    className="absolute bottom-12 left-6 w-12 sm:w-16 pointer-events-none opacity-35 select-none hidden lg:block"
+                    animate={{ rotate: [0, 10, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                />
+
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="medium" />
 
                 <div className="relative z-10 mx-auto max-w-7xl">
@@ -1493,7 +1691,36 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
             {/* 8. SECCIÓN AUTORIDADES DE LA CARRERA                                      */}
             {/* ========================================================================= */}
             {autoridades && autoridades.length > 0 && (
-                <section id="autoridades" className="relative overflow-hidden bg-slate-950 px-6 py-24 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent">
+                <section
+                    id="autoridades"
+                    className="relative overflow-hidden bg-gradient-to-b from-[#050814] via-[#091129] to-[#04060f] px-6 py-24 transition-colors duration-500 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent"
+                >
+                    {/* Iluminación ambiental cálida */}
+                    <div
+                        className="pointer-events-none absolute top-12 left-12 h-96 w-96 rounded-full blur-[140px] opacity-25 select-none"
+                        style={{ background: `radial-gradient(circle, ${primary} 0%, transparent 70%)` }}
+                    />
+                    <div
+                        className="pointer-events-none absolute bottom-12 right-12 h-96 w-96 rounded-full blur-[140px] opacity-20 select-none"
+                        style={{ background: `radial-gradient(circle, #f59e0b 0%, ${secondary} 50%, transparent 75%)` }}
+                    />
+
+                    {/* Decoradores laterales */}
+                    <motion.img
+                        src="/decoradores/decor_static/circulo_azuul.png"
+                        alt=""
+                        className="absolute top-16 left-6 w-18 sm:w-24 pointer-events-none opacity-35 select-none hidden lg:block"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+                    />
+                    <motion.img
+                        src="/decoradores/decor_static/redondo_form2.png"
+                        alt=""
+                        className="absolute bottom-16 right-6 w-18 sm:w-26 pointer-events-none opacity-35 select-none hidden lg:block"
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
+                    />
+
                     <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                     <div className="relative z-10 mx-auto max-w-7xl">
@@ -1625,6 +1852,18 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                     background: `linear-gradient(135deg, ${primary}99 0%, ${secondary}25 50%, #030712 100%)`,
                 }}
             >
+                {/* Esquinas ornamentales */}
+                <img
+                    src="/decoradores/esquina-izquierda.png"
+                    alt=""
+                    className="absolute top-0 left-0 w-[clamp(200px,25vw,380px)] pointer-events-none opacity-20 select-none z-0"
+                />
+                <img
+                    src="/decoradores/esquina-derecha.png"
+                    alt=""
+                    className="absolute bottom-0 right-0 w-[clamp(200px,25vw,380px)] pointer-events-none opacity-20 select-none z-0"
+                />
+
                 <AmbientReactiveBackground primaryColor={primary} secondaryColor={secondary} density="low" />
 
                 <div className="relative z-10 mx-auto max-w-3xl" data-aos="zoom-in">
