@@ -126,11 +126,13 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
             // (los archivos llegan vacíos). Por eso se envía como POST con _method spoofing.
             formData.append('_method', 'PUT');
             router.post(`/pagina-admin/portadas/${portadaSelect.id}`, formData, {
+                forceFormData: true,
                 onSuccess: () => { setModalPortada(false); setProcessing(false); toast.success('Portada actualizada'); },
                 onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         } else {
             router.post('/pagina-admin/portadas', formData, {
+                forceFormData: true,
                 onSuccess: () => { setModalPortada(false); setProcessing(false); toast.success('Portada agregada'); },
                 onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
@@ -171,11 +173,13 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         if (autoridadSelect) {
             formData.append('_method', 'PUT');
             router.post(`/pagina-admin/autoridades/${autoridadSelect.id}`, formData, {
+                forceFormData: true,
                 onSuccess: () => { setModalAutoridad(false); setProcessing(false); toast.success('Autoridad actualizada'); },
                 onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         } else {
             router.post('/pagina-admin/autoridades', formData, {
+                forceFormData: true,
                 onSuccess: () => { setModalAutoridad(false); setProcessing(false); toast.success('Autoridad agregada'); },
                 onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
@@ -224,11 +228,13 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
         if (convocatoriaSelect) {
             formData.append('_method', 'PUT');
             router.post(`/pagina-admin/convocatorias/${convocatoriaSelect.id}`, formData, {
+                forceFormData: true,
                 onSuccess: () => { setModalConvocatoria(false); setProcessing(false); toast.success('Convocatoria actualizada'); },
                 onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
         } else {
             router.post('/pagina-admin/convocatorias', formData, {
+                forceFormData: true,
                 onSuccess: () => { setModalConvocatoria(false); setProcessing(false); toast.success('Convocatoria publicada'); },
                 onError: (errors) => { setProcessing(false); showValidationErrors(errors); },
             });
@@ -643,6 +649,11 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     onFileChange={(file) => setPortadaImagen(file)}
                                     onFileSelect={(file) => setPortadaImagen(file)}
                                 />
+                                {portadaImagen && (
+                                    <p className="text-xs font-semibold text-primary mt-1">
+                                        Nueva imagen seleccionada: {portadaImagen.name} ({(portadaImagen.size / (1024 * 1024)).toFixed(2)} MB)
+                                    </p>
+                                )}
                                 {portadaSelect?.imagen && !portadaImagen && (
                                     <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-muted/40 border border-border/60">
                                         <img src={`/storage/${portadaSelect.imagen}`} className="h-14 w-24 object-cover rounded-lg shadow-xs" alt="Portada actual" />
@@ -684,6 +695,11 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     onFileChange={(file) => setAutoridadFoto(file)}
                                     onFileSelect={(file) => setAutoridadFoto(file)}
                                 />
+                                {autoridadFoto && (
+                                    <p className="text-xs font-semibold text-primary mt-1">
+                                        Nueva foto seleccionada: {autoridadFoto.name} ({(autoridadFoto.size / (1024 * 1024)).toFixed(2)} MB)
+                                    </p>
+                                )}
                                 {autoridadSelect?.foto && !autoridadFoto && (
                                     <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-muted/40 border border-border/60">
                                         <img src={`/storage/${autoridadSelect.foto}`} className="h-12 w-12 rounded-full object-cover shadow-xs" alt="Foto actual" />
@@ -734,6 +750,11 @@ export default function PaginaAdminIndex({ portadas, autoridades, convocatorias 
                                     onFileChange={(file) => setConvocatoriaArchivo(file)}
                                     onFileSelect={(file) => setConvocatoriaArchivo(file)}
                                 />
+                                {convocatoriaArchivo && (
+                                    <p className="text-xs font-semibold text-primary mt-1">
+                                        Nuevo afiche seleccionado: {convocatoriaArchivo.name} ({(convocatoriaArchivo.size / (1024 * 1024)).toFixed(2)} MB)
+                                    </p>
+                                )}
                                 {convocatoriaSelect?.archivo && !convocatoriaArchivo && (
                                     <div className="flex items-center gap-2 mt-2 p-2 rounded-xl bg-muted/40 border border-border/60">
                                         <img src={`/storage/${convocatoriaSelect.archivo}`} className="h-14 w-20 rounded-lg object-cover shadow-xs" alt="Afiche actual" />
