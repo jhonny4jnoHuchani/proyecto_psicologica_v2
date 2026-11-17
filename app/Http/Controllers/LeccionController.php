@@ -164,7 +164,11 @@ class LeccionController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
-            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:20480',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:51200',
+        ], [
+            'titulo.required' => 'El título de la lección es obligatorio.',
+            'archivo.mimes' => 'El archivo adjunto debe ser de tipo PDF o Word (DOC/DOCX).',
+            'archivo.max' => 'El material adjunto no debe superar los 50 MB de tamaño.',
         ]);
 
         $docente = Docente::where('user_id', Auth::id())->first();
@@ -199,9 +203,14 @@ class LeccionController extends Controller
             'descripcion' => 'nullable|string',
             'fecha_programada' => 'nullable|date',
             'fecha_entrega' => 'nullable|date',
-            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:20480',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:51200',
             'eliminar_archivo' => 'nullable',
             'estado' => ['required', Rule::in(['activo', 'inactivo'])],
+        ], [
+            'titulo.required' => 'El título de la lección es obligatorio.',
+            'archivo.mimes' => 'El archivo adjunto debe ser de tipo PDF o Word (DOC/DOCX).',
+            'archivo.max' => 'El material adjunto no debe superar los 50 MB de tamaño.',
+            'estado.required' => 'El estado es obligatorio.',
         ]);
 
         $data = [

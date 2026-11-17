@@ -9,6 +9,7 @@ use App\Models\Refuerzo;
 use App\Observers\CalificacionObserver;
 use App\Observers\LeccionObserver;
 use App\Observers\RefuerzoObserver;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // 🌐 Idioma en español garantizado para toda la aplicación
+        app()->setLocale('es');
+        Carbon::setLocale('es');
+
         // 🔔 Observers de notificaciones
         Calificacion::observe(CalificacionObserver::class);
         Refuerzo::observe(RefuerzoObserver::class);

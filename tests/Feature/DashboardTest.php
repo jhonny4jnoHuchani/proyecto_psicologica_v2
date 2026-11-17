@@ -249,3 +249,81 @@ test('subirImagen rejects invalid non-image files', function () {
 
     $response->assertSessionHasErrors('imagen');
 });
+
+test('subirImagen rejects images larger than 5MB with spanish error message', function () {
+    Storage::fake('public');
+    Role::firstOrCreate(['name' => 'docente', 'guard_name' => 'web']);
+
+    $user = User::factory()->create();
+    $user->assignRole('docente');
+    $docente = Docente::create(['user_id' => $user->id, 'especialidad' => 'Psicología']);
+
+    $gestion = Gestion::create([
+        'año' => 2026,
+        'etapa' => 1,
+        'fecha_inicio' => '2026-02-01',
+        'fecha_fin' => '2026-06-30',
+        'estado' => 'activo',
+    ]);
+    $curso = Curso::create(['gestion_id' => $gestion->id, 'nombre' => '3er Semestre', 'turno' => 'noche', 'paralelo' => 'A']);
+    $materia = Materia::create(['nombre' => 'Psicopatología', 'codigo' => 'PSI-301']);
+
+    $cursoMateriaId = DB::table('curso_materia')->insertGetId([
+        'curso_id' => $curso->id,
+        'materia_id' => $materia->id,
+        'docente_id' => $docente->id,
+        'ayuda_ia_activa' => false,
+    ]);
+
+    // Archivo de 6 MB (6144 KB)
+    $file = UploadedFile::fake()->create('foto_pesada.jpg', 6144, 'image/jpeg');
+
+    $response = $this->actingAs($user)->post("/docente/curso-materia/{$cursoMateriaId}/imagen", [
+        'imagen' => $file,
+    ]);
+
+    $response->assertSessionHasErrors([
+        'imagen' => 'La imagen seleccionada supera el tamaño máximo permitido de 5 MB.',
+    ]);
+});
+
+test('subirImagen accepts images around 2.1MB to 5MB', function () {
+    Storage::fake('public');
+    Role::firstOrCreate(['name' => 'docente', 'guard_name' => 'web']);
+
+    $user = User::factory()->create();
+    $user->assignRole('docente');
+    $docente = Docente::create(['user_id' => $user->id, 'especialidad' => 'Psicología']);
+
+    $gestion = Gestion::create([
+        'año' => 2026,
+        'etapa' => 1,
+        'fecha_inicio' => '2026-02-01',
+        'fecha_fin' => '2026-06-30',
+        'estado' => 'activo',
+    ]);
+    $curso = Curso::create(['gestion_id' => $gestion->id, 'nombre' => '1er Semestre', 'turno' => 'mañana', 'paralelo' => 'A']);
+    $materia = Materia::create(['nombre' => 'Psicología Social', 'codigo' => 'PSI-102']);
+
+    $cursoMateriaId = DB::table('curso_materia')->insertGetId([
+        'curso_id' => $curso->id,
+        'materia_id' => $materia->id,
+        'docente_id' => $docente->id,
+        'ayuda_ia_activa' => false,
+    ]);
+
+    // Archivo PNG de 2.5 MB con cabecera de imagen válida
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    $file = UploadedFile::fake()->createWithContent('logo-cursos.png', $png.str_repeat('0', 2500 * 1024));
+
+    $response = $this->actingAs($user)->post("/docente/curso-materia/{$cursoMateriaId}/imagen", [
+        'imagen' => $file,
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success', 'Portada de la materia actualizada correctamente.');
+
+    $updated = DB::table('curso_materia')->where('id', $cursoMateriaId)->first();
+    expect($updated->imagen)->not->toBeNull();
+    Storage::disk('public')->assertExists($updated->imagen);
+});

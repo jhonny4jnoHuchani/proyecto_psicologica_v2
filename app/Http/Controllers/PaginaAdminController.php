@@ -32,8 +32,12 @@ class PaginaAdminController extends Controller
     {
         $request->validate([
             'titulo' => 'nullable|string|max:200',
-            'imagen' => 'required|image|max:2048',
+            'imagen' => 'required|image|max:10240',
             'orden' => 'nullable|integer|min:0',
+        ], [
+            'imagen.required' => 'Debes seleccionar una imagen para la portada.',
+            'imagen.image' => 'El archivo debe ser una imagen válida.',
+            'imagen.max' => 'La imagen de portada no debe superar los 10 MB de tamaño.',
         ]);
 
         $data = [
@@ -55,9 +59,12 @@ class PaginaAdminController extends Controller
     {
         $request->validate([
             'titulo' => 'nullable|string|max:200',
-            'imagen' => 'nullable|image|max:2048',
+            'imagen' => 'nullable|image|max:10240',
             'orden' => 'nullable|integer|min:0',
             'activo' => 'nullable|boolean',
+        ], [
+            'imagen.image' => 'El archivo debe ser una imagen válida.',
+            'imagen.max' => 'La imagen de portada no debe superar los 10 MB de tamaño.',
         ]);
 
         $data = $request->only(['titulo', 'orden', 'activo']);
@@ -92,9 +99,14 @@ class PaginaAdminController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:200',
             'cargo' => 'required|string|max:100',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:10240',
             'mensaje' => 'nullable|string',
             'orden' => 'nullable|integer|min:0',
+        ], [
+            'nombre.required' => 'El nombre de la autoridad es obligatorio.',
+            'cargo.required' => 'El cargo institucional es obligatorio.',
+            'foto.image' => 'La fotografía debe ser una imagen válida.',
+            'foto.max' => 'La fotografía no debe pesar más de 10 MB.',
         ]);
 
         $data = $request->only(['nombre', 'cargo', 'mensaje', 'orden']);
@@ -113,9 +125,14 @@ class PaginaAdminController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:200',
             'cargo' => 'required|string|max:100',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:10240',
             'mensaje' => 'nullable|string',
             'orden' => 'nullable|integer|min:0',
+        ], [
+            'nombre.required' => 'El nombre de la autoridad es obligatorio.',
+            'cargo.required' => 'El cargo institucional es obligatorio.',
+            'foto.image' => 'La fotografía debe ser una imagen válida.',
+            'foto.max' => 'La fotografía no debe pesar más de 10 MB.',
         ]);
 
         $data = $request->only(['nombre', 'cargo', 'mensaje', 'orden']);
@@ -150,11 +167,16 @@ class PaginaAdminController extends Controller
         $request->validate([
             'titulo' => 'required|string|max:200',
             'descripcion' => 'nullable|string',
-            'archivo' => 'nullable|image|max:2048',
+            'archivo' => 'nullable|image|max:10240',
             'link_video' => 'nullable|string',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
             'activo' => 'nullable|boolean',
+        ], [
+            'titulo.required' => 'El título de la convocatoria es obligatorio.',
+            'archivo.image' => 'El afiche o imagen de la convocatoria debe ser un archivo de imagen válido.',
+            'archivo.max' => 'El afiche o imagen de la convocatoria no debe superar los 10 MB.',
+            'fecha_fin.after_or_equal' => 'La fecha de finalización debe ser posterior o igual a la de inicio.',
         ]);
 
         $data = $request->only(['titulo', 'descripcion', 'link_video', 'fecha_inicio', 'fecha_fin', 'activo']);
@@ -173,11 +195,16 @@ class PaginaAdminController extends Controller
         $request->validate([
             'titulo' => 'required|string|max:200',
             'descripcion' => 'nullable|string',
-            'archivo' => 'nullable|image|max:2048',
+            'archivo' => 'nullable|image|max:10240',
             'link_video' => 'nullable|string',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
             'activo' => 'nullable|boolean',
+        ], [
+            'titulo.required' => 'El título de la convocatoria es obligatorio.',
+            'archivo.image' => 'El afiche o imagen de la convocatoria debe ser un archivo de imagen válido.',
+            'archivo.max' => 'El afiche o imagen de la convocatoria no debe superar los 10 MB.',
+            'fecha_fin.after_or_equal' => 'La fecha de finalización debe ser posterior o igual a la de inicio.',
         ]);
 
         $data = $request->only(['titulo', 'descripcion', 'link_video', 'fecha_inicio', 'fecha_fin', 'activo']);

@@ -24,8 +24,14 @@ class RecursoController extends Controller
             'titulo' => 'required|string|max:200',
             'descripcion' => 'nullable|string',
             'tipo' => ['required', Rule::in(['pdf', 'enlace', 'documento'])],
-            'archivo' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,txt|max:25600',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,txt|max:51200',
             'enlace_url' => 'nullable|string|max:500',
+        ], [
+            'materia_id.required' => 'Debes seleccionar una materia.',
+            'titulo.required' => 'El título del recurso es obligatorio.',
+            'tipo.required' => 'Debes indicar el tipo de recurso.',
+            'archivo.mimes' => 'El formato del archivo adjunto no es compatible.',
+            'archivo.max' => 'El archivo no debe superar los 50 MB de tamaño.',
         ]);
 
         $tipo = $request->tipo;
@@ -84,9 +90,15 @@ class RecursoController extends Controller
             'curso_id' => 'nullable|exists:cursos,id',
             'descripcion' => 'nullable|string',
             'tipo' => ['required', Rule::in(['pdf', 'enlace', 'documento'])],
-            'archivo' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,txt|max:25600',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,zip,txt|max:51200',
             'enlace_url' => 'nullable|string|max:500',
             'estado' => ['required', Rule::in(['activo', 'inactivo'])],
+        ], [
+            'titulo.required' => 'El título del recurso es obligatorio.',
+            'tipo.required' => 'Debes indicar el tipo de recurso.',
+            'archivo.mimes' => 'El formato del archivo adjunto no es compatible.',
+            'archivo.max' => 'El archivo no debe superar los 50 MB de tamaño.',
+            'estado.required' => 'El estado es obligatorio.',
         ]);
 
         $tipo = $request->tipo;

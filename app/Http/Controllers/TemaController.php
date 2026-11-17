@@ -23,7 +23,11 @@ class TemaController extends Controller
         $request->validate([
             'materia_id' => 'required|exists:materias,id',
             'texto' => 'nullable|string',
-            'archivo_pdf' => 'nullable|file|mimes:pdf|max:20480', // 20MB máx
+            'archivo_pdf' => 'nullable|file|mimes:pdf|max:51200', // 50MB máx
+        ], [
+            'materia_id.required' => 'Debes seleccionar una materia.',
+            'archivo_pdf.mimes' => 'El archivo para resumir debe ser un documento PDF.',
+            'archivo_pdf.max' => 'El archivo PDF no debe pesar más de 50 MB.',
         ]);
 
         $texto = (string) $request->input('texto', '');
@@ -80,7 +84,12 @@ class TemaController extends Controller
             'resumen' => 'nullable|string',
             'paginas_libro' => 'nullable|string|max:50',
             'estado' => ['nullable', Rule::in(['programado', 'visto', 'omitido', 'pospuesto'])],
-            'archivo_pdf' => 'nullable|file|mimes:pdf|max:20480',
+            'archivo_pdf' => 'nullable|file|mimes:pdf|max:51200',
+        ], [
+            'materia_id.required' => 'Debes seleccionar una materia.',
+            'nombre.required' => 'El título o nombre del tema es obligatorio.',
+            'archivo_pdf.mimes' => 'El material del tema debe ser un archivo PDF.',
+            'archivo_pdf.max' => 'El archivo PDF no debe pesar más de 50 MB.',
         ]);
 
         $orden = $request->orden;
@@ -118,7 +127,13 @@ class TemaController extends Controller
             'resumen' => 'nullable|string',
             'paginas_libro' => 'nullable|string|max:50',
             'estado' => ['required', Rule::in(['programado', 'visto', 'omitido', 'pospuesto'])],
-            'archivo_pdf' => 'nullable|file|mimes:pdf|max:20480',
+            'archivo_pdf' => 'nullable|file|mimes:pdf|max:51200',
+        ], [
+            'nombre.required' => 'El título o nombre del tema es obligatorio.',
+            'orden.required' => 'El número de orden es obligatorio.',
+            'archivo_pdf.mimes' => 'El material del tema debe ser un archivo PDF.',
+            'archivo_pdf.max' => 'El archivo PDF no debe pesar más de 50 MB.',
+            'estado.required' => 'El estado del tema es obligatorio.',
         ]);
 
         $data = $request->only([

@@ -329,7 +329,12 @@ class DashboardController extends Controller
     public function subirImagen(Request $request, $cursoMateriaId): RedirectResponse
     {
         $request->validate([
-            'imagen' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'imagen' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+        ], [
+            'imagen.required' => 'Debes seleccionar una imagen para la portada.',
+            'imagen.image' => 'El archivo seleccionado debe ser una imagen válida.',
+            'imagen.mimes' => 'La imagen debe estar en formato JPG, PNG, JPEG o WebP.',
+            'imagen.max' => 'La imagen seleccionada supera el tamaño máximo permitido de 5 MB.',
         ]);
 
         $user = Auth::user();

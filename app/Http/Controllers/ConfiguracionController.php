@@ -23,11 +23,20 @@ class ConfiguracionController extends Controller
         $request->validate([
             'color_primario' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
             'color_secundario' => 'required|string|regex:/^#[0-9A-Fa-f]{6}$/',
-            'logo' => 'nullable|image|max:2048',
+            'logo' => 'nullable|image|max:10240',
             'mision' => 'nullable|string',
             'vision' => 'nullable|string',
             'lema' => 'nullable|string|max:200',
-            'organigrama' => 'nullable|image|max:2048',
+            'organigrama' => 'nullable|image|max:10240',
+        ], [
+            'color_primario.required' => 'El color primario es obligatorio.',
+            'color_primario.regex' => 'El color primario debe ser un código hexadecimal válido (ej. #4f46e5).',
+            'color_secundario.required' => 'El color secundario es obligatorio.',
+            'color_secundario.regex' => 'El color secundario debe ser un código hexadecimal válido (ej. #06b6d4).',
+            'logo.image' => 'El logotipo debe ser una imagen válida.',
+            'logo.max' => 'El logotipo no debe superar los 10 MB de tamaño.',
+            'organigrama.image' => 'El organigrama institucional debe ser una imagen válida.',
+            'organigrama.max' => 'La imagen del organigrama no debe superar los 10 MB de tamaño.',
         ]);
 
         $config = Configuracion::firstOrCreate([], [

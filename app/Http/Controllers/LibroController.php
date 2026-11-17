@@ -58,8 +58,15 @@ class LibroController extends Controller
             'nombre' => 'required|string|max:200',
             'autor' => 'nullable|string|max:150',
             'anio_lanzamiento' => 'nullable|integer|min:1900|max:2100',
-            'archivo' => 'nullable|file|mimes:pdf|max:10240',
-            'portada' => 'nullable|image|max:2048',
+            'archivo' => 'nullable|file|mimes:pdf|max:51200',
+            'portada' => 'nullable|image|max:5120',
+        ], [
+            'materia_id.required' => 'Debes seleccionar una materia.',
+            'nombre.required' => 'El título o nombre del libro es obligatorio.',
+            'archivo.mimes' => 'El documento debe ser un archivo PDF válido.',
+            'archivo.max' => 'El archivo PDF no debe pesar más de 50 MB.',
+            'portada.image' => 'La portada debe ser una imagen válida.',
+            'portada.max' => 'La imagen de portada no debe pesar más de 5 MB.',
         ]);
 
         $data = $request->only(['materia_id', 'nombre', 'autor', 'anio_lanzamiento']);
@@ -84,8 +91,15 @@ class LibroController extends Controller
             'nombre' => 'required|string|max:200',
             'autor' => 'nullable|string|max:150',
             'anio_lanzamiento' => 'nullable|integer|min:1900|max:2100',
-            'archivo' => 'nullable|file|mimes:pdf|max:10240',
-            'portada' => 'nullable|image|max:2048',
+            'archivo' => 'nullable|file|mimes:pdf|max:51200',
+            'portada' => 'nullable|image|max:5120',
+        ], [
+            'materia_id.required' => 'Debes seleccionar una materia.',
+            'nombre.required' => 'El título o nombre del libro es obligatorio.',
+            'archivo.mimes' => 'El documento debe ser un archivo PDF válido.',
+            'archivo.max' => 'El archivo PDF no debe pesar más de 50 MB.',
+            'portada.image' => 'La portada debe ser una imagen válida.',
+            'portada.max' => 'La imagen de portada no debe pesar más de 5 MB.',
         ]);
 
         $data = $request->only(['materia_id', 'nombre', 'autor', 'anio_lanzamiento']);

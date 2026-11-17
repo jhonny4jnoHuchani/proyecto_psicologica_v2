@@ -99,8 +99,14 @@ class EntregaController extends Controller
         $request->validate([
             'leccion_id' => 'required|exists:lecciones,id',
             'archivos' => 'required|array|min:1',
-            'archivos.*' => 'file|max:10240', // 10MB max
+            'archivos.*' => 'file|max:25600',
             'comentarios' => 'nullable|string',
+        ], [
+            'leccion_id.required' => 'La tarea o lección no fue especificada.',
+            'archivos.required' => 'Debes adjuntar al menos un archivo para tu entrega.',
+            'archivos.min' => 'Debes adjuntar al menos un archivo para tu entrega.',
+            'archivos.*.file' => 'Uno de los elementos adjuntos no es un archivo válido.',
+            'archivos.*.max' => 'Cada archivo entregado no debe superar los 25 MB.',
         ]);
 
         $user = Auth::user();

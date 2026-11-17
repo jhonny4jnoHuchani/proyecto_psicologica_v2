@@ -52,6 +52,7 @@ export function ModalCambiarPortadaMateria({
   }, [isOpen]);
 
   const handleFileChange = (file: File | null) => {
+    clearErrors("imagen");
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -159,19 +160,14 @@ export function ModalCambiarPortadaMateria({
           <div className="space-y-1">
             <FileUploadDropzone
               accept="image/jpeg,image/png,image/jpg,image/webp"
-              maxSizeMB={2}
+              maxSizeMB={5}
               iconType="image"
               label="Arrastra y suelta aquí tu nueva portada"
-              helperText="Formatos: JPG, PNG o WebP (máximo 2MB)"
+              helperText="Formatos: JPG, PNG o WebP (máximo 5MB)"
               onFileChange={handleFileChange}
               error={errors.imagen}
               className="hover:border-primary focus-within:border-primary transition-colors duration-200"
             />
-            {errors.imagen && (
-              <p className="text-xs font-medium text-red-500 pt-1">
-                {errors.imagen}
-              </p>
-            )}
           </div>
 
           {/* 3. Acciones del Modal */}

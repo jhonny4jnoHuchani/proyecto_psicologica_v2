@@ -58,10 +58,12 @@ export function FileUploadDropzone({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) {
       setSelectedFiles([]);
+      setLocalError(null);
       onChange?.(null);
       onFileChange?.(null);
       onFilesChange?.([]);
@@ -69,6 +71,24 @@ export function FileUploadDropzone({
     }
 
     const filesArray = Array.from(fileList);
+    const maxBytes = maxSizeMB * 1024 * 1024;
+    const oversizedFile = filesArray.find((f) => f.size > maxBytes);
+
+    if (oversizedFile) {
+      setLocalError(
+        `El archivo "${oversizedFile.name}" pesa ${formatBytes(oversizedFile.size)} y supera el límite permitido de ${maxSizeMB} MB.`
+      );
+      setSelectedFiles([]);
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      onChange?.(null);
+      onFileChange?.(null);
+      onFilesChange?.([]);
+      return;
+    }
+
+    setLocalError(null);
     setSelectedFiles(filesArray);
     onChange?.(fileList);
     onFileChange?.(filesArray[0] || null);
@@ -102,6 +122,7 @@ export function FileUploadDropzone({
     e.stopPropagation();
     const updated = selectedFiles.filter((_, i) => i !== index);
     setSelectedFiles(updated);
+    setLocalError(null);
 
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -242,7 +263,9 @@ export function FileUploadDropzone({
         )}
       </div>
 
-      {error && <p className="text-xs font-medium text-rose-500 pl-1">{error}</p>}
+      {(error || localError) && (
+        <p className="text-xs font-medium text-rose-500 pl-1">{error || localError}</p>
+      )}
     </div>
   );
 }
