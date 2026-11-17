@@ -32,6 +32,7 @@ import React, { useEffect, useState } from 'react';
 import { AmbientReactiveBackground } from '@/components/ambient-reactive-background';
 import { ExploraCarreraCarousel } from '@/components/explora-carrera-carousel';
 import { FloatingScrollIndex } from '@/components/floating-scroll-index';
+import { LibrosCarrusel } from '@/components/libros-carrusel';
 import { PageDecorators } from '@/components/page-decorators';
 import { PortadasCinematicSlider } from '@/components/portadas-cinematic-slider';
 import { Badge } from '@/components/ui/badge';
@@ -1468,198 +1469,14 @@ export default function Welcome({ config, portadas, autoridades, convocatorias, 
                         </p>
                     </div>
 
-                    {/* LISTADO / GRILLA DIRECTA DE DOCUMENTOS PDF (CONECTADO DIRECTAMENTE SIN ESPACIOS GIGANTES) */}
-                    {libros.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {libros.map((libro, idx) => (
-                                <div
-                                    key={libro.id}
-                                    data-aos="fade-up"
-                                    data-aos-delay={(idx % 4) * 70}
-                                    onClick={() => abrirPdfLibro(libro)}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                            e.preventDefault();
-                                            abrirPdfLibro(libro);
-                                        }
-                                    }}
-                                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-slate-900/75 shadow-xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer select-none"
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.borderColor = `${secondary}80`;
-                                        e.currentTarget.style.boxShadow = `0 15px 35px -5px ${primary}40`;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                                        e.currentTarget.style.boxShadow = 'none';
-                                    }}
-                                >
-                                    {/* CABECERA VISUAL CON ICONO Y BADGE CLARO DE PDF */}
-                                    <div
-                                        className="relative flex h-52 w-full items-center justify-center overflow-hidden border-b border-white/5 p-4"
-                                        style={{
-                                            background: `linear-gradient(135deg, #030712 0%, #0f172a 60%, ${primary}25 100%)`,
-                                        }}
-                                    >
-                                        {/* Insignia clara de PDF en la esquina superior izquierda */}
-                                        <div className="absolute top-3 left-3 z-10">
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-extrabold font-mono tracking-wider bg-rose-950/80 border border-rose-500/50 text-rose-300 shadow-lg backdrop-blur-md">
-                                                <FileText className="h-3 w-3 text-rose-400" />
-                                                PDF
-                                            </span>
-                                        </div>
-
-                                        {/* Insignia de lectura rápida de 5 páginas */}
-                                        <div className="absolute top-3 right-3 z-10">
-                                            <span className="font-mono-tag inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-950/80 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 shadow-md backdrop-blur-md">
-                                                ≤ 5 Págs
-                                            </span>
-                                        </div>
-
-                                        {/* Indicador de lectura al pasar el mouse por el card */}
-                                        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-[2px] transition-all duration-300 group-hover:opacity-100">
-                                            <span
-                                                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold text-white shadow-2xl transition-transform duration-300 group-hover:scale-105"
-                                                style={{
-                                                    background: `linear-gradient(135deg, ${primary}, ${secondary})`,
-                                                }}
-                                            >
-                                                <BookOpen className="h-3.5 w-3.5" />
-                                                Leer PDF Completo
-                                            </span>
-                                        </div>
-
-                                        {libro.portada ? (
-                                            <img
-                                                src={`/storage/${libro.portada}`}
-                                                alt={libro.nombre}
-                                                className="h-full max-h-44 rounded-lg object-contain shadow-2xl transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            /* Portada estilizada oficial con emblema institucional */
-                                            <div
-                                                className="relative flex h-full w-36 flex-col justify-between overflow-hidden rounded-xl p-3 shadow-2xl transition-transform duration-500 group-hover:scale-105"
-                                                style={{
-                                                    background: `linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98))`,
-                                                    border: `1px solid rgba(255, 255, 255, 0.15)`,
-                                                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.6)',
-                                                }}
-                                            >
-                                                {/* Lomo izquierdo del libro */}
-                                                <div
-                                                    className="absolute top-0 bottom-0 left-0 w-2.5"
-                                                    style={{
-                                                        background: `linear-gradient(to right, ${primary}, ${secondary})`,
-                                                    }}
-                                                />
-
-                                                {/* Marca de agua Psi */}
-                                                <div className="pointer-events-none absolute right-1 bottom-1 font-serif text-6xl text-slate-800 opacity-40 select-none">
-                                                    Ψ
-                                                </div>
-
-                                                <div className="relative z-1 pl-2">
-                                                    <span
-                                                        className="font-mono-tag block text-[9px] font-bold tracking-wider uppercase"
-                                                        style={{ color: secondary }}
-                                                    >
-                                                        {libro.materia?.codigo || 'UPEA'}
-                                                    </span>
-                                                    <p className="font-title mt-1 line-clamp-3 text-[11px] leading-snug font-bold text-white">
-                                                        {libro.nombre}
-                                                    </p>
-                                                </div>
-
-                                                <div className="relative z-1 border-t border-white/10 pt-2 pl-2">
-                                                    <p className="truncate text-[9px] text-slate-400">{libro.autor || 'Psicología UPEA'}</p>
-                                                    <span className="font-mono-tag mt-0.5 block text-[8px] font-semibold text-emerald-400">
-                                                        Guía Oficial
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* CONTENIDO DEL LIBRO */}
-                                    <div className="flex flex-1 flex-col justify-between p-5">
-                                        <div>
-                                            <div className="mb-2 flex items-center gap-2">
-                                                <span
-                                                    className="font-mono-tag rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase"
-                                                    style={{
-                                                        color: secondary,
-                                                        backgroundColor: `${secondary}18`,
-                                                        borderColor: `${secondary}44`,
-                                                        borderWidth: 1,
-                                                    }}
-                                                >
-                                                    {libro.materia?.codigo || 'PSI'}
-                                                </span>
-                                                <span className="truncate text-xs text-slate-400">{libro.materia?.nombre}</span>
-                                            </div>
-
-                                            <h3 className="font-title line-clamp-2 text-base leading-snug font-bold text-white transition-colors">
-                                                {libro.nombre}
-                                            </h3>
-
-                                            <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
-                                                <span>{libro.autor || 'Carrera de Psicología UPEA'}</span>
-                                                {libro.anio_lanzamiento && <span>· {libro.anio_lanzamiento}</span>}
-                                            </p>
-                                        </div>
-
-                                        {/* ACCIONES DEL LIBRO: VISTA PREVIA Y DESCARGA DIRECTA DE PDF */}
-                                        <div className="mt-5 flex items-center gap-2 border-t border-white/10 pt-4">
-                                            {libro.archivo ? (
-                                                <>
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            abrirPdfLibro(libro);
-                                                        }}
-                                                        className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                                        style={{
-                                                            background: `linear-gradient(135deg, ${primary}, ${secondary})`,
-                                                        }}
-                                                    >
-                                                        <Eye className="h-3.5 w-3.5" />
-                                                        Leer Documento
-                                                    </button>
-                                                    <a
-                                                        href={`/storage/${libro.archivo}`}
-                                                        download
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        className="rounded-xl bg-white/10 p-2 text-slate-200 transition-colors hover:bg-white/20 hover:text-white"
-                                                        title="Descargar archivo PDF"
-                                                    >
-                                                        <Download className="h-4 w-4" />
-                                                    </a>
-                                                </>
-                                            ) : (
-                                                <div className="flex w-full items-center justify-between py-1 text-xs text-slate-400 italic">
-                                                    <span className="flex items-center gap-1.5 text-[11px]">
-                                                        <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                                                        Lectura en digitalización
-                                                    </span>
-                                                    <span className="font-mono-tag text-[10px] text-slate-500">Pronto</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="mx-auto max-w-xl rounded-3xl border border-white/10 bg-white/5 py-16 text-center">
-                            <BookOpen className="mx-auto mb-3 h-12 w-12 text-slate-500" />
-                            <p className="font-medium text-slate-300">Las guías de estudio están siendo preparadas.</p>
-                            <p className="mt-1 text-xs text-slate-500">Próximamente se publicará el nuevo material bibliográfico.</p>
-                        </div>
-                    )}
+                    {/* CARRUSEL INFINITO DE LIBROS (3 ÍTEMS CON AUTO-SLIDE, INDICADORES Y PORTADA DEFAULT LOGO_PDF_MUESTRA) */}
+                    <LibrosCarrusel
+                        libros={libros}
+                        primaryColor={primary}
+                        secondaryColor={secondary}
+                        onAbrirPdf={abrirPdfLibro}
+                        intervalMs={3500}
+                    />
                 </div>
             </section>
 
