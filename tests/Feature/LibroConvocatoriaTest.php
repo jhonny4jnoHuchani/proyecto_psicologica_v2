@@ -94,3 +94,50 @@ test('admin can upload pdf when creating and updating a libro', function () {
     expect($libro->archivo)->not->toBeNull();
     Storage::disk('public')->assertExists($libro->archivo);
 });
+
+test('admin can upload portada image including gif up to 20mb and rejects larger files', function () {
+    Storage::fake('public');
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $materia = Materia::create(['nombre' => 'Psicología General', 'codigo' => 'PSI-101']);
+
+    $libro = Libro::create([
+        'materia_id' => $materia->id,
+        'nombre' => 'Resumen Psicología',
+        'autor' => 'UPEA Psicología',
+        'anio_lanzamiento' => 2026,
+    ]);
+
+    // 1. Subir portada GIF de ~10 MB (10240 KB) -> debe aceptarse
+    $gifPortada = UploadedFile::fake()->create('download.gif', 10240, 'image/gif');
+
+    $response = $this->actingAs($admin)->post("/libros/{$libro->id}", [
+        '_method' => 'PUT',
+        'materia_id' => $materia->id,
+        'nombre' => 'Resumen Psicología',
+        'autor' => 'UPEA Psicología',
+        'anio_lanzamiento' => 2026,
+        'portada' => $gifPortada,
+    ]);
+
+    $response->assertRedirect('/libros');
+    $libro->refresh();
+    expect($libro->portada)->not->toBeNull();
+    expect($libro->portada_url)->toStartWith('/storage/libros/portadas/');
+    Storage::disk('public')->assertExists($libro->portada);
+
+    // 2. Subir portada mayor a 20 MB (21504 KB = 21 MB) -> debe rechazarse
+    $oversizedPortada = UploadedFile::fake()->create('enorme.gif', 21504, 'image/gif');
+
+    $failResponse = $this->actingAs($admin)->post("/libros/{$libro->id}", [
+        '_method' => 'PUT',
+        'materia_id' => $materia->id,
+        'nombre' => 'Resumen Psicología',
+        'portada' => $oversizedPortada,
+    ]);
+
+    $failResponse->assertSessionHasErrors('portada');
+});

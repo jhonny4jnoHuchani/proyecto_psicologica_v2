@@ -58,7 +58,9 @@ interface Libro {
   autor: string | null;
   anio_lanzamiento: number | null;
   archivo: string | null;
+  archivo_url?: string | null;
   portada: string | null;
+  portada_url?: string | null;
   materia: MateriaOption;
 }
 
@@ -682,8 +684,8 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     <Label>Portada del Libro (Imagen)</Label>
                     <FileUploadDropzone
                       iconType="image"
-                      accept="image/*"
-                      maxSizeMB={5}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      maxSizeMB={20}
                       error={errors.portada}
                       onFileChange={(f) => {
                         setPortada(f);
@@ -694,7 +696,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                         if (errors.portada) setErrors((prev) => { const n = { ...prev }; delete n.portada; return n; });
                       }}
                       label="Arrastra la portada"
-                      helperText="JPG, PNG o WebP de la cubierta (máx. 5MB)"
+                      helperText="JPG, PNG, WebP o GIF de la cubierta (máx. 20MB)"
                     />
                     {portada && (
                       <p className="text-xs font-semibold text-primary">
@@ -822,8 +824,8 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                     <Label>Reemplazar Portada (opcional)</Label>
                     <FileUploadDropzone
                       iconType="image"
-                      accept="image/*"
-                      maxSizeMB={5}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      maxSizeMB={20}
                       error={errors.portada}
                       onFileChange={(f) => {
                         setPortada(f);
@@ -834,7 +836,7 @@ export default function LibrosIndex({ libros, materias, filtros }: Props) {
                         if (errors.portada) setErrors((prev) => { const n = { ...prev }; delete n.portada; return n; });
                       }}
                       label="Subir nueva portada"
-                      helperText="Opcional: Sube una nueva imagen para la cubierta (máx. 5MB)"
+                      helperText="Opcional: JPG, PNG, WebP o GIF (máx. 20MB)"
                     />
                     {portada && (
                       <p className="text-xs font-semibold text-primary">
