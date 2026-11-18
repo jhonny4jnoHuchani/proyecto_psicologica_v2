@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
 
         // 🎨 View composer para configuración visual
         View::composer('app', function ($view) {
-            $config = Configuracion::first();
+            $config = Configuracion::cached();
             $primario = $config?->color_primario ?? '#4f46e5';
             $secundario = $config?->color_secundario ?? '#06b6d4';
 

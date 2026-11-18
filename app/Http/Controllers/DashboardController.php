@@ -307,13 +307,19 @@ class DashboardController extends Controller
 
     public function toggleIA($cursoMateriaId): RedirectResponse
     {
+        $user = Auth::user();
+        $isAdmin = $user->hasRole('admin');
+        $docente = Docente::where('user_id', $user->id)->first();
 
-        $docente = Docente::where('user_id', Auth::id())->first();
+        $query = DB::table('curso_materia')->where('id', $cursoMateriaId);
+        if (! $isAdmin) {
+            if (! $docente) {
+                abort(403, 'No tienes un perfil de docente asignado.');
+            }
+            $query->where('docente_id', $docente->id);
+        }
 
-        $cursoMateria = DB::table('curso_materia')
-            ->where('id', $cursoMateriaId)
-            ->where('docente_id', $docente->id)
-            ->first();
+        $cursoMateria = $query->first();
 
         if (! $cursoMateria) {
             abort(403, 'No tienes permiso');

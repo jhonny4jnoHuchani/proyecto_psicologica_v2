@@ -143,6 +143,13 @@ test('entrega submitted after deadline timestamp is marked atrasado', function (
     $curso = Curso::create(['gestion_id' => $gestion->id, 'paralelo' => 'C', 'turno' => 'noche', 'cupos' => 30, 'estado' => 'activo']);
     $materia = Materia::create(['codigo' => 'PSI-203', 'nombre' => 'Neuropsicología']);
 
+    DB::table('curso_estudiante')->insert([
+        'curso_id' => $curso->id,
+        'estudiante_id' => $estudiante->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
     $leccion = Leccion::create([
         'curso_id' => $curso->id,
         'materia_id' => $materia->id,

@@ -85,10 +85,10 @@ interface MateriaInfo {
 interface LibroItem {
     id: number;
     nombre: string;
-    autor: string | null;
-    anio_lanzamiento: number | null;
-    archivo: string | null;
-    portada: string | null;
+    autor?: string | null;
+    anio_lanzamiento?: number | null;
+    archivo?: string | null;
+    portada?: string | null;
     materia?: MateriaInfo | null;
 }
 

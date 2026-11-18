@@ -34,5 +34,9 @@ return [
         'enabled' => filter_var(env('TELEGRAM_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
     ],
+    // configuracion para microservicio de Machine Learning
+    'ml' => [
+        'url' => env('ML_SERVICE_URL', 'http://127.0.0.1:5000'),
+    ],
 
 ];

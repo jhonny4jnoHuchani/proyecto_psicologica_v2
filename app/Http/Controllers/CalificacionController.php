@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Calificacion;
+use App\Models\Docente;
 use App\Models\Entrega;
 use App\Models\Refuerzo;
 use App\Services\IAService;
@@ -30,6 +31,13 @@ class CalificacionController extends Controller
         ]);
 
         $entrega = Entrega::with(['leccion.materia', 'leccion.curso', 'estudiante.user'])->findOrFail($request->entrega_id);
+
+        if (! auth()->user()->hasRole('admin')) {
+            $docente = Docente::where('user_id', auth()->id())->first();
+            if ($entrega->leccion?->docente_id && $entrega->leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para calificar esta entrega.');
+            }
+        }
 
         Calificacion::updateOrCreate(
             ['entrega_id' => $entrega->id],

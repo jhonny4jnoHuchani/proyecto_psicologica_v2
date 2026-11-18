@@ -50,6 +50,13 @@ class RefuerzoController extends Controller
             'calificacion',
         ])->findOrFail($request->entrega_id);
 
+        if (! auth()->user()->hasRole('admin')) {
+            $docente = Docente::where('user_id', Auth::id())->first();
+            if ($entrega->leccion?->docente_id && $entrega->leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para generar refuerzos en esta entrega.');
+            }
+        }
+
         // 1. Validar que tenga calificación
         if (! $entrega->calificacion) {
             $msg = 'La entrega no tiene calificación todavía.';
@@ -208,6 +215,13 @@ class RefuerzoController extends Controller
         ]);
 
         $entrega = Entrega::with('leccion')->findOrFail($request->entrega_id);
+
+        if (! auth()->user()->hasRole('admin')) {
+            $docente = Docente::where('user_id', Auth::id())->first();
+            if ($entrega->leccion?->docente_id && $entrega->leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para guardar refuerzos en esta entrega.');
+            }
+        }
 
         // Verificar que no exista un refuerzo para esa entrega
         if (Refuerzo::where('entrega_id', $entrega->id)->exists()) {

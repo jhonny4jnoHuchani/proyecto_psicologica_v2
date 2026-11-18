@@ -50,10 +50,21 @@ class Configuracion extends Model
      */
     public static function clearTelegramCache(): void
     {
+        Cache::forget('app_configuracion_global');
         Cache::forget('telegram_config_token');
         Cache::forget('telegram_config_chat_id');
         Cache::forget('telegram_config_activo');
         Cache::forget('telegram_config_username');
+    }
+
+    /**
+     * Obtiene la configuración global cacheada para evitar consultas repetidas en cada petición.
+     */
+    public static function cached(): ?self
+    {
+        return Cache::remember('app_configuracion_global', now()->addHours(6), function () {
+            return static::query()->first();
+        });
     }
 
     /**

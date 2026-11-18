@@ -34,7 +34,7 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $user ? $user->getRoleNames()->all() : [],
                 'notificaciones' => $user ? $user->notificaciones()->noLeidas()->recientes(10)->get() : [],
             ],
-            'config' => Configuracion::first(),  // ← NUEVO
+            'config' => Configuracion::cached(),
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

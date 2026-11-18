@@ -34,7 +34,7 @@ use Inertia\Inertia;
 // pagina inicial (todos pueden verla xq??)
 Route::get('/', function () {
     return Inertia::render('welcome', [
-        'config' => Configuracion::first(),
+        'config' => Configuracion::cached(),
         'portadas' => Portada::activas()->get(),
         'autoridades' => Autoridad::ordenadas()->get(),
         'convocatorias' => Convocatoria::activas()->get(),
@@ -167,7 +167,7 @@ Route::middleware(['auth'])->group(function () {
     // TEMAS (Admin y Docente)
     // ========================
     Route::middleware(['role:admin|docente'])->prefix('temas')->name('temas.')->controller(TemaController::class)->group(function () {
-        Route::post('/generar-resumen', 'generarResumen')->name('generar-resumen');
+        Route::post('/generar-resumen', 'generarResumen')->middleware('throttle:20,1')->name('generar-resumen');
         Route::post('/', 'store')->name('store');
         Route::put('/{tema}', 'update')->name('update');
         Route::delete('/{tema}', 'destroy')->name('destroy');
@@ -211,7 +211,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:docente|admin'])->group(function () {
         // guada la calificacion
         Route::post('/calificaciones', [CalificacionController::class, 'store'])->name('calificaciones.store');
-        Route::post('/calificaciones/sugerir-retroalimentacion', [CalificacionController::class, 'sugerirRetroalimentacion'])->name('calificaciones.sugerir-retroalimentacion');
+        Route::post('/calificaciones/sugerir-retroalimentacion', [CalificacionController::class, 'sugerirRetroalimentacion'])->middleware('throttle:20,1')->name('calificaciones.sugerir-retroalimentacion');
     });
 
     // Reportes (admin y docente)
@@ -241,8 +241,8 @@ Route::middleware(['auth'])->group(function () {
 
         // --- Rutas del DOCENTE (generación con IA) ---
         Route::middleware(['role:docente|admin'])->group(function () {
-            Route::post('/generar', 'generar')->name('generar');
-            Route::post('/regenerar-pregunta', 'regenerarPregunta')->name('regenerar-pregunta');
+            Route::post('/generar', 'generar')->middleware('throttle:20,1')->name('generar');
+            Route::post('/regenerar-pregunta', 'regenerarPregunta')->middleware('throttle:20,1')->name('regenerar-pregunta');
             Route::post('/guardar', 'guardar')->name('guardar');
             Route::get('/docente', 'docente')->name('docente');
         });
@@ -251,7 +251,7 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['role:estudiante'])->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{refuerzo}', 'show')->name('show');
-            Route::post('/{refuerzo}/responder', 'responder')->name('responder');
+            Route::post('/{refuerzo}/responder', 'responder')->middleware('throttle:20,1')->name('responder');
         });
     });
 
@@ -268,6 +268,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'webhook'])
+    ->middleware('throttle:120,1')
     ->name('telegram.webhook');
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

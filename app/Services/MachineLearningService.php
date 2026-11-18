@@ -8,7 +8,12 @@ use Illuminate\Support\Facades\Log;
 class MachineLearningService
 {
     // La dirección donde vive nuestro cerebro de Python
-    protected $baseUrl = 'http://127.0.0.1:5000';
+    protected string $baseUrl;
+
+    public function __construct()
+    {
+        $this->baseUrl = rtrim((string) config('services.ml.url', 'http://127.0.0.1:5000'), '/');
+    }
 
     /**
      * Pregunta al cerebro ML qué libro recomendar.

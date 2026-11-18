@@ -23,6 +23,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
 
     ->withMiddleware(function (Middleware $middleware) {
+        // Confiar en headers de proxy inverso (Nginx/Caddy en VPS) para detectar HTTPS e IP real
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
             // AddLinkHeadersForPreloadedAssets::class, // Deshabilitado para evitar headers excesivos en FastCGI (502 upstream sent too big header)

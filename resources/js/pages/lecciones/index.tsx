@@ -27,6 +27,7 @@ import {
     Plus,
     Printer,
     RotateCcw,
+    Search,
     Send,
     Sparkles,
     Trash2,

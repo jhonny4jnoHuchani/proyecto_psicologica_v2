@@ -4,7 +4,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import axios from 'axios';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { route as routeFn } from 'ziggy-js';
 import { initializeTheme } from './hooks/use-appearance';
 

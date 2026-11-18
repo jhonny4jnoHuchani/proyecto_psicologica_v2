@@ -101,40 +101,48 @@ class LeccionController extends Controller
             $temas = Tema::orderBy('materia_id')->orderBy('orden')->get();
         }
 
-        // Obtener estudiantes matriculados en el curso seleccionado (apartado de nómina estudiantil)
+        // Obtener estudiantes matriculados en el curso seleccionado (solo para admin y docente)
         $estudiantes = collect();
-        if ($cursoId) {
-            $estudiantes = Estudiante::whereHas('cursos', function ($q) use ($cursoId) {
-                $q->where('cursos.id', $cursoId);
-            })
-                ->with([
-                    'user',
-                    'cursos' => function ($q) use ($cursoId) {
-                        $q->where('cursos.id', $cursoId)
-                            ->with('gestion')
-                            ->withPivot('fecha_inscripcion', 'estado');
-                    },
-                ])
-                ->orderBy('id', 'desc')
-                ->get();
-        } elseif ($user->hasRole('docente')) {
-            $docente = Docente::where('user_id', $user->id)->first();
-            if ($docente) {
-                $docenteCursoIds = Curso::whereHas('materias', fn ($q) => $q->where('curso_materia.docente_id', $docente->id))->pluck('id');
-                $estudiantes = Estudiante::whereHas('cursos', fn ($q) => $q->whereIn('cursos.id', $docenteCursoIds))
+        if ($user->hasRole('admin')) {
+            if ($cursoId) {
+                $estudiantes = Estudiante::whereHas('cursos', function ($q) use ($cursoId) {
+                    $q->where('cursos.id', $cursoId);
+                })
                     ->with([
                         'user',
-                        'cursos' => function ($q) use ($docenteCursoIds) {
-                            $q->whereIn('cursos.id', $docenteCursoIds)
+                        'cursos' => function ($q) use ($cursoId) {
+                            $q->where('cursos.id', $cursoId)
                                 ->with('gestion')
                                 ->withPivot('fecha_inscripcion', 'estado');
                         },
                     ])
                     ->orderBy('id', 'desc')
                     ->get();
+            } else {
+                $estudiantes = Estudiante::with(['user', 'cursos.gestion'])->orderBy('id', 'desc')->get();
             }
-        } elseif ($user->hasRole('admin')) {
-            $estudiantes = Estudiante::with(['user', 'cursos.gestion'])->orderBy('id', 'desc')->get();
+        } elseif ($user->hasRole('docente')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($docente) {
+                $docenteCursoIds = Curso::whereHas('materias', fn ($q) => $q->where('curso_materia.docente_id', $docente->id))->pluck('id');
+                $cursosPermitidos = $cursoId
+                    ? $docenteCursoIds->filter(fn ($id) => (int) $id === (int) $cursoId)
+                    : $docenteCursoIds;
+
+                if ($cursosPermitidos->isNotEmpty()) {
+                    $estudiantes = Estudiante::whereHas('cursos', fn ($q) => $q->whereIn('cursos.id', $cursosPermitidos))
+                        ->with([
+                            'user',
+                            'cursos' => function ($q) use ($cursosPermitidos) {
+                                $q->whereIn('cursos.id', $cursosPermitidos)
+                                    ->with('gestion')
+                                    ->withPivot('fecha_inscripcion', 'estado');
+                            },
+                        ])
+                        ->orderBy('id', 'desc')
+                        ->get();
+                }
+            }
         }
 
         return Inertia::render('lecciones/index', [
@@ -197,6 +205,14 @@ class LeccionController extends Controller
     /** Actualiza el contenido, ponderación o fecha límite de una lección. */
     public function update(Request $request, Leccion $leccion): RedirectResponse
     {
+        $user = Auth::user();
+        if (! $user->hasRole('admin')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($leccion->docente_id && $leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para modificar esta lección.');
+            }
+        }
+
         $request->validate([
             'titulo' => 'required|string|max:200',
             'tema_id' => 'nullable|exists:temas,id',
@@ -242,6 +258,14 @@ class LeccionController extends Controller
     /** Elimina una lección o tarea del temario. */
     public function destroy(Leccion $leccion): RedirectResponse
     {
+        $user = Auth::user();
+        if (! $user->hasRole('admin')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($leccion->docente_id && $leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para eliminar esta lección.');
+            }
+        }
+
         if ($leccion->imagen && Storage::disk('public')->exists($leccion->imagen)) {
             Storage::disk('public')->delete($leccion->imagen);
         }

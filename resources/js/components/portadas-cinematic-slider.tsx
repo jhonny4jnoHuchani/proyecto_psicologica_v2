@@ -126,7 +126,7 @@ export function PortadasCinematicSlider({
                         transition: {
                             duration: 1.05,
                             delay,
-                            ease: [0.16, 1, 0.3, 1], // Deceleración magnética tipo snap
+                            ease: [0.16, 1, 0.3, 1] as const, // Deceleración magnética tipo snap
                         },
                     },
                 };
@@ -151,7 +151,7 @@ export function PortadasCinematicSlider({
                         transition: {
                             duration: 0.85,
                             delay,
-                            ease: [0.22, 1, 0.36, 1],
+                            ease: [0.22, 1, 0.36, 1] as const,
                         },
                     },
                 };
@@ -174,7 +174,7 @@ export function PortadasCinematicSlider({
                         transition: {
                             duration: 0.9,
                             delay,
-                            ease: [0.25, 1, 0.5, 1],
+                            ease: [0.25, 1, 0.5, 1] as const,
                         },
                     },
                 };
@@ -208,7 +208,7 @@ export function PortadasCinematicSlider({
                         transition: {
                             duration: 1.0,
                             delay,
-                            ease: [0.16, 1, 0.3, 1],
+                            ease: [0.16, 1, 0.3, 1] as const,
                         },
                     },
                 };
@@ -231,7 +231,7 @@ export function PortadasCinematicSlider({
                         transition: {
                             duration: 0.95,
                             delay,
-                            ease: [0.16, 1, 0.3, 1],
+                            ease: [0.16, 1, 0.3, 1] as const,
                         },
                     },
                 };
@@ -255,7 +255,7 @@ export function PortadasCinematicSlider({
                         transition: {
                             duration: 0.85,
                             delay,
-                            ease: [0.22, 1, 0.36, 1],
+                            ease: [0.22, 1, 0.36, 1] as const,
                         },
                     },
                 };

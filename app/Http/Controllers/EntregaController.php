@@ -24,6 +24,13 @@ class EntregaController extends Controller
         $user = Auth::user();
         $estudiante = Estudiante::where('user_id', $user->id)->first();
 
+        if (! $estudiante) {
+            return Inertia::render('entregas/estudiante', [
+                'entregas' => collect(),
+                'leccionesPendientes' => collect(),
+            ]);
+        }
+
         $entregas = Entrega::with([
             'leccion.materia',
             'leccion.docente.user',
@@ -52,18 +59,27 @@ class EntregaController extends Controller
     public function docente(): Response
     {
         $user = Auth::user();
+        $isAdmin = $user->hasRole('admin');
         $docente = Docente::where('user_id', $user->id)->first();
 
-        // aqui buscamos todas las lecciones del docente que esta logueado?
+        if (! $isAdmin && ! $docente) {
+            return Inertia::render('entregas/docente', [
+                'entregas' => collect(),
+                'lecciones' => collect(),
+                'filtroLeccionId' => null,
+                'estudiantesSinEntregar' => collect(),
+            ]);
+        }
+
         $lecciones = Leccion::with('materia', 'curso')
-            ->where('docente_id', $docente->id)
+            ->when(! $isAdmin && $docente, fn ($q) => $q->where('docente_id', $docente->id))
             ->orderBy('created_at', 'desc')
             ->get();
 
         $leccionId = request('leccion_id');
 
         $entregas = Entrega::with(['estudiante.user', 'leccion.materia', 'calificacion', 'refuerzo'])
-            ->whereHas('leccion', fn ($q) => $q->where('docente_id', $docente->id))
+            ->when(! $isAdmin && $docente, fn ($q) => $q->whereHas('leccion', fn ($sq) => $sq->where('docente_id', $docente->id)))
             ->when($leccionId, fn ($q) => $q->where('leccion_id', $leccionId))
             ->orderBy('created_at', 'desc')
             ->get();
@@ -99,24 +115,40 @@ class EntregaController extends Controller
         $request->validate([
             'leccion_id' => 'required|exists:lecciones,id',
             'archivos' => 'required|array|min:1',
-            'archivos.*' => 'file|max:25600',
+            'archivos.*' => 'file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,txt,jpg,jpeg,png,webp,zip,rar|max:25600',
             'comentarios' => 'nullable|string',
         ], [
             'leccion_id.required' => 'La tarea o lección no fue especificada.',
             'archivos.required' => 'Debes adjuntar al menos un archivo para tu entrega.',
             'archivos.min' => 'Debes adjuntar al menos un archivo para tu entrega.',
             'archivos.*.file' => 'Uno de los elementos adjuntos no es un archivo válido.',
+            'archivos.*.mimes' => 'Formato de archivo no permitido. Usa PDF, Word, PowerPoint, Excel, imágenes (JPG/PNG/WebP), TXT o ZIP/RAR.',
             'archivos.*.max' => 'Cada archivo entregado no debe superar los 25 MB.',
         ]);
 
         $user = Auth::user();
         $estudiante = Estudiante::where('user_id', $user->id)->first();
+        if (! $estudiante) {
+            abort(403, 'No tienes un perfil de estudiante asociado.');
+        }
+
         $leccion = Leccion::findOrFail($request->leccion_id);
+
+        // Verificar que el estudiante esté matriculado en el curso de esta lección
+        $estaMatriculado = $estudiante->cursos()->where('cursos.id', $leccion->curso_id)->exists();
+        if (! $estaMatriculado) {
+            abort(403, 'No estás inscrito en el curso correspondiente a esta tarea.');
+        }
 
         // Verificar si ya existe entrega
         $entrega = Entrega::where('leccion_id', $leccion->id)
             ->where('estudiante_id', $estudiante->id)
             ->first();
+
+        // Validar antes de subir archivos nuevos para no dejar archivos huérfanos en disco
+        if ($entrega && ! $entrega->sePuedeEditar()) {
+            return back()->with('error', 'No puedes editar esta entrega.');
+        }
 
         // Subir archivos
         $rutas = [];
@@ -132,10 +164,6 @@ class EntregaController extends Controller
         }
 
         if ($entrega) {
-            // Si ya existe y se puede editar
-            if (! $entrega->sePuedeEditar()) {
-                return back()->with('error', 'No puedes editar esta entrega.');
-            }
             // Eliminar archivos antiguos
             if ($entrega->archivos_enviado) {
                 foreach ($entrega->archivos_enviado as $rutaVieja) {
