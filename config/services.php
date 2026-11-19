@@ -33,6 +33,7 @@ return [
     'telegram' => [
         'enabled' => filter_var(env('TELEGRAM_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
     // configuracion para microservicio de Machine Learning
     'ml' => [

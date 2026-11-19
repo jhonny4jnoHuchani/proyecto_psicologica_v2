@@ -89,7 +89,15 @@ class CalificacionController extends Controller
             'nota' => 'required|numeric|min:0|max:100',
         ]);
 
-        $entrega = Entrega::findOrFail($request->entrega_id);
+        $entrega = Entrega::with('leccion')->findOrFail($request->entrega_id);
+
+        if (! auth()->user()->hasRole('admin')) {
+            $docente = Docente::where('user_id', auth()->id())->first();
+            if ($entrega->leccion?->docente_id && $entrega->leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para acceder a esta entrega.');
+            }
+        }
+
         $sugerencia = $iaService->sugerirRetroalimentacion($entrega, (float) $request->nota);
 
         return response()->json([

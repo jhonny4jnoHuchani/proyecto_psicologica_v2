@@ -175,6 +175,13 @@ class RefuerzoController extends Controller
             'leccion.temario',
         ])->findOrFail($request->entrega_id);
 
+        if (! auth()->user()->hasRole('admin')) {
+            $docente = Docente::where('user_id', Auth::id())->first();
+            if ($entrega->leccion?->docente_id && $entrega->leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para regenerar preguntas en esta entrega.');
+            }
+        }
+
         try {
             $nuevaPregunta = $this->iaService->regenerarPregunta(
                 $entrega,

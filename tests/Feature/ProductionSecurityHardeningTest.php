@@ -188,3 +188,49 @@ test('configuracion cached returns fresh value after update', function () {
 
     expect(Configuracion::cached()?->color_primario)->toBe('#333333');
 });
+
+test('web responses include standard security headers', function () {
+    $response = $this->get('/');
+
+    $response->assertOk()
+        ->assertHeader('X-Content-Type-Options', 'nosniff')
+        ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+        ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+});
+
+test('student cannot view leccion from a course they are not enrolled in', function () {
+    $ctx = crearContextoAcademico();
+
+    $userEst = User::factory()->create();
+    $userEst->assignRole('estudiante');
+    Estudiante::create(['user_id' => $userEst->id, 'codigo_estudiante' => 'EST-SEC-5']);
+
+    $this->actingAs($userEst)
+        ->get(route('lecciones.show', $ctx['leccion']))
+        ->assertForbidden();
+});
+
+test('recurso rejects javascript protocol urls to prevent stored xss', function () {
+    $ctx = crearContextoAcademico();
+
+    $this->actingAs($ctx['userDocente'])
+        ->post(route('recursos.store'), [
+            'materia_id' => $ctx['materia']->id,
+            'curso_id' => $ctx['curso']->id,
+            'titulo' => 'Enlace malicioso',
+            'tipo' => 'enlace',
+            'enlace_url' => 'javascript:alert(1)',
+        ])
+        ->assertSessionHasErrors('enlace_url');
+});
+
+test('telegram webhook rejects requests with invalid secret token when configured', function () {
+    config()->set('services.telegram.webhook_secret', 'mi-secreto-super-seguro');
+
+    $this->postJson(route('telegram.webhook'), ['message' => ['text' => '/start']])
+        ->assertForbidden();
+
+    $this->withHeader('X-Telegram-Bot-Api-Secret-Token', 'mi-secreto-super-seguro')
+        ->postJson(route('telegram.webhook'), ['message' => ['text' => '/start']])
+        ->assertOk();
+});

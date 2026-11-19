@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectNumericRouteKeys;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             // AddLinkHeadersForPreloadedAssets::class, // Deshabilitado para evitar headers excesivos en FastCGI (502 upstream sent too big header)
             RedirectNumericRouteKeys::class,
+            SecurityHeaders::class,
         ]);
 
         // Alias de Spatie Permission

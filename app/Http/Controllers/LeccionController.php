@@ -284,6 +284,19 @@ class LeccionController extends Controller
 
         $user = Auth::user();
 
+        if ($user->hasRole('estudiante')) {
+            $estudiante = Estudiante::where('user_id', $user->id)->first();
+            $estaMatriculado = $estudiante && $estudiante->cursos()->where('cursos.id', $leccion->curso_id)->exists();
+            if (! $estaMatriculado || $leccion->estado !== 'activo') {
+                abort(403, 'No tienes acceso a esta lección.');
+            }
+        } elseif ($user->hasRole('docente') && ! $user->hasRole('admin')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($leccion->docente_id && $leccion->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para ver esta lección.');
+            }
+        }
+
         // 1. Cargamos la lección con sus relaciones
         $leccion->load(['materia', 'temario', 'docente.user', 'curso.gestion']);
         $entrega = null;

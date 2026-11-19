@@ -38,9 +38,16 @@ class TelegramSetWebhook extends Command
         $this->info("Registrando webhook en Telegram con la URL: {$url}...");
 
         try {
-            $response = Http::timeout(15)->post("https://api.telegram.org/bot{$token}/setWebhook", [
+            $payload = [
                 'url' => $url,
-            ]);
+            ];
+
+            $webhookSecret = (string) config('services.telegram.webhook_secret', '');
+            if ($webhookSecret !== '') {
+                $payload['secret_token'] = $webhookSecret;
+            }
+
+            $response = Http::timeout(15)->post("https://api.telegram.org/bot{$token}/setWebhook", $payload);
 
             if ($response->successful() && $response->json('ok')) {
                 $this->info('✅ ¡Webhook configurado exitosamente en Telegram!');

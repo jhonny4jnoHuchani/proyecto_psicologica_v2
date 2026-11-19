@@ -42,8 +42,14 @@ class RecursoController extends Controller
             if (empty($enlaceUrl)) {
                 return back()->withErrors(['enlace_url' => 'Debes ingresar un enlace web o link de YouTube/investigación.']);
             }
+            if (preg_match('/^(javascript|data|vbscript):/i', $enlaceUrl)) {
+                return back()->withErrors(['enlace_url' => 'El enlace ingresado contiene un protocolo no permitido.']);
+            }
             if (! str_starts_with($enlaceUrl, 'http://') && ! str_starts_with($enlaceUrl, 'https://')) {
                 $enlaceUrl = 'https://'.$enlaceUrl;
+            }
+            if (! filter_var($enlaceUrl, FILTER_VALIDATE_URL)) {
+                return back()->withErrors(['enlace_url' => 'Debes ingresar una URL válida (ej. https://...).']);
             }
         } elseif (! $request->hasFile('archivo')) {
             return back()->withErrors(['archivo' => 'Debes seleccionar un archivo para el recurso de estudio.']);
@@ -84,6 +90,14 @@ class RecursoController extends Controller
      */
     public function update(Request $request, Recurso $recurso): RedirectResponse
     {
+        $user = Auth::user();
+        if (! $user->hasRole('admin')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($recurso->docente_id && $recurso->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para modificar este recurso.');
+            }
+        }
+
         $request->validate([
             'titulo' => 'required|string|max:200',
             'tema_id' => 'nullable|exists:temas,id',
@@ -105,8 +119,14 @@ class RecursoController extends Controller
         $enlaceUrl = trim((string) $request->enlace_url);
 
         if ($tipo === 'enlace' && ! empty($enlaceUrl)) {
+            if (preg_match('/^(javascript|data|vbscript):/i', $enlaceUrl)) {
+                return back()->withErrors(['enlace_url' => 'El enlace ingresado contiene un protocolo no permitido.']);
+            }
             if (! str_starts_with($enlaceUrl, 'http://') && ! str_starts_with($enlaceUrl, 'https://')) {
                 $enlaceUrl = 'https://'.$enlaceUrl;
+            }
+            if (! filter_var($enlaceUrl, FILTER_VALIDATE_URL)) {
+                return back()->withErrors(['enlace_url' => 'Debes ingresar una URL válida (ej. https://...).']);
             }
         }
 
@@ -137,6 +157,14 @@ class RecursoController extends Controller
      */
     public function destroy(Recurso $recurso): RedirectResponse
     {
+        $user = Auth::user();
+        if (! $user->hasRole('admin')) {
+            $docente = Docente::where('user_id', $user->id)->first();
+            if ($recurso->docente_id && $recurso->docente_id !== $docente?->id) {
+                abort(403, 'No tienes permiso para eliminar este recurso.');
+            }
+        }
+
         if ($recurso->archivo && Storage::disk('public')->exists($recurso->archivo)) {
             Storage::disk('public')->delete($recurso->archivo);
         }

@@ -17,7 +17,7 @@ El dimensionamiento del servidor depende de la cantidad de usuarios concurrentes
 ### Desglose estimado de consumo de RAM en producción
 - **Sistema Operativo (Ubuntu Server 22.04 / 24.04 LTS):** ~250 – 350 MB
 - **Nginx (servidor web + proxy inverso SSL):** ~30 – 80 MB
-- **PHP-FPM 8.2/8.3 (pool de workers + DomPDF + importación Excel):** ~400 MB – 1.2 GB
+- **PHP-FPM 8.3 (pool de workers + DomPDF + importación Excel):** ~400 MB – 1.2 GB
 - **MySQL 8.0 / MariaDB 10.6+:** ~400 MB – 1.5 GB (según `innodb_buffer_pool_size`)
 - **Laravel Queue Worker (Supervisor para Telegram):** ~60 – 120 MB
 - **Microservicio Python ML (opcional, Flask + scikit-learn):** ~250 – 500 MB
@@ -32,7 +32,7 @@ El dimensionamiento del servidor depende de la cantidad de usuarios concurrentes
 ## Requisitos de Software
 
 ### Servidor de Producción (VPS Linux — Ubuntu 22.04 / 24.04 LTS recomendado)
-- **PHP:** `>= 8.2` (recomendado `8.3`) con extensiones:
+- **PHP:** `>= 8.3` con extensiones:
   `pdo_mysql`, `mbstring`, `xml`, `bcmath`, `curl`, `zip`, `gd` (o `imagick`), `fileinfo`, `intl`, `openssl`, `tokenizer`, `ctype`
 - **Base de Datos:** MySQL `8.0+` o MariaDB `10.6+`
 - **Servidor Web:** Nginx `1.18+` (o Caddy/Apache) con certificado **SSL/HTTPS** (Let's Encrypt / Certbot)
@@ -47,7 +47,7 @@ El dimensionamiento del servidor depende de la cantidad de usuarios concurrentes
 ## Stack Tecnológico
 
 ### Backend
-- **Laravel 12.x** sobre **PHP 8.2 / 8.3+**
+- **Laravel 12.x** sobre **PHP 8.3+**
 - **Eloquent ORM** con `SoftDeletes` (papelera de reciclaje y restauración) y caché de configuración global
 - **Spatie Laravel-Permission** para control de acceso por roles (`admin`, `docente`, `estudiante`, `administrativo`)
 - **Laravel Queues (`database`)** para envío asíncrono de notificaciones por Telegram

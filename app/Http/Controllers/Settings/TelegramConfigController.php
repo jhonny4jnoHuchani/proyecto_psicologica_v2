@@ -113,11 +113,18 @@ class TelegramConfigController extends Controller
 
             if (str_starts_with($webhookUrl, 'https://')) {
                 try {
+                    $webhookPayload = [
+                        'url' => $webhookUrl,
+                        'drop_pending_updates' => false,
+                    ];
+
+                    $webhookSecret = (string) config('services.telegram.webhook_secret', '');
+                    if ($webhookSecret !== '') {
+                        $webhookPayload['secret_token'] = $webhookSecret;
+                    }
+
                     $webhookResponse = Http::timeout(10)
-                        ->post("https://api.telegram.org/bot{$tokenParaUsar}/setWebhook", [
-                            'url' => $webhookUrl,
-                            'drop_pending_updates' => false,
-                        ]);
+                        ->post("https://api.telegram.org/bot{$tokenParaUsar}/setWebhook", $webhookPayload);
 
                     if ($webhookResponse->successful() && $webhookResponse->json('ok')) {
                         $webhookRegistrado = true;
