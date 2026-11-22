@@ -271,7 +271,9 @@ class RefuerzoController extends Controller
     {
         $estudiante = Estudiante::where('user_id', Auth::id())->first();
 
-        $refuerzos = Refuerzo::with(['leccion.materia', 'leccion.temario', 'leccion.curso'])
+        $refuerzos = Refuerzo::with([
+            'leccion' => fn ($q) => $q->withTrashed()->with('materia', 'temario', 'curso'),
+        ])
             ->where('estudiante_id', $estudiante?->id)
             ->orderBy('completado', 'asc')
             ->orderBy('created_at', 'desc')

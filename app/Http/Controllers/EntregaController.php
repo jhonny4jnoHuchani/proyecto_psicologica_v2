@@ -32,10 +32,9 @@ class EntregaController extends Controller
         }
 
         $entregas = Entrega::with([
-            'leccion.materia',
-            'leccion.docente.user',
+            'leccion' => fn ($q) => $q->withTrashed()->with('materia', 'docente.user'),
             'calificacion',
-            'refuerzo',  // 👈 NUEVO
+            'refuerzo',
         ])
             ->where('estudiante_id', $estudiante->id)
             ->orderBy('created_at', 'desc')
@@ -78,8 +77,8 @@ class EntregaController extends Controller
 
         $leccionId = request('leccion_id');
 
-        $entregas = Entrega::with(['estudiante.user', 'leccion.materia', 'calificacion', 'refuerzo'])
-            ->when(! $isAdmin && $docente, fn ($q) => $q->whereHas('leccion', fn ($sq) => $sq->where('docente_id', $docente->id)))
+        $entregas = Entrega::with(['estudiante.user', 'leccion' => fn ($q) => $q->withTrashed()->with('materia'), 'calificacion', 'refuerzo'])
+            ->when(! $isAdmin && $docente, fn ($q) => $q->whereHas('leccion', fn ($sq) => $sq->withTrashed()->where('docente_id', $docente->id)))
             ->when($leccionId, fn ($q) => $q->where('leccion_id', $leccionId))
             ->orderBy('created_at', 'desc')
             ->get();

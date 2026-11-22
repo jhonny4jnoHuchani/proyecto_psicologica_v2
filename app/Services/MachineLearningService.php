@@ -38,7 +38,7 @@ class MachineLearningService
     public function __construct()
     {
         $this->baseUrl = rtrim((string) config('services.ml.url', 'http://127.0.0.1:5000'), '/');
-        $this->apiKey = config('services.ml.key');
+        $this->apiKey = config('services.ml.key') ?: (string) env('ML_API_KEY', 'ml_secret_token_2026_psi_upea');
     }
 
     /**
@@ -46,10 +46,9 @@ class MachineLearningService
      */
     protected function client(int $timeout = 5)
     {
-        $headers = [];
-        if (! empty($this->apiKey)) {
-            $headers['X-ML-API-KEY'] = $this->apiKey;
-        }
+        $headers = [
+            'X-ML-API-KEY' => $this->apiKey ?: 'ml_secret_token_2026_psi_upea',
+        ];
 
         return Http::withHeaders($headers)->timeout($timeout);
     }

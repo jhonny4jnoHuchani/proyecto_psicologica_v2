@@ -516,7 +516,8 @@ class IAService
      */
     public function generarResumenTema(string $texto, string $materiaNombre): array
     {
-        $textoLimpio = trim($texto);
+        $textoLimpio = mb_scrub(trim($texto), 'UTF-8');
+        $materiaNombre = mb_scrub(trim($materiaNombre), 'UTF-8');
         if (mb_strlen($textoLimpio) < 30) {
             throw new \Exception('El contenido proporcionado es demasiado breve para generar un resumen adecuado (mínimo 30 caracteres).');
         }

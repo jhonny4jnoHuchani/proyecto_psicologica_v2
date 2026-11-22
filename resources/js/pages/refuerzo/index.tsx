@@ -51,10 +51,15 @@ function agruparPorMateria(refuerzos: Refuerzo[]) {
     { materia: Refuerzo["leccion"]["materia"]; refuerzos: Refuerzo[] }
   > = {};
 
-  refuerzos.forEach((r) => {
-    const key = r.leccion.materia.id;
+  (refuerzos || []).forEach((r) => {
+    const materia = r.leccion?.materia ?? {
+      id: 0,
+      codigo: "GRAL",
+      nombre: "Otras / Lección no disponible",
+    };
+    const key = materia.id;
     if (!grupos[key]) {
-      grupos[key] = { materia: r.leccion.materia, refuerzos: [] };
+      grupos[key] = { materia, refuerzos: [] };
     }
     grupos[key].refuerzos.push(r);
   });

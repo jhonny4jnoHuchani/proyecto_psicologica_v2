@@ -122,8 +122,8 @@ export default function RefuerzoShow({ refuerzo }: Props) {
             <CardTitle className="text-xl">{refuerzo.leccion.titulo}</CardTitle>
             <div className="flex items-center gap-2 text-xs text-neutral-500 mt-1">
               <BookOpen className="h-3.5 w-3.5" />
-              {refuerzo.leccion.materia.codigo} ·{" "}
-              {refuerzo.leccion.materia.nombre}
+              {refuerzo.leccion?.materia?.codigo || "GRAL"} ·{" "}
+              {refuerzo.leccion?.materia?.nombre || "Materia no disponible"}
             </div>
           </CardHeader>
 

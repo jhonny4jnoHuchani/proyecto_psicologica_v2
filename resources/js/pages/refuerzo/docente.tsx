@@ -222,8 +222,8 @@ export default function RefuerzoDocente({ refuerzos }: Props) {
                             </div>
                             <div className="mt-1 flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
                               <BookOpen className="h-3.5 w-3.5" />
-                              {r.leccion.materia.codigo} ·{" "}
-                              {r.leccion.materia.nombre}
+                              {r.leccion?.materia?.codigo || "GRAL"} ·{" "}
+                              {r.leccion?.materia?.nombre || "Materia no disponible"}
                             </div>
                             <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-300 truncate">
                               {r.leccion.titulo}

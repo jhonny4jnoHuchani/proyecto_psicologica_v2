@@ -133,17 +133,22 @@ export default function EntregasEstudiante({
     });
   };
 
-  // 🎯 Agrupar entregas por materia
+  // 🎯 Agrupar entregas por materia (resiliente ante lecciones/materias eliminadas)
   const entregasPorMateria = useMemo(() => {
     const grupos: Record<
       string,
       { materia: MateriaData; entregas: Entrega[] }
     > = {};
 
-    entregas.forEach((e) => {
-      const key = String(e.leccion.materia.id);
+    (entregas || []).forEach((e) => {
+      const materia: MateriaData = e.leccion?.materia ?? {
+        id: 0,
+        codigo: "GRAL",
+        nombre: "Otras / Lección no disponible",
+      };
+      const key = String(materia.id);
       if (!grupos[key]) {
-        grupos[key] = { materia: e.leccion.materia, entregas: [] };
+        grupos[key] = { materia, entregas: [] };
       }
       grupos[key].entregas.push(e);
     });
@@ -336,7 +341,7 @@ export default function EntregasEstudiante({
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="font-medium text-foreground group-hover:text-primary transition-colors">
-                                  {e.leccion?.titulo}
+                                  {e.leccion?.titulo ?? "Lección sin título"}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   Docente:{" "}

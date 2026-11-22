@@ -117,6 +117,7 @@ class PdfTextExtractor
      */
     protected static function limpiarTexto(string $texto, int $maxCaracteres): string
     {
+        $texto = mb_scrub((string) $texto, 'UTF-8');
         $texto = preg_replace('/[ \t]+/', ' ', $texto);
         $texto = preg_replace('/(\r?\n){3,}/', "\n\n", $texto);
         $texto = trim((string) $texto);
