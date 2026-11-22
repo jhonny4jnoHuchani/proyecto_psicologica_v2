@@ -2,6 +2,10 @@
 
 namespace App\Services;
 
+/**
+ * Servicio de Ofuscación de Identificadores (Hash IDs).
+ * Codifica y decodifica IDs numéricos para evitar ataques de enumeración (IDOR) en rutas públicas.
+ */
 class IdObfuscator
 {
     private static function getKey(): string

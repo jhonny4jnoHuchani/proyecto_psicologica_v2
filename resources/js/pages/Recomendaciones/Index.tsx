@@ -16,9 +16,11 @@ interface Props {
   tema_siguiente?: string;
   paginas_siguiente?: string;
   prediccion?: {
-    prediccion_sin_leer: number;
-    prediccion_con_leer: number;
-    beneficio: number;
+    tiene_datos_historicos?: boolean;
+    prediccion_sin_leer?: number | null;
+    prediccion_con_leer?: number | null;
+    beneficio?: number;
+    mensaje?: string;
   };
 }
 
@@ -102,40 +104,55 @@ export default function Index({
             </p>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="p-5 rounded-2xl bg-red-500/10 border border-red-500/25 space-y-2">
-              <p className="text-xs font-bold text-red-500 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4" /> Sin preparación previa
+          {/* Escenario ML: Si la materia es nueva sin historial, mostramos aviso seguro */}
+          {prediccion && (prediccion.tiene_datos_historicos === false || prediccion.prediccion_sin_leer == null) ? (
+            <div className="mt-6 p-6 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-2 text-center">
+              <p className="font-bold text-amber-600 dark:text-amber-400">
+                Materia o Tema en Etapa de Recopilación de Datos
               </p>
-              <p className="text-4xl font-extrabold text-red-500">
-                ~{prediccion?.prediccion_sin_leer}/100
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Riesgo de descenso en tu rendimiento académico en esta unidad.
+              <p className="text-xs text-muted-foreground max-w-xl mx-auto">
+                {prediccion.mensaje || "Esta materia o tema es nuevo en la gestión actual. No cuenta con datos históricos suficientes para una predicción confiable. Las proyecciones se habilitarán conforme se registren más evaluaciones."}
               </p>
             </div>
+          ) : (
+            /* Escenario ML: Proyección predictiva comparativa basada en el próximo TEMA */
+            <>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="p-5 rounded-2xl bg-red-500/10 border border-red-500/25 space-y-2">
+                  <p className="text-xs font-bold text-red-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4" /> Sin preparación previa
+                  </p>
+                  <p className="text-4xl font-extrabold text-red-500">
+                    ~{prediccion?.prediccion_sin_leer}/100
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Riesgo de descenso en tu rendimiento académico en esta unidad.
+                  </p>
+                </div>
 
-            <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-2">
-              <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
-                <TrendingUp className="h-4 w-4" /> Leyendo {paginas_siguiente} antes
-              </p>
-              <p className="text-4xl font-extrabold text-emerald-500">
-                ~{prediccion?.prediccion_con_leer}/100
-              </p>
-              <p className="text-xs text-muted-foreground">
-                ¡Aseguras la comprensión conceptual y elevas tu puntaje!
-              </p>
-            </div>
-          </div>
+                <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-2">
+                  <p className="text-xs font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <TrendingUp className="h-4 w-4" /> Leyendo {paginas_siguiente} antes
+                  </p>
+                  <p className="text-4xl font-extrabold text-emerald-500">
+                    ~{prediccion?.prediccion_con_leer}/100
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    ¡Aseguras la comprensión conceptual y elevas tu puntaje!
+                  </p>
+                </div>
+              </div>
 
-          <div className="mt-5 p-4 rounded-2xl bg-primary/10 border border-primary/25 text-center">
-            <p className="text-sm text-primary font-semibold">
-              Ventaja neta estimada de lectura previa:{" "}
-              <span className="font-extrabold text-base text-foreground">
-                +{prediccion?.beneficio} puntos de ventaja
-              </span>
-            </p>
-          </div>
+              <div className="mt-5 p-4 rounded-2xl bg-primary/10 border border-primary/25 text-center">
+                <p className="text-sm text-primary font-semibold">
+                  Ventaja neta estimada de lectura previa:{" "}
+                  <span className="font-extrabold text-base text-foreground">
+                    +{prediccion?.beneficio} puntos de ventaja
+                  </span>
+                </p>
+              </div>
+            </>
+          )}
 
           <div className="mt-6 p-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2 shadow-lg">
             <BookOpen className="h-5 w-5" />

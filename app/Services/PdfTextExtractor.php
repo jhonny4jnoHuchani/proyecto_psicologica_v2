@@ -5,6 +5,10 @@ namespace App\Services;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Servicio de Extracción de Texto de Documentos PDF.
+ * Procesa PDFs para autocompletar temarios y alimentar prompts de IA.
+ */
 class PdfTextExtractor
 {
     /**

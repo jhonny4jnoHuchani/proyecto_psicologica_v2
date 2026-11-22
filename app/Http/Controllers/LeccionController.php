@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Calificacion;
 use App\Models\Curso;
 use App\Models\Docente;
 use App\Models\Entrega;
@@ -308,15 +309,28 @@ class LeccionController extends Controller
                 ->first();
         }
 
-        // 2. Lógica del Machine Learning
+        // 2. Lógica del Machine Learning a nivel de TEMA (Consolidando notas del tema)
         $prediccion_ml = null;
         $tema_siguiente = null;
         $paginas_siguiente = null;
+        $notaConsolidadaTema = null;
+        $temaActualNombre = $leccion->temario?->nombre ?? 'Tema actual';
 
         if ($entrega && $entrega->calificacion) {
+            // Calculamos el promedio consolidado del estudiante en el TEMA (todas las tareas del tema)
+            if ($leccion->tema_id && $estudiante) {
+                $promedioTema = Calificacion::query()
+                    ->join('entregas', 'calificaciones.entrega_id', '=', 'entregas.id')
+                    ->join('lecciones', 'entregas.leccion_id', '=', 'lecciones.id')
+                    ->where('entregas.estudiante_id', $estudiante->id)
+                    ->where('lecciones.tema_id', $leccion->tema_id)
+                    ->whereNotNull('calificaciones.nota')
+                    ->avg('calificaciones.nota');
 
-            // Forzamos a que sea un número entero (65 en vez de "65.00")
-            $notaActual = (int) round($entrega->calificacion->nota);
+                $notaConsolidadaTema = (int) round($promedioTema ?? $entrega->calificacion->nota);
+            } else {
+                $notaConsolidadaTema = (int) round($entrega->calificacion->nota);
+            }
 
             // Buscar el siguiente tema (con un orden mayor al actual)
             $ordenActual = $leccion->temario ? $leccion->temario->orden : 0;
@@ -331,18 +345,14 @@ class LeccionController extends Controller
                 $tema_siguiente = $temaSiguienteObj->nombre;
                 $paginas_siguiente = $temaSiguienteObj->paginas_libro;
 
-                // Llamamos a Python
+                // Llamamos a Python pasando la nota consolidada del tema y el tema_id actual
                 $prediccion_ml = $mlService->getPrediccion(
                     $leccion->materia_id,
-                    $notaActual // <-- Aquí enviamos el entero (ej: 65)
+                    $notaConsolidadaTema,
+                    $leccion->tema_id
                 );
             }
         }
-
-        // --- DEBUG TEMPORAL ---
-        // Descomenta esta línea si sigue saliendo 0. Te mostrará qué está pasando exactamente.
-        // dd($prediccion_ml, $notaActual, $temaSiguienteObj);
-        // ----------------------
 
         return Inertia::render('lecciones/show', [
             'leccion' => $leccion,
@@ -351,6 +361,8 @@ class LeccionController extends Controller
             'prediccion_ml' => $prediccion_ml,
             'tema_siguiente' => $tema_siguiente,
             'paginas_siguiente' => $paginas_siguiente,
+            'nota_tema_promedio' => $notaConsolidadaTema,
+            'tema_actual_nombre' => $temaActualNombre,
         ]);
     }
 

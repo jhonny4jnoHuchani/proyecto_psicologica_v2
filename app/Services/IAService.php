@@ -7,6 +7,22 @@ use App\Models\Refuerzo;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Servicio de Inteligencia Artificial Generativa (LLM vía Groq API).
+ *
+ * Funciones:
+ * 1. generarPreguntas(): Genera cuestionarios dinámicos de refuerzo basados en el temario.
+ * 2. evaluarRespuestas(): Califica cualitativa y cuantitativamente las respuestas de los estudiantes.
+ * 3. estructurarTema(): Asiste al docente extrayendo conceptos y resúmenes de archivos de estudio.
+ */
+/**
+ * Servicio de Inteligencia Artificial Generativa (LLM vía Groq API).
+ *
+ * Funciones:
+ * 1. generarPreguntas(): Genera cuestionarios dinámicos de refuerzo basados en el temario.
+ * 2. evaluarRespuestas(): Califica cualitativa y cuantitativamente las respuestas de los estudiantes.
+ * 3. estructurarTema(): Asiste al docente extrayendo conceptos y resúmenes de archivos de estudio.
+ */
 class IAService
 {
     protected string $apiKey;

@@ -44,7 +44,7 @@ class CalificacionObserver
             $nombreMateria = $leccion?->materia?->nombre;
             $leccionKey = $leccion ? $leccion->getRouteKey() : null;
 
-            // 6. Notificar
+            // 6. Notificar con bloque predictivo de ML a nivel de Tema
             NotificacionService::tareaCalificada(
                 user: $user,
                 nota: (float) $calificacion->nota,
@@ -53,6 +53,9 @@ class CalificacionObserver
                 comentarios: $calificacion->comentarios,
                 url: $leccionKey ? "/lecciones/{$leccionKey}" : '/entregas',
                 mandarTelegram: true,
+                estudianteId: $estudiante?->id,
+                materiaId: $leccion?->materia_id,
+                temaId: $leccion?->tema_id,
             );
 
         } catch (\Exception $e) {

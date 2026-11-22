@@ -27,16 +27,21 @@ class RefuerzoObserver
                 return;
             }
 
+            $leccion = $refuerzo->leccion;
+
             // 3. Nombre del tema/tarea
-            $nombreTema = $refuerzo->leccion->titulo
-                ?? $refuerzo->leccion->nombre
+            $nombreTema = $leccion?->titulo
+                ?? $leccion?->nombre
                 ?? 'Tema';
 
-            // 4. Notificar
+            // 4. Notificar con bloque predictivo de ML a nivel de Tema
             NotificacionService::refuerzoGenerado(
                 user: $user,
                 nombreTema: $nombreTema,
                 refuerzoId: $refuerzo->id,
+                estudianteId: $estudiante?->id,
+                materiaId: $leccion?->materia_id,
+                temaId: $leccion?->tema_id,
             );
 
         } catch (\Exception $e) {

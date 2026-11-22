@@ -128,12 +128,16 @@ interface Props {
   rol: string;
   // 👇LÍNEAS nuevas de ML:
   prediccion_ml?: {
-    prediccion_sin_leer: number;
-    prediccion_con_leer: number;
-    beneficio: number;
+    tiene_datos_historicos?: boolean;
+    prediccion_sin_leer?: number | null;
+    prediccion_con_leer?: number | null;
+    beneficio?: number;
+    mensaje?: string;
   } | null;
   tema_siguiente?: string | null;
   paginas_siguiente?: string | null;
+  nota_tema_promedio?: number | null;
+  tema_actual_nombre?: string | null;
 }
 
 export default function LeccionesShow({
@@ -143,6 +147,8 @@ export default function LeccionesShow({
   prediccion_ml,
   tema_siguiente,
   paginas_siguiente,
+  nota_tema_promedio,
+  tema_actual_nombre,
 }: Props) {
   const pageProps = usePage<SharedData>().props;
   const authUser = pageProps.auth?.user;
@@ -717,69 +723,83 @@ export default function LeccionesShow({
                 </div>
 
                 <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                  Basado en tu historial académico y el análisis de {temaNombre}
-                  , nuestro modelo predice tu rendimiento en el próximo tema.
+                  Basado en tu desempeño acumulado en {tema_actual_nombre || temaNombre}
+                  {nota_tema_promedio !== null && nota_tema_promedio !== undefined ? ` (${nota_tema_promedio}/100)` : ""},
+                  nuestro modelo proyecta tu rendimiento para el próximo tema.
                 </p>
               </div>
 
-              {/* Mostrar predicciones si existen */}
+              {/* Panel Predictivo de Machine Learning (Proyección de notas a nivel de TEMA) */}
               {prediccion_ml ? (
-                <div className="space-y-3">
-                  {/* Próximo tema */}
-                  {tema_siguiente && (
-                    <div className="rounded-lg bg-primary-light border border-primary-border p-2.5">
-                      <p className="text-[11px] text-primary font-medium mb-1">
-                        Próximo tema:
-                      </p>
-                      <p className="text-xs font-semibold text-foreground">
-                        {tema_siguiente}
-                      </p>
-                      {paginas_siguiente && (
-                        <p className="text-[11px] text-primary mt-1">
-                          📖 Lectura recomendada: {paginas_siguiente}
+                /* Caso A: Materia o tema nuevo sin historial suficiente (Cold Start seguro) */
+                prediccion_ml.tiene_datos_historicos === false || prediccion_ml.prediccion_sin_leer == null ? (
+                  <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 space-y-1.5 text-xs">
+                    <p className="font-semibold text-amber-700 dark:text-amber-300">
+                      Materia o Tema en recopilación inicial
+                    </p>
+                    <p className="text-[11px] text-amber-600/90 dark:text-amber-400/90 leading-relaxed">
+                      {prediccion_ml.mensaje || "Esta materia o tema es nuevo en la gestión actual. La predicción se habilitará conforme se registren más evaluaciones."}
+                    </p>
+                  </div>
+                ) : (
+                  /* Caso B: Proyección comparativa: sin repaso vs. con lectura de páginas asignadas */
+                  <div className="space-y-3">
+                    {/* Próximo tema */}
+                    {tema_siguiente && (
+                      <div className="rounded-lg bg-primary-light border border-primary-border p-2.5">
+                        <p className="text-[11px] text-primary font-medium mb-1">
+                          Próximo tema:
                         </p>
-                      )}
-                    </div>
-                  )}
+                        <p className="text-xs font-semibold text-foreground">
+                          {tema_siguiente}
+                        </p>
+                        {paginas_siguiente && (
+                          <p className="text-[11px] text-primary mt-1">
+                            📖 Lectura recomendada: {paginas_siguiente}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
-                  {/* Dos predicciones */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-2.5">
-                      <p className="text-[10px] text-rose-700 dark:text-rose-300 font-semibold mb-1">
-                        ⚠️ Sin prepararte:
+                    {/* Dos predicciones */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-lg bg-rose-50/80 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 p-2.5">
+                        <p className="text-[10px] text-rose-700 dark:text-rose-300 font-semibold mb-1">
+                          ⚠️ Sin prepararte:
+                        </p>
+                        <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
+                          ~{prediccion_ml.prediccion_sin_leer}/100
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5">
+                        <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mb-1">
+                          ✅ Leyendo {paginas_siguiente || "el material"}:
+                        </p>
+                        <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                          ~{prediccion_ml.prediccion_con_leer}/100
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Beneficio */}
+                    <div className="rounded-lg bg-primary-light border border-primary-border p-2.5 text-center">
+                      <p className="text-[11px] text-primary font-medium">
+                        Beneficio de prepararte:
                       </p>
-                      <p className="text-lg font-bold text-rose-600 dark:text-rose-400">
-                        ~{prediccion_ml.prediccion_sin_leer}/100
+                      <p className="text-base font-bold text-foreground">
+                        +{prediccion_ml.beneficio} puntos
                       </p>
                     </div>
-                    <div className="rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 p-2.5">
-                      <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold mb-1">
-                        ✅ Leyendo {paginas_siguiente || "el material"}:
-                      </p>
-                      <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                        ~{prediccion_ml.prediccion_con_leer}/100
-                      </p>
-                    </div>
+
+                    {/* Mensaje informativo */}
+                    {paginas_siguiente && (
+                      <div className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2 transition-colors">
+                        <BookOpen className="h-4 w-4" />
+                        Leer el texto guía ({paginas_siguiente})
+                      </div>
+                    )}
                   </div>
-
-                  {/* Beneficio */}
-                  <div className="rounded-lg bg-primary-light border border-primary-border p-2.5 text-center">
-                    <p className="text-[11px] text-primary font-medium">
-                      Beneficio de prepararte:
-                    </p>
-                    <p className="text-base font-bold text-foreground">
-                      +{prediccion_ml.beneficio} puntos
-                    </p>
-                  </div>
-
-                  {/* Mensaje informativo */}
-                  {paginas_siguiente && (
-                    <div className="w-full bg-primary hover:bg-primary-hover text-primary-foreground py-2.5 rounded-lg font-semibold flex justify-center items-center gap-2 shadow-sm text-xs mt-2 transition-colors">
-                      <BookOpen className="h-4 w-4" />
-                      Leer el texto guía ({paginas_siguiente})
-                    </div>
-                  )}
-                </div>
+                )
               ) : (
                 <div className="rounded-lg bg-background/80 dark:bg-neutral-900/60 border p-3.5 space-y-2 text-xs">
                   <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300 font-semibold">

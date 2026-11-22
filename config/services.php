@@ -38,6 +38,7 @@ return [
     // configuracion para microservicio de Machine Learning
     'ml' => [
         'url' => env('ML_SERVICE_URL', 'http://127.0.0.1:5000'),
+        'key' => env('ML_API_KEY', 'ml_secret_token_2026_psi_upea'),
     ],
 
 ];

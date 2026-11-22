@@ -120,7 +120,8 @@ class RecomendacionController extends Controller
         // ═══════════════════════════════════════════════════════════
         $prediccion = $mlService->getPrediccion(
             $temaActual->materia_id,
-            $notaEntera
+            $notaEntera,
+            $temaActual->id
         );
 
         // ═══════════════════════════════════════════════════════════

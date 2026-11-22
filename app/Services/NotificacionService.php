@@ -3,9 +3,16 @@
 namespace App\Services;
 
 use App\Jobs\EnviarNotificacionTelegram;
+use App\Models\Calificacion;
 use App\Models\Notificacion;
+use App\Models\Tema;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
+/**
+ * Servicio Central de Notificaciones.
+ * Registra avisos internos (campanita) y despacha mensajes al Bot de Telegram.
+ */
 class NotificacionService
 {
     /**
@@ -41,6 +48,81 @@ class NotificacionService
     }
 
     /**
+     * Construye la sección predictiva de Machine Learning (a nivel de Tema) para Telegram.
+     * Tolerancia a fallos: Si el microservicio ML falla o está apagado, retorna cadena vacía.
+     */
+    public static function generarBloquePredictivoMl(?int $estudianteId, ?int $materiaId, ?int $temaId): string
+    {
+        if (! $estudianteId || ! $materiaId || ! $temaId) {
+            return '';
+        }
+
+        try {
+            // 1. Consolidar el promedio del estudiante en el TEMA actual (igual que en LeccionController)
+            $promedioTema = Calificacion::query()
+                ->join('entregas', 'calificaciones.entrega_id', '=', 'entregas.id')
+                ->join('lecciones', 'entregas.leccion_id', '=', 'lecciones.id')
+                ->where('entregas.estudiante_id', $estudianteId)
+                ->where('lecciones.tema_id', $temaId)
+                ->whereNotNull('calificaciones.nota')
+                ->avg('calificaciones.nota');
+
+            $notaConsolidada = (int) round($promedioTema ?? 70);
+
+            // 2. Consultar al servicio de Machine Learning
+            /** @var MachineLearningService $mlService */
+            $mlService = app(MachineLearningService::class);
+            $prediccion = $mlService->getPrediccion($materiaId, $notaConsolidada, $temaId);
+
+            $siguienteTema = $prediccion['siguiente_tema'] ?? null;
+
+            // Si Python no trajo siguiente_tema directamente, buscar en la BD local
+            if (! $siguienteTema) {
+                $ordenActual = Tema::where('id', $temaId)->value('orden') ?? 0;
+                $sigTemaDb = Tema::where('materia_id', $materiaId)
+                    ->where('orden', '>', $ordenActual)
+                    ->where('estado', '!=', 'omitido')
+                    ->orderBy('orden', 'asc')
+                    ->first();
+
+                if ($sigTemaDb) {
+                    $siguienteTema = [
+                        'nombre' => $sigTemaDb->nombre,
+                        'paginas_libro' => $sigTemaDb->paginas_libro,
+                    ];
+                }
+            }
+
+            $nombreSiguiente = $siguienteTema['nombre'] ?? 'Siguiente tema del temario';
+            $paginasStr = ! empty($siguienteTema['paginas_libro']) ? " (📖 {$siguienteTema['paginas_libro']})" : '';
+
+            $lineas = [
+                '',
+                '🔮 Predicción de rendimiento para el próximo tema',
+                ' "Ve lo que debes estudiar para la siguiente clase"',
+                '',
+                "📚 Próximo tema: {$nombreSiguiente}{$paginasStr}",
+            ];
+
+            // 3. Caso con datos históricos vs Caso Cold Start
+            if (! empty($prediccion['tiene_datos_historicos']) && isset($prediccion['beneficio']) && $prediccion['beneficio'] > 0) {
+                $beneficio = $prediccion['beneficio'];
+                $lineas[] = "📈 Mejora estimada: +{$beneficio} puntos si repasas el material asignado.";
+                $lineas[] = '👉 Ingresa a la plataforma para ver tu proyección comparativa completa.';
+            } else {
+                $lineas[] = 'ℹ️ Materia en etapa inicial de recopilación de datos históricos.';
+                $lineas[] = '👉 Ingresa a la plataforma para revisar el temario y tus lecturas.';
+            }
+
+            return implode("\n", $lineas);
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo generar bloque predictivo ML para Telegram: '.$e->getMessage());
+
+            return '';
+        }
+    }
+
+    /**
      * Atajo: notificación de tarea calificada.
      */
     public static function tareaCalificada(
@@ -51,6 +133,9 @@ class NotificacionService
         ?string $comentarios = null,
         ?string $url = null,
         bool $mandarTelegram = true,
+        ?int $estudianteId = null,
+        ?int $materiaId = null,
+        ?int $temaId = null,
     ): Notificacion {
         $materiaStr = $nombreMateria ? " ({$nombreMateria})" : '';
         // El mensaje solo notifica que la tarea fue calificada, sin revelar la nota obtenida
@@ -58,6 +143,12 @@ class NotificacionService
 
         if (! empty(trim($comentarios ?? ''))) {
             $mensaje .= "\n\n💬 Observaciones:\n\"{$comentarios}\"";
+        }
+
+        // Bloque predictivo de Machine Learning (a nivel de Tema)
+        $bloqueMl = self::generarBloquePredictivoMl($estudianteId, $materiaId, $temaId);
+        if (! empty($bloqueMl)) {
+            $mensaje .= "\n".$bloqueMl;
         }
 
         return self::crear(
@@ -77,12 +168,23 @@ class NotificacionService
         User $user,
         string $nombreTema,
         int $refuerzoId,
+        ?int $estudianteId = null,
+        ?int $materiaId = null,
+        ?int $temaId = null,
     ): Notificacion {
+        $mensaje = "Se generó un refuerzo para \"{$nombreTema}\". ¡Practica para mejorar!";
+
+        // Bloque predictivo de Machine Learning (a nivel de Tema)
+        $bloqueMl = self::generarBloquePredictivoMl($estudianteId, $materiaId, $temaId);
+        if (! empty($bloqueMl)) {
+            $mensaje .= "\n".$bloqueMl;
+        }
+
         return self::crear(
             user: $user,
             tipo: 'refuerzo_generado',
             titulo: 'Nuevo refuerzo disponible',
-            mensaje: "Se generó un refuerzo para \"{$nombreTema}\". ¡Practica para mejorar!",
+            mensaje: $mensaje,
             url: "/refuerzos/{$refuerzoId}",
         );
     }
